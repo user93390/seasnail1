@@ -59,7 +59,6 @@ public class ChatControl extends Module {
         }
     }
 
-    @Override
     public void onDisconnect() {
         // Stop the thread and reset the player names map and alerted players set when disconnecting from the server
         running = false;
