@@ -1,3 +1,3 @@
-Snail++
+snail++
 
-Mostly made by Seasnail1...
+developed meteor addon by @chronosuser and @seasnail1
