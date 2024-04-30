@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "addon-template",
+  "id": "Snail++",
   "version": "${version}",
   "name": "snail++",
   "description": "meteor addon looking to improve combat, misc, and movement modules ",
