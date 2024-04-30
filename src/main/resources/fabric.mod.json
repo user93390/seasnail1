@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "addon-template",
   "version": "${version}",
-  "name": "Addon Template",
-  "description": "An addon template for the Meteor addons.",
+  "name": "snail++",
+  "description": "meteor addon looking to improve combat, misc, and movement modules ",
   "authors": [
     "seasnail"
   ],
