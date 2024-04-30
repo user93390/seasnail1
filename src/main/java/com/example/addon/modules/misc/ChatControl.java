@@ -4,11 +4,11 @@ import com.example.addon.Addon;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,33 +16,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-
-
 public class ChatControl extends Module {
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
-    private final SettingGroup sgPrefix = settings.createGroup("Prefix");
-    
+
     private final Setting<Boolean> visual = sgVisualRange.add(new BoolSetting.Builder()
-            .name("Visual Range")
+            .name("visual Range")
             .description("Toggle visual range notification.")
             .defaultValue(true)
             .build()
     );
 
     private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
-            .name("Check Uuid")
+            .name("checkUuid")
             .description("Toggle checking player UUIDs.")
             .defaultValue(true)
             .build()
     );
-    
-    private final Setting<Boolean> playSound = sgVisualRange.add(new BoolSetting.Builder()
-            .name("Sound")
-            .description("Plays a sound when you are near a player")
-            .defaultValue(true)
-            .build()
-    );
-    
 
     private final Map<UUID, String> playerNames = new HashMap<>();
     private final Set<UUID> alertedPlayers = new HashSet<>();
@@ -70,6 +59,7 @@ public class ChatControl extends Module {
         }
     }
 
+    @Override
     public void onDisconnect() {
         // Stop the thread and reset the player names map and alerted players set when disconnecting from the server
         running = false;
@@ -88,16 +78,18 @@ public class ChatControl extends Module {
                 populatePlayerNames(); // Populate player names map
 
                 for (PlayerEntity target : mc.world.getPlayers()) {
-                    if (target == mc.player) continue;
+                    if (target == mc.player) 
+                    continue;
 
                     if (checkUuid.get() && target.getUuidAsString().isEmpty()) continue;
 
                     UUID uuid = target.getUuid();
                     String name = playerNames.get(uuid);
 
-                    if (name == null) continue;
+                    if (name == null)
+                     continue;
 
-                    if (alertedPlayers.contains(uuid)) continue;
+                    if (alertedPlayers.contains(uuid)) continue; // Skip if player has already been alerted
 
                     double targetX = target.getX();
                     double targetY = target.getY();
@@ -106,14 +98,16 @@ public class ChatControl extends Module {
                     double distance = Math.sqrt(Math.pow(targetX - playerX, 2) + Math.pow(targetY - playerY, 2) + Math.pow(targetZ - playerZ, 2));
 
                     if (distance <= renderDistance * 16) {
-                        if (playSound.get()) {
-                            mc.getSoundManager().play(net.minecraft.client.sound.PositionedSoundInstance.master(SoundEvents.BLOCK_AMETHYST_BLOCK_STEP, 1.0F));
-                            ChatUtils.sendMsg(Text.of("A player is within render distance"));
-                        }
+                        ChatUtils.sendMsg(Text.of(Formatting.BLUE + name + " is within render distance."));
+
+                        // Play the specified sound when a player is spotted
+                        mc.getSoundManager().play(net.minecraft.client.sound.PositionedSoundInstance.master(SoundEvents.BLOCK_AMETHYST_BLOCK_STEP, 1.0F));
+
+                        alertedPlayers.add(uuid); // Add player to alerted set
                     }
                 }
             }
-
+            
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
@@ -121,5 +115,12 @@ public class ChatControl extends Module {
             }
         }
     }
+
+    private void populatePlayerNames() {
+        for (PlayerEntity player : mc.world.getPlayers()) {
+            playerNames.put(player.getUuid(), player.getName().getString());
+        }
     }
+}
+
 
