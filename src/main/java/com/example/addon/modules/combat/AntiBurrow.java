@@ -52,7 +52,7 @@ public class AntiBurrow extends Module {
             .build()
     );
     public AntiBurrow() {
-        super(Addon.COMBAT, "anti-burrow", "almost disables a meta on every server");
+        super(Addon.COMBAT, "anti-burrow", "disables a meta on most anarchy servers");
     }
 
     @EventHandler
