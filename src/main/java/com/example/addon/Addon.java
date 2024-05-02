@@ -5,7 +5,6 @@ import com.example.addon.modules.misc.*;
 import com.example.addon.modules.movement.*;
 
 
-
 import com.example.addon.hud.*;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -33,11 +32,14 @@ public class Addon extends MeteorAddon {
 
         // Modules
         Modules.get().add(new AutoEZ());
-        Modules.get().add(new AnchorAuraPlus());
+        Modules.get().add(new AutoAnchor());
         Modules.get().add(new quiverPlus());
         Modules.get().add(new ChatControl());
         Modules.get().add(new VelocityPlus());
-
+        Modules.get().add(new AntiBurrow());
+        Modules.get().add(new AntiBurrow());
+        Modules.get().add(new XPautomation());
+        Modules.get().add(new autoSand());
         // HUD
         Hud.get().register(HudExample.INFO);
     }

@@ -1,12 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "Snail++",
+  "id": "snailplusplus",
   "version": "${version}",
-  "name": "snail++",
+  "name": "snailplusplus",
   "description": "meteor addon looking to improve combat, misc, and movement modules ",
   "authors": [
     "seasnail"
-    "chronosuser"
   ],
   "contact": {
     "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"
