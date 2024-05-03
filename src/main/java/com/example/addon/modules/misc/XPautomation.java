@@ -109,7 +109,7 @@ public class XPautomation extends Module {
     );
 
     public XPautomation() {
-        super(Addon.MISC, "XP automation+", "better auto-xp");
+        super(Addon.MISC, "AutoXP-Bypass", "better auto-xp");
     }
 
     @EventHandler
