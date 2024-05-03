@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
@@ -55,6 +56,17 @@ public class AutoSand extends Module {
             .defaultValue(SortPriority.LowestDistance)
             .build()
     );
+    private final Setting<Boolean> support = sgGeneral.add(new BoolSetting.Builder()
+            .name("support")
+            .description("Support (Obsidian)")
+            .defaultValue(false)
+            .build()
+    );
+    private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
+            .name("Color")
+            .description("The Color for positions to be placed.")
+            .defaultValue(new SettingColor(255, 0, 0, 75))
+            .build());
 
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
@@ -97,10 +109,38 @@ public class AutoSand extends Module {
                 return;
             }
 
-            BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.SAND, Items.RED_SAND), rotate.get(), 0, false);
-            RenderUtils.renderTickingBlock(targetPos, Color.CYAN, Color.CYAN, ShapeMode.Both, 5, 5, true, false);
+            if (support.get())
+            {
+                BlockPos supportPosNorth = target.getBlockPos().north(1);
+                BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
+                BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
+                BlockPos supportPosEast = target.getBlockPos().east(1);
+                BlockPos supportPosSouth = target.getBlockPos().south(1);
+                BlockPos supportPosWest = target.getBlockPos().west(1);
+
+                BlockUtils.place(supportPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+                BlockUtils.place(supportPosNorthUpOne, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+                BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+                BlockUtils.place(supportPosEast, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+                BlockUtils.place(supportPosSouth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+                BlockUtils.place(supportPosWest, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+
+                RenderUtils.renderTickingBlock(supportPosNorth, color.get(), color.get(), ShapeMode.Both, 5, 10, true, false);
+                RenderUtils.renderTickingBlock(supportPosNorthUpOne, color.get(), color.get(), ShapeMode.Both, 5, 10, true, false);
+                RenderUtils.renderTickingBlock(supportPosNorthUpTwo, color.get(), color.get(), ShapeMode.Both,5 , 10, true, false);
+                RenderUtils.renderTickingBlock(supportPosEast, color.get(), color.get(), ShapeMode.Both, 5, 10, true, false);
+                RenderUtils.renderTickingBlock(supportPosSouth, color.get(), color.get(), ShapeMode.Both, 5, 10, true, false);
+                RenderUtils.renderTickingBlock(supportPosWest, color.get(), color.get(), ShapeMode.Both, 5, 10, true, false);
+
+
+            }
+
+            BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.SAND, Items.RED_SAND, Items.GRAVEL), rotate.get(), 0, false);
+            RenderUtils.renderTickingBlock(targetPos, color.get(), color.get(), ShapeMode.Both, 5, 5, true, false);
 
             ChatUtils.sendMsg(Text.of(Formatting.GREEN + "Placing sand..."));
+
+
 
             if (autoDisable.get()) {
                 this.toggle();
