@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;;
 
 public class AnchorAuraPlus extends Module {
          public AnchorAuraPlus() {
-                super(Addon.COMBAT, "sn++ anchor-aura", "Harms players around you with respawn anchors");
+                super(Addon.COMBAT, "SnailAnchorAura", "Harms players around you with respawn anchors");
 
                 
                 final SettingGroup sgGeneral = settings.getDefaultGroup();
