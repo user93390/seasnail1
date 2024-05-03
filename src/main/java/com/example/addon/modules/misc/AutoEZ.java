@@ -38,7 +38,7 @@ public class AutoEZ extends Module {
     );
 
     public AutoEZ() {
-        super(Addon.MISC, "SnailAutoEz", "Say a message when you kill someone ");
+        super(Addon.MISC, "sn++ auto-EZ", "Say a message when you kill someone ");
     }
 
     @EventHandler

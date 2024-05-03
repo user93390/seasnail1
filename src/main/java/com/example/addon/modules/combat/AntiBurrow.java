@@ -90,10 +90,13 @@ public class AntiBurrow extends Module {
 
         BlockPos targetPos = target.getBlockPos();
 
+        long time = System.currentTimeMillis();
+        if ((time- lastPlaceTime) < 0.50 *1000) return;
+        lastPlaceTime = time;
+
 
         BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.OAK_BUTTON), rotate.get(), 0, false);
         RenderUtils.renderTickingBlock(targetPos, Color.GREEN, Color.GREEN, ShapeMode.Both, 5, 3, true, false);
-
 
 
         //ChatUtils.sendMsg("[Snail]", Text.of("A Button has been Placed"));

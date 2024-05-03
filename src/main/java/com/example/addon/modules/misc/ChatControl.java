@@ -1,4 +1,4 @@
-package com.example.addon.modules.misc;
+ package com.example.addon.modules.misc;
 
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.settings.*;
@@ -33,6 +33,14 @@ public class ChatControl extends Module {
             .build()
     );
 
+    private final Setting<Boolean> performanceMode = sgVisualRange.add(new BoolSetting.Builder()
+    .name("Performance Mode")
+    .description("Disable the module when in the game pause menu (GUI).")
+    .defaultValue(true)
+    .build()
+);
+    
+    
     private final Map<UUID, String> playerNames = new HashMap<>();
     private final Set<UUID> alertedPlayers = new HashSet<>();
     private boolean running = false;
@@ -47,6 +55,7 @@ public class ChatControl extends Module {
         running = true;
         thread = new Thread(this::checkPlayers);
         thread.start();
+        ChatUtils.sendMsg(Text.of(Formatting.GREEN + "Enabled Chatcontrol"));
     }
 
     @Override
@@ -57,6 +66,7 @@ public class ChatControl extends Module {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        ChatUtils.sendMsg(Text.of(Formatting.RED + "Disabled Chatcontrol"));
     }
 
     public void onDisconnect() {
@@ -65,6 +75,13 @@ public class ChatControl extends Module {
         playerNames.clear();
         alertedPlayers.clear();
     }
+    public void onDeath() {
+        // Stop the thread and reset the player names map and alerted players set when you die
+        running = false;
+        playerNames.clear();
+        alertedPlayers.clear();
+    }
+
 
     private void checkPlayers() {
         while (running) {
@@ -121,5 +138,3 @@ public class ChatControl extends Module {
         }
     }
 }
-
-
