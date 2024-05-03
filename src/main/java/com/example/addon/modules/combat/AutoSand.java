@@ -75,7 +75,7 @@ public class AutoSand extends Module {
     private long lastPlaceTime = 0;
 
     public AutoSand() {
-        super(Addon.COMBAT, "AutoSand", "Places sand two blocks above players' heads");
+        super(Addon.COMBAT, "auto-sand", "Places sand two blocks above players' heads");
     }
 
     @EventHandler
@@ -92,19 +92,19 @@ public class AutoSand extends Module {
 
         if (mc.world.getBlockState(targetPos).getBlock().equals(Blocks.AIR)) {
             if (InvUtils.findInHotbar(Items.SAND, Items.RED_SAND) == null) {
-                error("no sand in hotbar... disabling");
+                ChatUtils.error("no sand in hotbar... disabling");
                 toggle();
                 return;
             }
 
             BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.SAND, Items.RED_SAND), rotate.get(), 0, false);
-            RenderUtils.renderTickingBlock(targetPos, Color.CYAN, Color.CYAN, ShapeMode.Both, 5, 3, true, false);
+            RenderUtils.renderTickingBlock(targetPos, Color.CYAN, Color.CYAN, ShapeMode.Both, 5, 5, true, false);
 
             ChatUtils.sendMsg(Text.of(Formatting.GREEN + "Placing sand..."));
 
             if (autoDisable.get()) {
                 this.toggle();
-                ChatUtils.sendMsg("[Snail]", Text.of(Formatting.GREEN + "Auto-disabling because of auto-disable..."));
+                ChatUtils.sendMsg(Text.of(Formatting.GREEN + "Auto-disabling because of auto-disable..."));
             }
         }
     }

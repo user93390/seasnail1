@@ -82,6 +82,8 @@ public class AntiBurrow extends Module {
         super(Addon.COMBAT, "AntiBurow", "disables a meta on most anarchy servers");
     }
 
+    private long lastPlaceTime = 0;
+
     @EventHandler
     private void onTick(TickEvent.Pre event) throws InterruptedException {
         target = TargetUtils.getPlayerTarget(range.get(), priority.get()); // Initialize the target variable
