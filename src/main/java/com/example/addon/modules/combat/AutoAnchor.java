@@ -82,7 +82,7 @@ public class AutoAnchor extends Module {
     private BlockPos breakPos;
 
     public AutoAnchor() {
-        super(Addon.COMBAT, "auto-anchor", "Automatically places Respawn Anchors near players.");
+        super(Addon.COMBAT, "Auto Anchor", "Automatically places Respawn Anchors near players.");
     }
 
     @Override

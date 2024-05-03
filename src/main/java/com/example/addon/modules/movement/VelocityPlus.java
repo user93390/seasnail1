@@ -8,7 +8,7 @@ import com.example.addon.Addon;
 
 public class VelocityPlus extends Module {
         public VelocityPlus() {
-            super(Addon.MOVEMENT, "sn++ Velocity", "Adjusts velocity for different server configurations.");
+            super(Addon.MOVEMENT, "Velocity Plus", "Adjusts velocity for different server configurations.");
     
             final SettingGroup sg2b2t = settings.createGroup("grim-Velocity");
             final SettingGroup ncpStrict = settings.createGroup("ncp-strict");

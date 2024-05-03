@@ -47,7 +47,7 @@ public class ChatControl extends Module {
     private Thread thread;
 
     public ChatControl() {
-        super(Addon.MISC, "ChatControl", "Better Chat");
+        super(Addon.MISC, "Chat Control", "Better Chat");
     }
 
     @Override

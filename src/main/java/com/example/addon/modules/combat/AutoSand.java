@@ -91,7 +91,7 @@ public class AutoSand extends Module {
         BlockPos targetPos = target.getBlockPos().up(height.get());
 
         if (mc.world.getBlockState(targetPos).getBlock().equals(Blocks.AIR)) {
-            if (InvUtils.findInHotbar(Items.SAND, Items.RED_SAND) == null) {
+            if (InvUtils.findInHotbar(Items.SAND, Items.RED_SAND, Items.GRAVEL) == null) {
                 ChatUtils.error("no sand in hotbar... disabling");
                 toggle();
                 return;

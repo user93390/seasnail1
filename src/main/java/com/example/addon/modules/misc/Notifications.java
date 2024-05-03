@@ -23,7 +23,7 @@ public class Notifications extends Module {
     );
 
     public Notifications() {
-        super(Addon.MISC, "Notifications", "Provides notifications for addon actions.");
+        super(Addon.MISC, "Notifications Snail", "Provides notifications for addon actions.");
     }
 
     public void sendToggledMsg() {

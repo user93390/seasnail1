@@ -21,6 +21,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.MinecraftClient;
@@ -45,6 +46,13 @@ public class AntiBurrow extends Module {
             .defaultValue(5)
             .range(0, 7)
             .sliderRange(0, 7)
+            .build()
+    );
+
+    private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
+            .name("auto-disable")
+            .description("Disables the module when you have placed the sand")
+            .defaultValue(true)
             .build()
     );
 
@@ -78,8 +86,17 @@ public class AntiBurrow extends Module {
             .build()
     );
 
+    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+            .name("delay")
+            .description("Delay in seconds between each block placement.")
+            .defaultValue(1.0)
+            .min(0)
+            .sliderMax(5)
+            .build()
+    );
+
     public AntiBurrow() {
-        super(Addon.COMBAT, "AntiBurow", "disables a meta on most anarchy servers");
+        super(Addon.COMBAT, "Anti Burow", "disables a meta on most anarchy servers");
     }
 
     private long lastPlaceTime = 0;
@@ -93,11 +110,11 @@ public class AntiBurrow extends Module {
         BlockPos targetPos = target.getBlockPos();
 
         long time = System.currentTimeMillis();
-        if ((time- lastPlaceTime) < 0.50 *1000) return;
+        if ((time- lastPlaceTime) < delay.get() * 1000) return;
         lastPlaceTime = time;
 
 
-        BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.OAK_BUTTON), rotate.get(), 0, false);
+        BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.OAK_BUTTON, Items.BIRCH_BUTTON, Items.ACACIA_BUTTON, Items.DARK_OAK_BUTTON, Items.STONE_BUTTON, Items.SPRUCE_BUTTON), rotate.get(), 0, false);
         RenderUtils.renderTickingBlock(targetPos, Color.GREEN, Color.GREEN, ShapeMode.Both, 5, 3, true, false);
 
 
@@ -110,7 +127,10 @@ public class AntiBurrow extends Module {
         double y = closestPlayerPos.y - mc.getCameraEntity().getY();
         double z = closestPlayerPos.z - mc.getCameraEntity().getZ();
 
-
+        if (autoDisable.get()) {
+            this.toggle();
+            ChatUtils.sendMsg((Formatting.RED), "AntiBurrow has been Disabled");
+        }
 
     }
 }
