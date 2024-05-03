@@ -35,6 +35,8 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoEZ());
         Modules.get().add(new AnchorAuraPlus());
         Modules.get().add(new AutoSand());
+        Modules.get().add(new AntiBurrow());
+        Modules.get().add(new XPautomation());
         Modules.get().add(new quiverPlus());
         Modules.get().add(new ChatControl());
         Modules.get().add(new VelocityPlus());
