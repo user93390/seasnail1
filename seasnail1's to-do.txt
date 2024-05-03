@@ -2,3 +2,4 @@
 2. make visual range have a smart mode (antibot) --semi done
 3. make the prefix work
 4. make autoEZ use global chat (server chat)
+5. get better renders
