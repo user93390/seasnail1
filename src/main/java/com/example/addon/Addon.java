@@ -3,8 +3,7 @@ package com.example.addon;
 import com.example.addon.modules.combat.*;
 import com.example.addon.modules.misc.*;
 import com.example.addon.modules.movement.*;
-
-
+import com.example.addon.modules.render.*;
 
 import com.example.addon.hud.*;
 
@@ -22,10 +21,12 @@ import org.slf4j.LoggerFactory;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Addon");
-    public static final Category COMBAT = new Category("Combat");
-    public static final Category MISC = new Category("Misc");
-    public static final Category MOVEMENT = new Category("Movement");
+    public static final Category COMBAT = new Category("Combat+");
+    public static final Category MISC = new Category("Misc+");
+    public static final Category MOVEMENT = new Category("Movement+");
+    public static final Category RENDER = new Category("Render+");
     public static final HudGroup HUD_GROUP = new HudGroup("HUD");
+    
 
     @Override
     public void onInitialize() {
@@ -40,6 +41,9 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new quiverPlus());
         Modules.get().add(new ChatControl());
         Modules.get().add(new VelocityPlus());
+        Modules.get().add(new PistonPush());
+        Modules.get().add(new AntiRush());
+        Modules.get().add(new BurrowEsp());
 
         // HUD
         Hud.get().register(HudExample.INFO);
@@ -50,6 +54,7 @@ public class Addon extends MeteorAddon {
         Modules.registerCategory(COMBAT);
         Modules.registerCategory(MISC);
         Modules.registerCategory(MOVEMENT);
+        Modules.registerCategory(RENDER);
     }
 
     @Override
