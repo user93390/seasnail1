@@ -1,5 +1,10 @@
-1. make visual range less laggy when you join Minecraft servers --semi done
-2. make visual range have a smart mode (antibot) --semi done
-3. make the prefix work
-4. make autoEZ use global chat (server chat)
-5. get better renders
+new todo
+
+1.  rewrite burrow-esp
+2. make it so antirush trys to place multiple times
+3. add more options to piston push 
+4. make it so autosand trys to place multiple times
+5. make a quiver???
+6. better rotations to make hands look not as weird
+7. rewrite autoez to make it so theres an option to turn on a auto-dm and  a global chat
+8. do more funny ass shit with buttons
