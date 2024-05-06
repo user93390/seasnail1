@@ -1,9 +1,9 @@
 new todo
 
 1.  rewrite burrow-esp
-2. make it so antirush trys to place multiple times
+2. make it so antirush trys to place multiple times -done
 3. add more options to piston push 
-4. make it so autosand trys to place multiple times
+4. make it so autosand trys to place multiple times  --done
 5. make a quiver???
 6. better rotations to make hands look not as weird
 7. rewrite autoez to make it so theres an option to turn on a auto-dm and  a global chat
