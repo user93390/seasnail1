@@ -84,7 +84,7 @@ private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
 private BlockPos targetPos, pistonPos, activatorPos, obsidianPos, redstonePos;
 
 public PistonPush() {
- super(Addon.COMBAT, "Piston Push", "Pushes people out of holes");
+ super(Addon.COMBAT, "Piston Push+", "Pushes people out of holes");
 }
 
 

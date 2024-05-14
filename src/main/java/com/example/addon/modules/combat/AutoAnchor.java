@@ -5,60 +5,36 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
-import meteordevelopment.meteorclient.utils.entity.TargetUtils;
-import meteordevelopment.meteorclient.utils.player.*;
-import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
-import java.lang.annotation.Target;
-
-import org.jetbrains.annotations.Nullable;
-
-import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Categories;
-import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.entity.DamageUtils;
-import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.entity.SortPriority;
-import meteordevelopment.meteorclient.utils.entity.TargetUtils;
-import meteordevelopment.meteorclient.utils.player.*;
-import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
-import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.Nullable;
-import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.entity.SortPriority;
-import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import meteordevelopment.meteorclient.utils.entity.TargetUtils;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 
 public class AutoAnchor extends Module {
+    public enum SafetyMode {
+        safe,
+        balance,
+        off,
+    }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private PlayerEntity target;
-    // Place settings
+
+    private long lastPlaceTime = 0;
+
     private final Setting<Integer> Range = sgGeneral.add(new IntSetting.Builder()
             .name("range")
             .description("Range to target player(s)")
@@ -69,17 +45,40 @@ public class AutoAnchor extends Module {
             .name("rotation")
             .description("Rotates towards the block when placing.")
             .defaultValue(false)
-            .build()
-    );
+            .build());
 
-    private final Setting<SortPriority> targetPriority = sgGeneral.add(new EnumSetting.Builder<SortPriority>()
+    private final Setting<SortPriority> priority = sgGeneral.add(new EnumSetting.Builder<SortPriority>()
             .name("target-priority")
             .description("How to filter targets within range.")
             .defaultValue(SortPriority.LowestDistance)
             .build());
 
+    private final Setting<SafetyMode> safety = sgGeneral.add(new EnumSetting.Builder<SafetyMode>()
+            .name("safe mode")
+            .description("safety mode")
+            .defaultValue(SafetyMode.safe)
+            .build()
+    );
+
+    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+            .name("delay")
+            .description("Delay in seconds between each block placement.")
+            .defaultValue(1.0)
+            .min(0)
+            .sliderMax(5)
+            .build()
+    );
+
+    private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
+            .name("Color")
+            .description("The Color for positions to be placed.")
+            .defaultValue(new SettingColor(255, 0, 0, 75))
+            .build());
+
     private BlockPos targetPos;
     private BlockPos breakPos;
+    private boolean shouldSwapToAnchor = false;
+    private boolean shouldSwapToGlowstone = false;
 
     public AutoAnchor() {
         super(Addon.COMBAT, "Auto Anchor", "Automatically places Respawn Anchors near players.");
@@ -89,68 +88,78 @@ public class AutoAnchor extends Module {
     public void onActivate() {
         targetPos = null;
         breakPos = null;
+        shouldSwapToAnchor = false;
+        shouldSwapToGlowstone = false;
     }
 
     @EventHandler
-    private void onTick(TickEvent.Pre event) {
-        // Ensure that TargetUtils.getPlayerTargetPos() is called with correct parameters
-        target = TargetUtils.getPlayerTarget(Range.get(), targetPriority.get());
-        if (targetPos == null) return; // No target found within range
+    private void onTick(TickEvent.Post event) {
+        ClientPlayerEntity player = mc.player;
+        long time = System.currentTimeMillis();
+        if ((time - lastPlaceTime) < delay.get() * 1000) return;
+        lastPlaceTime = time;
 
-        breakPos = findBreakPos(targetPos);
-        if (breakPos == null) return; // No valid block to place anchor found
-
-        // Check for the availability of Respawn Anchors and Glowstone
+        if (player == null || player.getHealth() <= 0) return;
+        PlayerEntity target = TargetUtils.getPlayerTarget(Range.get(), priority.get());
         FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
-        FindItemResult glowstone = InvUtils.findInHotbar(Items.GLOWSTONE);
-        if (!anchor.found() || !glowstone.found()) {
-            error("No Respawn Anchors or Glowstone found in inventory.");
+        FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
+
+        // Check if the target is null before proceeding
+        if (target == null || target == player || target.distanceTo(player) > Range.get()) {
             return;
         }
 
-        // Rotate towards the block position if rotation is enabled
-        if (rotate.get()) {
-            Rotations.rotate(Rotations.getYaw(breakPos), Rotations.getPitch(breakPos), 50, () -> breakAnchor(breakPos, anchor, glowstone));
-        } else {
-            breakAnchor(breakPos, anchor, glowstone);
+        BlockPos targetHeadPos = target.getBlockPos().up(2);
+        BlockPos supportPosNorth = target.getBlockPos().north(1);
+        BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
+        BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
+
+        // Place obsidian blocks
+        BlockUtils.place(supportPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+        BlockUtils.place(supportPosNorthUpOne, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+        BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
+
+        if (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR) {
+            // Place a respawn anchor
+            if (anchor.isOffhand()) {
+                mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+            } else {
+                InvUtils.swap(anchor.slot(), true);
+                mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+                shouldSwapToAnchor = true;
+            }
+        } else if (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+            // Interact with the respawn anchor to explode it
+            mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+        } else if (mc.world.getBlockState(targetHeadPos.up()).getBlock() == Blocks.AIR) {
+            // Place glowstone if there's a respawn anchor below
+            if (glowStone.isOffhand()) {
+                mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 1.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos.up(), true));
+            } else {
+                InvUtils.swap(glowStone.slot(), true);
+                mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 1.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos.up(), true));
+                shouldSwapToGlowstone = true;
+            }
         }
 
-        // Find a suitable position to place the Respawn Anchor
-        BlockPos placePos = findPlacePos(targetPos);
-        if (placePos != null) {
-            // Ensure that BlockUtils.place() is called with correct parameters
-            BlockUtils.place(placePos, anchor, rotate.get(), 0, false);
+        // Swap to glowstone if necessary
+        if (shouldSwapToGlowstone) {
+            InvUtils.swap(glowStone.slot(), true);
+            shouldSwapToGlowstone = false;
         }
-    }
 
-    // Find a valid position to place the Respawn Anchor near the target position
-    private BlockPos findPlacePos(BlockPos targetPos) {
-        // Implementation of finding a suitable place position goes here
-        return null; // Placeholder return
-    }
+        // Swap to anchor if necessary
+        if (shouldSwapToAnchor) {
+            InvUtils.swap(anchor.slot(), true);
+            shouldSwapToAnchor = false;
+        }
 
-    // Find a valid position to break blocks near the target position
-    private BlockPos findBreakPos(BlockPos targetPos) {
-        // Implementation of finding a suitable break position goes here
-        return null; // Placeholder return
-    }
+        // Break the glowstone if it's placed
+        if (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.GLOWSTONE) {
+            BlockUtils.breakBlock(targetHeadPos, false);
+        }
 
-    // Break the anchor block
-    private void breakAnchor(BlockPos pos, FindItemResult anchor, FindItemResult glowstone) {
-        if (pos == null || mc.world.getBlockState(pos).getBlock() != Blocks.RESPAWN_ANCHOR) return;
-
-        // Swap to Glowstone and interact to break the block
-        InvUtils.swap(glowstone.slot(), true);
-        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, true));
-
-        // Swap to Respawn Anchor and interact to break the block
-        InvUtils.swap(anchor.slot(), true);
-        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, true));
-    }
-
-    // Get the damage caused by breaking blocks at a certain position
-    private boolean getDamageBreak(BlockPos pos) {
-        // Implementation of getting damage caused by breaking blocks goes here
-        return false; // Placeholder return
+        RenderUtils.renderTickingBlock(targetHeadPos, color.get(), color.get(), ShapeMode.Both, 5, 5, true, false);
     }
 }
+

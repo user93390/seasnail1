@@ -13,17 +13,21 @@ import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import com.example.addon.modules.misc.Notifications;
 
 public class XPautomation extends Module {
-    
+
     public enum AutoSwitchMode {
         Silent,
-    }
+}
     public enum RotateMode {
         packet,
-        pitch,
-        none,
-    }
+    pitch,
+    none,
+}
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -96,7 +100,7 @@ public class XPautomation extends Module {
     .sliderMin(1)
     .sliderMax(9)
     .build()
-);
+    );
 
     private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
     .name("Pitch")
@@ -107,7 +111,6 @@ public class XPautomation extends Module {
     .visible(() -> rotate.get() == RotateMode.pitch)
     .build()
     );
-
     public XPautomation() {
         super(Addon.MISC, "AutoXP Bypass", "better auto-xp");
     }
@@ -125,36 +128,38 @@ public class XPautomation extends Module {
             if (!exp.isHotbar() && !exp.isOffhand()) {
                 InvUtils.move().from(exp.slot()).toHotbar(slot.get() - 1);
             }
-
-            if (rotate.get() == RotateMode.pitch) {
-                mc.player.setPitch(pitch.get());
-                if (exp.getHand() != null) {
-                    mc.interactionManager.interactItem(mc.player, exp.getHand());
-                }
-                InvUtils.swap(exp.slot(), true);
-                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                InvUtils.swapBack();
+            if(exp.isHotbar()) {
+                InvUtils.find(Items.EXPERIENCE_BOTTLE);
             }
-
-            if (rotate.get() == RotateMode.packet) {
-                Rotations.rotate(mc.player.getYaw(), 90, () -> {
-                    if (exp.getHand() != null) {
-                        mc.interactionManager.interactItem(mc.player, exp.getHand());
+                    if (rotate.get() == RotateMode.pitch) {
+                        mc.player.setPitch(pitch.get());
+                        if (exp.getHand() != null) {
+                            mc.interactionManager.interactItem(mc.player, exp.getHand());
+                        }
+                        InvUtils.swap(exp.slot(), true);
+                        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                        InvUtils.swapBack();
                     }
-                    InvUtils.swap(exp.slot(), true);
-                    mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                    InvUtils.swapBack();
-                });
-            }
 
-            if (rotate.get() == RotateMode.none) {
-                if (exp.getHand() != null) {
-                    mc.interactionManager.interactItem(mc.player, exp.getHand());
+                    if (rotate.get() == RotateMode.packet) {
+                        Rotations.rotate(mc.player.getYaw(), 90, () -> {
+                            if (exp.getHand() != null) {
+                                mc.interactionManager.interactItem(mc.player, exp.getHand());
+                            }
+                            InvUtils.swap(exp.slot(), true);
+                            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                            InvUtils.swapBack();
+                        });
+                    }
+
+                    if (rotate.get() == RotateMode.none) {
+                        if (exp.getHand() != null) {
+                            mc.interactionManager.interactItem(mc.player, exp.getHand());
+                        }
+                        InvUtils.swap(exp.slot(), true);
+                        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                        InvUtils.swapBack();
+                    }
                 }
-                InvUtils.swap(exp.slot(), true);
-                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                InvUtils.swapBack();
             }
         }
-    }
-}

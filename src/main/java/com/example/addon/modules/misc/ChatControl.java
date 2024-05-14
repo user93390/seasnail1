@@ -1,140 +1,105 @@
- package com.example.addon.modules.misc;
+package com.example.addon.modules.misc;
 
+import com.example.addon.modules.misc.Notifications;
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-
-import java.util.HashMap;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.MinecraftClient;
+import java.lang.reflect.Field;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.client.gui.hud.ChatHud;
+import net.minecraft.client.gui.hud.ChatHudLine;
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 
 public class ChatControl extends Module {
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
-
+    private final SettingGroup sgChat = settings.createGroup("Chat"); // Corrected typo here
+    
     private final Setting<Boolean> visual = sgVisualRange.add(new BoolSetting.Builder()
-            .name("visual Range")
+            .name("Visual Range")
             .description("Toggle visual range notification.")
             .defaultValue(true)
             .build()
     );
 
     private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
-            .name("checkUuid")
+            .name("Check UUID")
             .description("Toggle checking player UUIDs.")
             .defaultValue(true)
+            .visible(visual::get)
             .build()
     );
 
-    private final Setting<Boolean> performanceMode = sgVisualRange.add(new BoolSetting.Builder()
-    .name("Performance Mode")
-    .description("Disable the module when in the game pause menu (GUI).")
-    .defaultValue(true)
-    .build()
-);
+    private final Setting<Integer> maxAmount = sgVisualRange.add(new IntSetting.Builder()
+        .name("Max Amount")
+        .description("The cap of how many players the visual range notifies.")
+        .defaultValue(3)
+        .visible(visual::get)
+        .build()
+    );
     
-    
-    private final Map<UUID, String> playerNames = new HashMap<>();
     private final Set<UUID> alertedPlayers = new HashSet<>();
-    private boolean running = false;
-    private Thread thread;
+
+    private Field viewDistanceField;
 
     public ChatControl() {
-        super(Addon.MISC, "Chat Control", "Better Chat");
-    }
+        super(Addon.MISC, "Chat Control", "View way more chat stuff, very useful for anarchy servers");
 
-    @Override
-    public void onActivate() {
-        running = true;
-        thread = new Thread(this::checkPlayers);
-        thread.start();
-        ChatUtils.sendMsg(Text.of(Formatting.GREEN + "Enabled Chatcontrol"));
-    }
-
-    @Override
-    public void onDeactivate() {
-        running = false;
         try {
-            thread.join();
-        } catch (InterruptedException e) {
+            viewDistanceField = MinecraftClient.getInstance().options.getClass().getDeclaredField("viewDistance");
+            viewDistanceField.setAccessible(true);
+        } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
-        ChatUtils.sendMsg(Text.of(Formatting.RED + "Disabled Chatcontrol"));
     }
 
     public void onDisconnect() {
-        // Stop the thread and reset the player names map and alerted players set when disconnecting from the server
-        running = false;
-        playerNames.clear();
         alertedPlayers.clear();
     }
+
     public void onDeath() {
-        // Stop the thread and reset the player names map and alerted players set when you die
-        running = false;
-        playerNames.clear();
         alertedPlayers.clear();
     }
 
+    @EventHandler
+    private void onTick(TickEvent.Post event) {
+        try {
+            if (!visual.get() || alertedPlayers.size() >= maxAmount.get()) return;
 
-    private void checkPlayers() {
-        while (running) {
-            if (mc.world != null && mc.player != null) {
-                double playerX = mc.player.getX();
-                double playerY = mc.player.getY();
-                double playerZ = mc.player.getZ();
-                int renderDistance = mc.options.getViewDistance().getValue();
+            int viewDistance = MinecraftClient.getInstance().options.getViewDistance().getValue();
+            for (PlayerEntity player : MinecraftClient.getInstance().world.getPlayers()) {
+                if (player == MinecraftClient.getInstance().player || alertedPlayers.contains(player.getUuid())) continue;
 
-                populatePlayerNames(); // Populate player names map
+                if (checkUuid.get() && player.getUuidAsString().isEmpty()) continue;
 
-                for (PlayerEntity target : mc.world.getPlayers()) {
-                    if (target == mc.player) 
-                    continue;
+                double distance = player.distanceTo(MinecraftClient.getInstance().player);
 
-                    if (checkUuid.get() && target.getUuidAsString().isEmpty()) continue;
+                if (distance <= viewDistance * 16) {
+                    ChatUtils.sendMsg(Text.of(Formatting.YELLOW + player.getName().getString() + " is within render distance."));
 
-                    UUID uuid = target.getUuid();
-                    String name = playerNames.get(uuid);
+                    // Play the specified sound when a player is spotted
+                    MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.BLOCK_AMETHYST_BLOCK_STEP, 1.0F));
 
-                    if (name == null)
-                     continue;
-
-                    if (alertedPlayers.contains(uuid)) continue; // Skip if player has already been alerted
-
-                    double targetX = target.getX();
-                    double targetY = target.getY();
-                    double targetZ = target.getZ();
-
-                    double distance = Math.sqrt(Math.pow(targetX - playerX, 2) + Math.pow(targetY - playerY, 2) + Math.pow(targetZ - playerZ, 2));
-
-                    if (distance <= renderDistance * 16) {
-                        ChatUtils.sendMsg(Text.of(Formatting.BLUE + name + " is within render distance."));
-
-                        // Play the specified sound when a player is spotted
-                        mc.getSoundManager().play(net.minecraft.client.sound.PositionedSoundInstance.master(SoundEvents.BLOCK_AMETHYST_BLOCK_STEP, 1.0F));
-
-                        alertedPlayers.add(uuid); // Add player to alerted set
-                    }
+                    alertedPlayers.add(player.getUuid());
                 }
             }
-            
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void populatePlayerNames() {
-        for (PlayerEntity player : mc.world.getPlayers()) {
-            playerNames.put(player.getUuid(), player.getName().getString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            error("An error occurred while processing Chat Control module: " + e.getMessage() + "report this error to seasnail1 or chronosuser");
         }
     }
 }
+
+//MinecraftClient.getInstance().inGameHud.getChatHud().clear(true);

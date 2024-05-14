@@ -36,6 +36,7 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import com.example.addon.modules.misc.Notifications;
 
 public class BurrowEsp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

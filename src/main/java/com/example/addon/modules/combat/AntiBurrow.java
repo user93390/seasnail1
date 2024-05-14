@@ -28,6 +28,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import meteordevelopment.meteorclient.events.render.Render2DEvent;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import com.example.addon.modules.misc.Notifications;
 
 import java.util.concurrent.TimeUnit;
 
@@ -35,11 +40,15 @@ import static java.awt.Color.blue;
 import static java.awt.Color.red;
 
 public class AntiBurrow extends Module {
-
+    public enum ShapeMode {
+        line,
+        side,
+        both,
+    }
+    
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private PlayerEntity target; // Declare the target variable
+    private PlayerEntity target;
 
-    // General
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("target-range")
             .description("The radius players can be in to be targeted.")
@@ -79,12 +88,6 @@ public class AntiBurrow extends Module {
             .build()
     );
 
-    private final Setting<SortPriority> renderType = sgGeneral.add(new EnumSetting.Builder<SortPriority>()
-            .name("renderType")
-            .description("How to filter targets within range.")
-            .defaultValue(SortPriority.LowestDistance)
-            .build()
-    );
 
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
@@ -94,9 +97,45 @@ public class AntiBurrow extends Module {
             .sliderMax(5)
             .build()
     );
+    
+    private final Setting<Boolean> color = sgGeneral.add(new BoolSetting.Builder()
+            .name("color")
+            .description("Shows colors when placing")
+            .defaultValue(true)
+            .build()
+    );
+    
+    private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("side-color")
+        .description("The side color of the block overlay.")
+        .defaultValue(new SettingColor(255, 255, 255, 45))
+        .visible(color::get)
+        .build());
 
+    
+    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("line-color")
+        .description("Color of the lines")
+        .defaultValue(new SettingColor(255, 255, 255))
+        .visible(color::get)
+        .build()
+    );
+    private final Setting<SettingColor> sidecolor = sgGeneral.add(new ColorSetting.Builder()
+        .name("side-color")
+        .description("Color of the sides")
+        .defaultValue(new SettingColor(255, 255, 255))
+        .visible(color::get)
+        .build()
+    );
+    private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
+        .name("shape-mode")
+        .description("Shape to render")
+        .defaultValue(ShapeMode.both)
+        .build()
+    );
+    
     public AntiBurrow() {
-        super(Addon.COMBAT, "Anti Burow", "disables a meta on most anarchy servers");
+        super(Addon.COMBAT, "Anti Burrow", "Disables a meta on most anarchy servers");
     }
 
     private long lastPlaceTime = 0;
@@ -113,24 +152,14 @@ public class AntiBurrow extends Module {
         if ((time- lastPlaceTime) < delay.get() * 1000) return;
         lastPlaceTime = time;
 
-
         BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.OAK_BUTTON, Items.BIRCH_BUTTON, Items.ACACIA_BUTTON, Items.DARK_OAK_BUTTON, Items.STONE_BUTTON, Items.SPRUCE_BUTTON), rotate.get(), 0, false);
-        RenderUtils.renderTickingBlock(targetPos, Color.GREEN, Color.GREEN, ShapeMode.Both, 5, 3, true, false);
-
-
-        //ChatUtils.sendMsg("[Snail]", Text.of("A Button has been Placed"));
 
         Vec3d playerPos = mc.player.getPos();
         Vec3d closestPlayerPos = mc.world.getClosestPlayer(playerPos.x, playerPos.y, playerPos.z, 100, false).getPos();
 
-        double x = closestPlayerPos.x - mc.getCameraEntity().getX();
-        double y = closestPlayerPos.y - mc.getCameraEntity().getY();
-        double z = closestPlayerPos.z - mc.getCameraEntity().getZ();
-
         if (autoDisable.get()) {
             this.toggle();
-            ChatUtils.sendMsg((Formatting.RED), "Anti Burrow has been Disabled");
+            ChatUtils.sendMsg(Formatting.RED, "Anti Burrow has been Disabled");
         }
-
     }
 }

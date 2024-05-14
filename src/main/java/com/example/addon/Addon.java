@@ -30,11 +30,10 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
-        LOG.info("Initializing Meteor Addon Template");
+        LOG.info("loading snail++");
 
         // Modules
         Modules.get().add(new AutoEZ());
-        Modules.get().add(new AnchorAuraPlus());
         Modules.get().add(new AutoSand());
         Modules.get().add(new AntiBurrow());
         Modules.get().add(new XPautomation());
@@ -44,7 +43,11 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new PistonPush());
         Modules.get().add(new AntiRush());
         Modules.get().add(new BurrowEsp());
-
+        Modules.get().add(new EchestFarmer());
+        Modules.get().add(new AntiCev());
+        Modules.get().add(new AutoKit());
+        Modules.get().add(new AntiBot());
+        Modules.get().add(new AutoAnchor());
         // HUD
         Hud.get().register(HudExample.INFO);
     }

@@ -3,6 +3,7 @@ package com.example.addon.modules.movement;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import com.example.addon.modules.misc.Notifications;
 
 import com.example.addon.Addon;
 
