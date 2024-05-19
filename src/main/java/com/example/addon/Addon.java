@@ -48,6 +48,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoKit());
         Modules.get().add(new AntiBot());
         Modules.get().add(new AutoAnchor());
+        Modules.get().add(new SnailBomber());
         // HUD
         Hud.get().register(HudExample.INFO);
     }
