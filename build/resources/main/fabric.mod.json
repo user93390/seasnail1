@@ -6,7 +6,8 @@
   "description": "meteor addon looking to improve combat, misc, and movement modules ",
   "authors": [
     "seasnail",
-    "chronosuser"
+    "chronosuser",
+    "silvercato"
   ],
   "contact": {
     "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"

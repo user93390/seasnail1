@@ -32,7 +32,6 @@ import meteordevelopment.meteorclient.events.render.Render2DEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import com.example.addon.modules.misc.Notifications;
 
 import java.util.concurrent.TimeUnit;
 

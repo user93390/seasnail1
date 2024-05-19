@@ -23,7 +23,6 @@ import net.minecraft.network.message.LastSeenMessagesCollector;
 import net.minecraft.network.message.MessageBody;
 import net.minecraft.network.message.MessageSignatureData;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
-import com.example.addon.modules.misc.Notifications;
 
 import java.time.Instant;
 import java.util.HashMap;

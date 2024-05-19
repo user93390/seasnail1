@@ -10,7 +10,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.orbit.EventPriority;
-import com.example.addon.modules.misc.Notifications;
 
 public class AutoKit extends Module {
     
