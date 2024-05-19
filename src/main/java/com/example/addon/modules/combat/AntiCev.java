@@ -132,7 +132,6 @@ public class AntiCev extends Module {
         BlockUtils.breakBlock(crystalWest, false);
 
         if (onlyInHoles.get() && !isSurrounded(mc.player)) {
-            error("You are not in a hole, disabling.");
             return;
         }
 
