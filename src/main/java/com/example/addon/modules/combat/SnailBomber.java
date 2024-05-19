@@ -173,7 +173,7 @@ public class SnailBomber extends Module {
     .build());
     
     private final Setting<Boolean> Debug = sgDebugg.add(new BoolSetting.Builder()
-    .name("debugg")
+    .name("debug")
     .description("debugs the module")
     .defaultValue(true)
     .build());
