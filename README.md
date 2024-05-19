@@ -1,3 +1,3 @@
 snail++
 
-developed meteor addon by @chronosuser and @seasnail1
+developed meteor addon by  @seasnail1, @chronosuser and @silvercato
