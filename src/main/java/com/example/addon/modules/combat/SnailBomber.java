@@ -232,41 +232,21 @@
         .build());
         
         public SnailBomber() {
-            super(Addon.COMBAT, "snail-bomber+", "Explodes crystals. W seasnail1");
-        }
-    public void onActivate() {
-        // Implementation
-    }
-    
-    // onTick method
-    @EventHandler
-    private void onTick(TickEvent.Pre event) {
-        PlayerEntity player = mc.player;
-        FindItemResult crystal = InvUtils.findInHotbar(Items.END_CRYSTAL);
-        PlayerEntity target = TargetUtils.getPlayerTarget(Range.get(), priority.get());
-
-        if(player == null) {
-            return;
-        }
-        if(crystal == null)  {
-            error("no crystals in hotbar...");
-            toggle();
-            return;
-        }
-        if(target == null) {
-            error("no target in range...");
-            toggle();
-            return;
+            super(Addon.COMBAT, "Snail Bomber+", "Explodes crystals.");
         }
     
-        if(target.getHealth() < maxSelfDamage.get()) {
-            // Skip further execution in this method
-            return;
-        }
+        @EventHandler
+        private void onTick(TickEvent.Pre event) {
+            PlayerEntity player = mc.player;
+            FindItemResult crystal = InvUtils.findInHotbar(Items.END_CRYSTAL);
+            PlayerEntity target = TargetUtils.getPlayerTarget(Range.get(), SortPriority.LowestDistance);
     
-        if(crystal != null && target != null && player != null) {
-            BlockPos posWest = target.getBlockPos().west(1);
-            BlockUtils.place(posWest, InvUtils.findInHotbar(Items.END_CRYSTAL), rotate.get(), 0, false);
+            if (player == null || crystal == null || target == null) return;
+    
+            BlockPos playerPos = player.getBlockPos();
+            BlockPos crystalWest = playerPos.west(1);
+    
+            BlockUtils.place(crystalWest, InvUtils.findInHotbar(Items.END_CRYSTAL), rotate.get(), 0, false);
+            BlockUtils.breakBlock(crystalWest, false);
         }
     }
-}

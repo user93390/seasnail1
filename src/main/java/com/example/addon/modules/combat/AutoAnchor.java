@@ -159,7 +159,7 @@ public class AutoAnchor extends Module {
             BlockUtils.breakBlock(targetHeadPos, false);
         }
 
-        RenderUtils.renderTickingBlock(targetHeadPos, color.get(), color.get(), ShapeMode.Both, 5, 5, true, false);
+        RenderUtils.renderTickingBlock(targetHeadPos, color.get(), color.get(), ShapeMode.Both, 5, 5, true, true);
     }
 }
 

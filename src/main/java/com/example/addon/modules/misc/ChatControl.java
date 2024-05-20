@@ -26,7 +26,6 @@ import java.util.UUID;
 import java.time.Instant;
 
 public class ChatControl extends Module {
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgSpammer = settings.createGroup("Spammer");
@@ -95,14 +94,6 @@ public class ChatControl extends Module {
         .name("spam-text")
         .description("Spam text")
         .defaultValue("Snail++ owns all!")
-        .visible(spam::get)
-        .build()
-    );
-
-    private final Setting<Boolean> onlyDm = sgSpammer.add(new BoolSetting.Builder()
-        .name("only-dm")
-        .description("Only spams in people's DMs")
-        .defaultValue(false)
         .visible(spam::get)
         .build()
     );
