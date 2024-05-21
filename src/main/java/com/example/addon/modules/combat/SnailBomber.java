@@ -247,6 +247,5 @@
             BlockPos crystalWest = playerPos.west(1);
     
             BlockUtils.place(crystalWest, InvUtils.findInHotbar(Items.END_CRYSTAL), rotate.get(), 0, false);
-            BlockUtils.breakBlock(crystalWest, false);
         }
     }

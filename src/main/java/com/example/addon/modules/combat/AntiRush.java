@@ -5,13 +5,10 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
@@ -47,6 +44,7 @@ public class AntiRush extends Module {
             .defaultValue(true)
             .build()
     );
+    
 
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
@@ -126,13 +124,20 @@ private void onTick(TickEvent.Pre event) {
     boolean anvilPlaced = BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.ANVIL), rotate.get(), 0, false);
     RenderUtils.renderTickingBlock(targetPos, color.get(), color.get(), ShapeMode.Both, 5, 5, true, false);
 
+    boolean placedAnvil = false;
+
     if (anvilPlaced) {
         ChatUtils.sendMsg(Text.of(Formatting.GREEN + "Placing anvil..."));
 
         if (autoDisable.get()) {
-            toggle();
-            ChatUtils.sendMsg(Text.of(Formatting.GREEN + "Auto-disabling because of auto-disable..."));
+            placedAnvil = true;
         }
     }
-}
+
+    if (placedAnvil && autoDisable.get()) {
+        toggle();
+        ChatUtils.sendMsg(Text.of(Formatting.GREEN + "Auto-disabling because of auto-disable..."));
+        placedAnvil = false;
+     }
+    }
 }

@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+
 import com.example.addon.modules.combat.autoCity;
 
 
@@ -42,6 +43,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoAnchor());
         Modules.get().add(new SnailBomber());
         Modules.get().add(new autoCity());
+        Modules.get().add(new PacketMinePlus());
         // HUD
         Hud.get().register(HudExample.INFO);
     }
