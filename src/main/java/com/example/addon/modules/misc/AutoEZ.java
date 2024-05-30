@@ -46,7 +46,7 @@ public class AutoEZ extends Module {
     );
 
     public AutoEZ() {
-        super(Addon.MISC, "Auto ez+", "Sends a toxic message when a player dies");
+        super(Addon.Snail, "Auto ez+", "Sends a toxic message when a player dies");
     }
 
     @Override

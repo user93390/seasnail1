@@ -11,23 +11,17 @@ import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 
-import com.example.addon.modules.combat.autoCity;
-
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Addon");
-    public static final Category COMBAT = new Category("Combat+");
-    public static final Category MISC = new Category("Misc+");
-    public static final HudGroup HUD_GROUP = new HudGroup("HUD");
-    
+    public static final Category Snail = new Category("Snail++");
+    public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
 
     @Override
     public void onInitialize() {
-        LOG.info("loading snail++");
+        LOG.info("loading snail++...");
 
         // Modules
         Modules.get().add(new AutoEZ());
@@ -50,8 +44,7 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onRegisterCategories() {
-        Modules.registerCategory(COMBAT);
-        Modules.registerCategory(MISC);
+        Modules.registerCategory(Snail);
     }
 
     @Override

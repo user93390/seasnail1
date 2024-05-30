@@ -24,7 +24,7 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 public class autoCity extends Module {
 
     public autoCity() {
-        super(Addon.COMBAT, "Auto City+", "Auto city but better ");
+        super(Addon.Snail, "Auto City+", "Auto city but better ");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -102,3 +102,9 @@ public class autoCity extends Module {
         }
     }
 }
+
+
+/*
+
+
+ */

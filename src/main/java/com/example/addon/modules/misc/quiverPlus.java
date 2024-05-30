@@ -30,7 +30,7 @@ import com.example.addon.Addon;
 
 public class quiverPlus extends Module {
     public quiverPlus() {
-        super(Addon.MISC, "Snail Quiver", "Shoots arrows at yourself.");
+        super(Addon.Snail, "Snail Quiver", "Shoots arrows at yourself.");
          
          final SettingGroup sgGeneral = settings.getDefaultGroup();
          final SettingGroup sgArrows = settings.getDefaultGroup();

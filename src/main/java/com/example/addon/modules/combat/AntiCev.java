@@ -89,7 +89,7 @@ public class AntiCev extends Module {
     );
 
     public AntiCev() {
-        super(Addon.COMBAT, "Anti-Cev", "The best anticev, made by seasnail1.");
+        super(Addon.Snail, "Anti-Cev", "The best anticev, made by seasnail1.");
     }
 
     @EventHandler

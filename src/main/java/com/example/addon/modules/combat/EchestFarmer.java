@@ -60,7 +60,7 @@ public class EchestFarmer extends Module {
     );
 
     public EchestFarmer() {
-        super(Addon.COMBAT, "Echest-farmer+", "Mines enderchests for obsidian");
+        super(Addon.Snail, "Echest-farmer+", "Mines enderchests for obsidian");
     }
 
     @EventHandler

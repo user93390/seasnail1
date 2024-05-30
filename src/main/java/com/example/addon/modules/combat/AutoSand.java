@@ -87,7 +87,7 @@ private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Build
 private long lastPlaceTime = 0;
 
 public AutoSand() {
-    super(Addon.COMBAT, "auto-sand", "Places sand two blocks above players' heads");
+    super(Addon.Snail, "auto-sand", "Places sand two blocks above players' heads");
 }
 
     @EventHandler

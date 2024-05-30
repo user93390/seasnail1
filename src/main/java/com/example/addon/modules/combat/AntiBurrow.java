@@ -64,7 +64,7 @@ public class AntiBurrow extends Module {
             .build());
 
     public AntiBurrow() {
-        super(Addon.COMBAT, "Anti Burrow", "Disables a meta on most anarchy servers");
+        super(Addon.Snail, "Anti Burrow", "Disables a meta on most anarchy servers");
     }
 
     private long lastPlaceTime = 0;

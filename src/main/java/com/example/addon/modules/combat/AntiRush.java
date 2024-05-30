@@ -42,8 +42,7 @@ public class AntiRush extends Module {
             .name("support")
             .description("Places support blocks (recommended)")
             .defaultValue(true)
-            .build()
-    );
+            .build());
     
 
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
@@ -52,8 +51,7 @@ public class AntiRush extends Module {
             .defaultValue(1.0)
             .min(0)
             .sliderMax(5)
-            .build()
-    );
+            .build());
 
 
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
@@ -67,11 +65,10 @@ public class AntiRush extends Module {
             .name("auto-disable")
             .description("Disables the module when you have placed the anvil")
             .defaultValue(true)
-            .build()
-    );
+            .build());
 
     public AntiRush() {
-        super(Addon.COMBAT, "Anti-rush", "Prevents people from rushing your hole by using anvils");
+        super(Addon.Snail, "Anti-rush", "Prevents people from rushing your hole by using anvils");
     }
 
     @EventHandler

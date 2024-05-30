@@ -66,7 +66,7 @@ public class DiscordRPC extends Module {
        .defaultValue(true)
        .build());
        public DiscordRPC() {
-        super(Addon.MISC, "DiscordRPC+", "Snail++ rpc");
+        super(Addon.Snail, "DiscordRPC+", "Snail++ rpc");
     }
 
 

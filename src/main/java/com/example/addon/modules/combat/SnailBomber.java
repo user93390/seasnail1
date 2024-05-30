@@ -232,7 +232,7 @@
         .build());
         
         public SnailBomber() {
-            super(Addon.COMBAT, "Snail Bomber+", "Explodes crystals.");
+            super(Addon.Snail, "Snail Bomber+", "Explodes crystals.");
         }
     
         @EventHandler

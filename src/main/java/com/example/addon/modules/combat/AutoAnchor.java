@@ -81,7 +81,7 @@ public class AutoAnchor extends Module {
     private boolean shouldSwapToGlowstone = false;
 
     public AutoAnchor() {
-        super(Addon.COMBAT, "Auto Anchor", "Automatically places Respawn Anchors near players.");
+        super(Addon.Snail, "Auto Anchor", "Automatically places Respawn Anchors near players.");
     }
 
     @Override

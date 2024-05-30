@@ -11,7 +11,7 @@ public class PlayerUtils {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
 
     public static boolean isSurrounded(PlayerEntity target) {
-        if (target == null) return false;  // Exit if no target is provided
+        if (target == null) return false;
 
         BlockPos north = target.getBlockPos().north();
         BlockPos east = target.getBlockPos().east();

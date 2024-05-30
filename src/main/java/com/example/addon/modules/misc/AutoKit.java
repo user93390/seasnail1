@@ -23,6 +23,6 @@ public class AutoKit extends Module {
     );
 
     public AutoKit() {
-        super(Addon.COMBAT, "Auto-kit", "Rekits when you die.");
+        super(Addon.Snail, "Auto-kit", "Rekits when you die.");
     }
 }

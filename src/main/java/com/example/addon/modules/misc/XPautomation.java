@@ -22,10 +22,17 @@ public class XPautomation extends Module {
     }
 
     public enum RotateMode {
-        Packet,
-        Pitch,
-        None,
+    Packet,
+    Pitch,
+    None,
     }
+    
+    public enum HandMode {
+    offhand,
+    MainHand,
+    RealHand,
+    }
+
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -94,12 +101,19 @@ public class XPautomation extends Module {
             .description("Swings your hand (won't really change anything)")
             .defaultValue(false)
             .build());
+            
+            private final Setting<RotateMode> HandSwing = sgGeneral.add(new EnumSetting.Builder<RotateMode>()
+            .name("swing")
+            .description("swing method")
+            .defaultValue(RotateMode.Packet)
+            .build());
+
 
     private long lastPlaceTime = 0;
     private int originalSlot = -1;
-
+    
     public XPautomation() {
-        super(Addon.MISC, "Auto-XP+", "Better auto-XP");
+        super(Addon.Snail, "Auto-XP+", "Better auto-XP");
     }
 
     @Override
@@ -108,14 +122,12 @@ public class XPautomation extends Module {
             ChatUtils.info("Your armor is at full HP, disabling...");
             toggle();
         }
-
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if (exp.found() && !exp.isHotbar() && !exp.isOffhand()) {
             originalSlot = exp.slot();
             InvUtils.move().from(exp.slot()).toHotbar(slot.get() - 1);
         }
     }
-
     @Override
     public void onDeactivate() {
         if (originalSlot != -1) {
@@ -126,20 +138,13 @@ public class XPautomation extends Module {
             }
         }
     }
-
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : delay.get();
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
-
         long time = System.currentTimeMillis();
-        if ((time - lastPlaceTime) < currentDelay * 1000)
-            return;
-
+        if ((time - lastPlaceTime) < currentDelay * 1000)return;
         lastPlaceTime = time;
-       
-
-
         if (autoSwitch.get() == AutoSwitchMode.Normal) {
             if (exp.found()) {
                 if (exp.isHotbar()) {
@@ -164,7 +169,8 @@ public class XPautomation extends Module {
                     }
                 }
             }
-        } else if (autoSwitch.get() == AutoSwitchMode.Silent) {
+        } 
+         if (autoSwitch.get() == AutoSwitchMode.Silent) {
             if (exp.found()) {
                 if (exp.isHotbar()) {
                     if (rotate.get() == RotateMode.Pitch) {
@@ -195,12 +201,10 @@ public class XPautomation extends Module {
                 }
             }
         }
-
-
     }
 
     private boolean isArmorFullDurability() {
         return StreamSupport.stream(mc.player.getArmorItems().spliterator(), false)
-                .allMatch(itemStack -> itemStack.getDamage() == 0);
+        .allMatch(itemStack -> itemStack.getDamage() == 0);
     }
 }
