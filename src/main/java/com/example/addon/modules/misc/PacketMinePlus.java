@@ -1,13 +1,22 @@
 package com.example.addon.modules.misc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.example.addon.Addon;
-import com.example.addon.utils.colorUtils;
+
+import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.EnumSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
@@ -17,17 +26,6 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
-import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
-import meteordevelopment.meteorclient.utils.render.color.Color;
-import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.util.math.Box;
-import  com.example.addon.utils.colorUtils;
-import java.util.ArrayList;
-import java.util.List;
 
 public class PacketMinePlus extends Module {
 
@@ -131,21 +129,5 @@ public class PacketMinePlus extends Module {
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN));
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN));
         mc.player.swingHand(Hand.MAIN_HAND);
-    }
-
-    @EventHandler
-    private void onRender(Render3DEvent event) {
-        for (BlockPos blockPos : blocksToMine) {
-            VoxelShape shape = mc.world.getBlockState(blockPos).getOutlineShape(mc.world, blockPos);
-            Box boundingBox = shape.getBoundingBox();
-
-            double progress = Math.min(10, mineProgress + 1);
-            double delayFactor = progress / 10.0;
-
-            Color color1 = new Color(gradientColor1.get().r, gradientColor1.get().g, gradientColor1.get().b, gradientColor1.get().a);
-            Color color2 = new Color(gradientColor2.get().r, gradientColor2.get().g, gradientColor2.get().b, gradientColor2.get().a);
-
-            colorUtils.colorFade(event.renderer, boundingBox, blockPos, ShapeMode.Both, color1, color2, delayFactor);
-        }
     }
 }

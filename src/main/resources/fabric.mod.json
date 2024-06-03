@@ -5,9 +5,7 @@
   "name": "snail++",
   "description": "Meteor addon",
   "authors": [
-    "seasnail1",
-    "chronosuser",
-    "silvercato"
+    "seasnail1"
   ],
   "contact": {
     "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"
@@ -27,7 +25,7 @@
   },
   "depends": {
     "java": ">=17",
-    "minecraft": ">=${mc_version}",
+    "minecraft": ">=1.20.4 <=1.20.6",
     "meteor-client": "*"
   }
 }

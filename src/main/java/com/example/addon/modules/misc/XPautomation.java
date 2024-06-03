@@ -22,17 +22,17 @@ public class XPautomation extends Module {
     }
 
     public enum RotateMode {
-    Packet,
-    Pitch,
-    None,
+        Packet,
+        Pitch,
+        None,
     }
     
     public enum HandMode {
-    offhand,
-    MainHand,
-    RealHand,
+        Offhand,
+        MainHand,
+        Packet,
+        none
     }
-
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -87,7 +87,7 @@ public class XPautomation extends Module {
             .sliderMax(9)
             .build());
 
-    private final Setting<Integer> Pitch = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
             .name("pitch")
             .description("Where to set pitch.")
             .defaultValue(90)
@@ -96,18 +96,17 @@ public class XPautomation extends Module {
             .visible(() -> rotate.get() == RotateMode.Pitch)
             .build());
 
-            private final Setting<Boolean> Swing = sgGeneral.add(new BoolSetting.Builder()
-            .name("Swing hand")
+    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
+            .name("swing-hand")
             .description("Swings your hand (won't really change anything)")
             .defaultValue(false)
             .build());
-            
-            private final Setting<RotateMode> HandSwing = sgGeneral.add(new EnumSetting.Builder<RotateMode>()
-            .name("swing")
-            .description("swing method")
-            .defaultValue(RotateMode.Packet)
-            .build());
 
+    private final Setting<HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<HandMode>()
+            .name("swing")
+            .description("Swing method")
+            .defaultValue(HandMode.MainHand)
+            .build());
 
     private long lastPlaceTime = 0;
     private int originalSlot = -1;
@@ -118,18 +117,97 @@ public class XPautomation extends Module {
 
     @Override
     public void onActivate() {
-        if (smartMode.get() && isArmorFullDurability()) {
+        checkArmorDurability();
+        moveXPBottleToHotbar();
+    }
+
+    @Override
+    public void onDeactivate() {
+        returnXPBottleToOriginalSlot();
+    }
+
+    @EventHandler
+    private void onTick(TickEvent.Pre event) {
+        if (isArmorFullDurability() && smartMode.get()) {
             ChatUtils.info("Your armor is at full HP, disabling...");
             toggle();
+            return;
         }
+
+        if (mc.player.getHealth() <= health.get()) {
+            return;
+        }
+
+        double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : delay.get();
+        long time = System.currentTimeMillis();
+
+        if ((time - lastPlaceTime) < currentDelay * 1000) return;
+        lastPlaceTime = time;
+
+        FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
+        if (!exp.found() || !exp.isHotbar()) return;
+
+        switch (rotate.get()) {
+            case Pitch:
+                mc.player.setPitch(pitch.get());
+                break;
+            case Packet:
+                Rotations.rotate(mc.player.getYaw(), 90);
+                break;
+            default:
+                break;
+        }
+
+        if (autoSwitch.get() == AutoSwitchMode.Normal) {
+            useXPBottle(exp);
+        } else if (autoSwitch.get() == AutoSwitchMode.Silent) {
+            silentUseXPBottle(exp);
+        }
+    }
+
+    private void useXPBottle(FindItemResult exp) {
+        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+        swingHand();
+    }
+
+    private void silentUseXPBottle(FindItemResult exp) {
+        InvUtils.swap(exp.slot(), true);
+        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+        swingHand();
+        InvUtils.swapBack();
+    }
+
+    private void swingHand() {
+        if (swing.get()) {
+            switch (handSwing.get()) {
+                case MainHand:
+                    mc.player.swingHand(Hand.MAIN_HAND);
+                    break;
+                case Offhand:
+                    mc.player.swingHand(Hand.OFF_HAND);
+                    break;
+                case Packet:
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                    break;
+                case none:
+
+                break;
+                
+                    default:
+                    break;
+            }
+        }
+    }
+
+    private void moveXPBottleToHotbar() {
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if (exp.found() && !exp.isHotbar() && !exp.isOffhand()) {
             originalSlot = exp.slot();
             InvUtils.move().from(exp.slot()).toHotbar(slot.get() - 1);
         }
     }
-    @Override
-    public void onDeactivate() {
+
+    private void returnXPBottleToOriginalSlot() {
         if (originalSlot != -1) {
             FindItemResult exp = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE);
             if (exp.found()) {
@@ -138,73 +216,16 @@ public class XPautomation extends Module {
             }
         }
     }
-    @EventHandler
-    private void onTick(TickEvent.Pre event) {
-        double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : delay.get();
-        FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
-        long time = System.currentTimeMillis();
-        if ((time - lastPlaceTime) < currentDelay * 1000)return;
-        lastPlaceTime = time;
-        if (autoSwitch.get() == AutoSwitchMode.Normal) {
-            if (exp.found()) {
-                if (exp.isHotbar()) {
-                    if (rotate.get() == RotateMode.Pitch) {
-                        mc.player.setPitch(Pitch.get());
-                        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                        if(Swing.get()) {
-                            mc.player.swingHand(Hand.MAIN_HAND);
-                        }
-                    } else if (rotate.get() == RotateMode.Packet) {
-                        Rotations.rotate(mc.player.getYaw(), 90, () -> mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND));
-                        if(Swing.get()) {
-                            mc.player.swingHand(Hand.MAIN_HAND);
-                        }
-                    
-                    } else {
-                        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                        if(Swing.get()) {
-                            mc.player.swingHand(Hand.MAIN_HAND);
-                        }
-                        
-                    }
-                }
-            }
-        } 
-         if (autoSwitch.get() == AutoSwitchMode.Silent) {
-            if (exp.found()) {
-                if (exp.isHotbar()) {
-                    if (rotate.get() == RotateMode.Pitch) {
-                        mc.player.setPitch(Pitch.get());
-                        InvUtils.swap(exp.slot(), true);
-                        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                        if(Swing.get()) {
-                            mc.player.swingHand(Hand.MAIN_HAND);
-                        }
-                        InvUtils.swapBack();
-                    } else if (rotate.get() == RotateMode.Packet) {
-                        Rotations.rotate(mc.player.getYaw(), 90, () -> {
-                            InvUtils.swap(exp.slot(), true);
-                            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                            if(Swing.get()) {
-                                mc.player.swingHand(Hand.MAIN_HAND);
-                            }
-                            InvUtils.swapBack();
-                        });
-                    } else {
-                        InvUtils.swap(exp.slot(), true);
-                        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                        if(Swing.get()) {
-                            mc.player.swingHand(Hand.MAIN_HAND);
-                        }
-                        InvUtils.swapBack();
-                    }
-                }
-            }
+
+    private void checkArmorDurability() {
+        if (smartMode.get() && isArmorFullDurability()) {
+            ChatUtils.info("Your armor is at full HP, disabling...");
+            toggle();
         }
     }
 
     private boolean isArmorFullDurability() {
         return StreamSupport.stream(mc.player.getArmorItems().spliterator(), false)
-        .allMatch(itemStack -> itemStack.getDamage() == 0);
+                .allMatch(itemStack -> itemStack.getDamage() == 0);
     }
 }
