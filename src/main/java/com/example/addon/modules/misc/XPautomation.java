@@ -123,6 +123,7 @@ public class XPautomation extends Module {
 
     @Override
     public void onDeactivate() {
+
         returnXPBottleToOriginalSlot();
     }
 

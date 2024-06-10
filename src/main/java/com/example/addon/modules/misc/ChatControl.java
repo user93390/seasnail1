@@ -95,6 +95,7 @@ public class ChatControl extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
+            
             if (!visual.get() || alertedPlayers.size() >= maxAmount.get()) return;
 
             MinecraftClient mc = MinecraftClient.getInstance();
