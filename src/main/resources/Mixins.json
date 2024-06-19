@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "package": "org.Snail.Plus.addon.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

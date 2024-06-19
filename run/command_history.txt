@@ -1,0 +1,11 @@
+/give Player89 minecraft:obsidian
+/give Player89 minecraft:anvil
+/gamemode survival
+/give Player78 minecraft:glowstone 64
+/give Player78 minecraft:respawn_anchor 64
+/gamemode creative
+/gamerule doFireTick false
+/give Player218 minecraft:diamond_pickaxe 1
+/gamemode survival
+/gamemode creative
+/gamemode survival

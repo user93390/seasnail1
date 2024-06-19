@@ -101,22 +101,22 @@ public class AutoSand extends Module {
 
         lastPlaceTime = time;
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if (target == null || TargetUtils.isBadTarget(target, range.get())) return;
+        if(TargetUtils.isBadTarget(target, range.get())) return;
 
+        FindItemResult Sand = InvUtils.findInHotbar(Items.SAND, Items.RED_SAND, Items.GRAVEL);
+        FindItemResult Support = InvUtils.findInHotbar(Items.OBSIDIAN);
         BlockPos targetPos = target.getBlockPos().up(height.get());
 
-        if (mc.world.getBlockState(targetPos).getBlock().equals(Blocks.AIR)) {
-            FindItemResult Sand = InvUtils.findInHotbar(Items.SAND, Items.RED_SAND, Items.GRAVEL);
-            FindItemResult Support = InvUtils.findInHotbar(Items.OBSIDIAN);
-            if(Sand == null) return;
+        if (mc.world.getBlockState(targetPos).getBlock().equals(Blocks.AIR) && Sand != null && target != null) {
+
             if (support.get()) {
                 BlockPos supportPosNorth = target.getBlockPos().north(1);
                 BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
                 BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
 
                 BlockUtils.place(supportPosNorth, Support, rotate.get(), 0, false);
-                BlockUtils.place(supportPosNorthUpOne, Support, rotate.get(), 0, false);
-                BlockUtils.place(supportPosNorthUpTwo, Support, rotate.get(), 0, false);
+                BlockUtils.place(supportPosNorthUpOne, Support, rotate.get(), 0, true);
+                BlockUtils.place(supportPosNorthUpTwo, Support, rotate.get(), 0, true);
             }
 
             BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.SAND, Items.RED_SAND, Items.GRAVEL), rotate.get(), 0, false);

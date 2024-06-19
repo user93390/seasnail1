@@ -1,6 +1,6 @@
 package org.Snail.Plus.modules.combat;
 
-import org.Snail.Plus.utils.PlayerUtils;
+import org.Snail.Plus.utils.CombatUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -8,20 +8,18 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import org.Snail.Plus.Addon;
 
 
 public class AutoTrap extends Module {
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> Delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
@@ -82,13 +80,6 @@ public class AutoTrap extends Module {
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
-    private final Setting<Integer> rendertime = sgGeneral.add(new IntSetting.Builder()
-            .name("render time")
-            .description("render time")
-            .defaultValue(3)
-            .sliderMax(100)
-            .sliderMin(1)
-            .build());
     private final Setting<RenderMode> renderMode = sgGeneral.add(new EnumSetting.Builder<RenderMode>()
             .name("render mode")
             .description("render mode")
@@ -100,47 +91,85 @@ public class AutoTrap extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
     private long lastPlaceTime = 0;
-    private BlockPos currentPos;
 
     public AutoTrap() {
-        super(Addon.Snail, "Auto Trap+", "Traps players using blocks, has compatibility with other modules");
+        super(Addon.Snail, "Auto Trap+", "Traps players using blocks");
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+
         long time = System.currentTimeMillis();
         if ((time - lastPlaceTime) < Delay.get() * 1000) return;
         lastPlaceTime = time;
-        PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        FindItemResult Block = InvUtils.findInHotbar(Items.OBSIDIAN);
-        if (mc.world.getDimension().respawnAnchorWorks()) {
-            ChatUtils.sendMsg(Text.of("cannot use anchors in this dimension."));
-        }
-        if (target != null && Block != null && !mc.player.isRiding() && !mc.world.getDimension().respawnAnchorWorks()) {
-            BlockPos HeadPos = target.getBlockPos().up(2);
 
-            if (PlayerUtils.isCentered(target)) {
-                if (OnlySurrounded.get() && PlayerUtils.isSurrounded(target)) {
+        PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+
+        if (CombatUtils.isCentered(target) && target instanceof PlayerEntity) {
+                if (OnlySurrounded.get() && CombatUtils.isSurrounded(target)) {
                     if (Mode.get() == TrapMode.head) {
+                        System.out.println("Placing head blocks");
                         placeTopBlocks(target);
-                        currentPos = HeadPos;
+
                     } else if (Mode.get() == TrapMode.full) {
+                        System.out.println("placing Full blocks");
                         placeFullBlocks(target);
                     } else if (Mode.get() == TrapMode.face) {
                         PlaceFaceBlocks(target);
                     }
                 }
             }
-            if (!AirPlace.get() && PlayerUtils.isCentered(target)) {
-                PlaceSupportBlocks(target);
-            }
+            if (!AirPlace.get() && CombatUtils.isCentered(target)) {
+                if(OnlySurrounded.get() && CombatUtils.isSurrounded(target)) {
+                    PlaceSupportBlocks(target);
+                }
         }
     }
 
+    @EventHandler
     private void TrapRender(Render3DEvent event) {
-        event.renderer.box(currentPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
-    }
+        PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+        if(target != null) {
+            BlockPos FullPosSouth = target.getBlockPos().south(1).up(1);
+            BlockPos FullPosNorth = target.getBlockPos().north(1).up(1);
+            BlockPos FullPosWest = target.getBlockPos().west(1).up(1);
+            BlockPos FullPosEast = target.getBlockPos().east(1).up(1);
+            BlockPos FullPosSouth1 = target.getBlockPos().south(1).up(2);
+            BlockPos FullPosNorth1 = target.getBlockPos().north(1).up(2);
+            BlockPos FullPosWest1 = target.getBlockPos().west(1).up(2);
+            BlockPos FullPosEast1 = target.getBlockPos().east(1).up(2);
+            BlockPos HeadPos = target.getBlockPos().up(2);
 
+            if (Mode.get() == TrapMode.head) {
+                event.renderer.box(HeadPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+
+            } else if (Mode.get() == TrapMode.full) {
+                event.renderer.box(FullPosSouth, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                event.renderer.box(FullPosEast, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                event.renderer.box(FullPosNorth, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                event.renderer.box(FullPosWest, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+
+                if (AntiStep.get()) {
+                    event.renderer.box(FullPosSouth1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                    event.renderer.box(FullPosEast1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                    event.renderer.box(FullPosNorth1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                    event.renderer.box(FullPosWest1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                }
+                event.renderer.box(HeadPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+            }
+        }
+    }
+    @EventHandler
+    private void SupportRender(Render3DEvent event) {
+        PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+        if(!AirPlace.get() && target != null) {
+            BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
+            BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
+
+            event.renderer.box(supportPosNorthUpOne, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+            event.renderer.box(supportPosNorthUpTwo, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+        }
+    }
     private void placeFullBlocks(PlayerEntity target) {
 
         BlockPos HeadPos = target.getBlockPos().up(2);
@@ -206,12 +235,11 @@ public class AutoTrap extends Module {
     }
 
     private void PlaceSupportBlocks(PlayerEntity target) {
-        BlockPos supportPosNorth = target.getBlockPos().north(1);
+        if(OnlySurrounded.get() && !CombatUtils.isSurrounded(target)) return;
         BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
         BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
 
 
-        BlockUtils.place(supportPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
         BlockUtils.place(supportPosNorthUpOne, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
         BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
     }

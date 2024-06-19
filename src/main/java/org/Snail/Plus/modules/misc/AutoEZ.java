@@ -1,31 +1,32 @@
 package org.Snail.Plus.modules.misc;
 
-import org.Snail.Plus.Addon;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.events.entity.EntityRemovedEvent;
+import meteordevelopment.meteorclient.mixin.ClientPlayNetworkHandlerAccessor;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.StringSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.Entity;
-import meteordevelopment.meteorclient.events.entity.EntityRemovedEvent;
-import meteordevelopment.meteorclient.mixin.ClientPlayNetworkHandlerAccessor;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.encryption.NetworkEncryptionUtils;
 import net.minecraft.network.message.LastSeenMessagesCollector;
 import net.minecraft.network.message.MessageBody;
 import net.minecraft.network.message.MessageSignatureData;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
+import org.Snail.Plus.Addon;
+
 import java.time.Instant;
-import net.minecraft.network.encryption.NetworkEncryptionUtils;
 
 public class AutoEZ extends Module {
     private Thread thread;
     private volatile boolean running;
 
     final SettingGroup sgGeneral = settings.getDefaultGroup();
-
-
-
 
    private final Setting<Boolean> global = sgGeneral.add(new BoolSetting.Builder()
         .name("global-chat")

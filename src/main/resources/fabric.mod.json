@@ -3,22 +3,22 @@
   "id": "snailplus",
   "version": "2.0",
   "name": "snail++",
-  "description": "Meteor addon",
+  "description": "meteor addon to make meteor client better",
   "authors": [
     "seasnail1"
   ],
   "contact": {
-    "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"
+    "repo": "https://discord.gg/mZrSMrNfMw"
   },
   "icon": "assets/snail++/icon.png",
   "environment": "client",
   "entrypoints": {
     "meteor": [
-      "com.example.addon.Addon"
+      "org.Snail.Plus.Addon"
     ]
   },
   "mixins": [
-    "addon-template.mixins.json"
+    "Mixins.json"
   ],
   "custom": {
     "meteor-client:color": "225,25,25"

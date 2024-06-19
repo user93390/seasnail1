@@ -1,0 +1,202 @@
+---- Minecraft Crash Report ----
+// Don't do that.
+
+Time: 2024-06-16 19:51:17
+Description: mouseReleased event handler
+
+meteordevelopment.orbit.NoLambdaFactoryException: No registered lambda listener for 'org.Snail.Plus.modules.combat.SnailBomber'.
+	at meteordevelopment.orbit.EventBus.getLambdaFactory(EventBus.java:188)
+	at meteordevelopment.orbit.EventBus.getListeners(EventBus.java:166)
+	at meteordevelopment.orbit.EventBus.lambda$getListeners$2(EventBus.java:146)
+	at meteordevelopment.orbit.EventBus.getListeners(EventBus.java:158)
+	at meteordevelopment.orbit.EventBus.subscribe(EventBus.java:77)
+	at meteordevelopment.meteorclient.systems.modules.Module.toggle(Module.java:73)
+	at meteordevelopment.meteorclient.gui.themes.meteor.widgets.WMeteorModule.onPressed(WMeteorModule.java:59)
+	at meteordevelopment.meteorclient.gui.widgets.pressable.WPressable.onMouseReleased(WPressable.java:27)
+	at meteordevelopment.meteorclient.gui.widgets.WWidget.mouseReleased(WWidget.java:96)
+	at meteordevelopment.meteorclient.gui.widgets.containers.WContainer.mouseReleased(WContainer.java:142)
+	at meteordevelopment.meteorclient.gui.widgets.containers.WContainer.mouseReleased(WContainer.java:142)
+	at meteordevelopment.meteorclient.gui.widgets.containers.WContainer.mouseReleased(WContainer.java:142)
+	at meteordevelopment.meteorclient.gui.widgets.containers.WContainer.mouseReleased(WContainer.java:142)
+	at meteordevelopment.meteorclient.gui.WidgetScreen.mouseReleased(WidgetScreen.java:136)
+	at net.minecraft.client.Mouse.method_1605(Mouse.java:103)
+	at net.minecraft.client.gui.screen.Screen.wrapScreenError(Screen.java:467)
+	at net.minecraft.client.Mouse.onMouseButton(Mouse.java:103)
+	at net.minecraft.client.Mouse.method_22686(Mouse.java:186)
+	at net.minecraft.util.thread.ThreadExecutor.execute(ThreadExecutor.java:108)
+	at net.minecraft.client.Mouse.method_22684(Mouse.java:186)
+	at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43)
+	at org.lwjgl.system.JNI.invokeV(Native Method)
+	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3438)
+	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:200)
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:218)
+	at net.minecraft.client.util.Window.swapBuffers(Window.java:287)
+	at net.minecraft.client.MinecraftClient.render(MinecraftClient.java:1342)
+	at net.minecraft.client.MinecraftClient.run(MinecraftClient.java:888)
+	at net.minecraft.client.main.Main.main(Main.java:265)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: Render thread
+Stacktrace:
+	at meteordevelopment.orbit.EventBus.getLambdaFactory(EventBus.java:188)
+	at meteordevelopment.orbit.EventBus.getListeners(EventBus.java:166)
+	at meteordevelopment.orbit.EventBus.lambda$getListeners$2(EventBus.java:146)
+	at meteordevelopment.orbit.EventBus.getListeners(EventBus.java:158)
+	at meteordevelopment.orbit.EventBus.subscribe(EventBus.java:77)
+	at meteordevelopment.meteorclient.systems.modules.Module.toggle(Module.java:73)
+	at meteordevelopment.meteorclient.gui.themes.meteor.widgets.WMeteorModule.onPressed(WMeteorModule.java:59)
+	at meteordevelopment.meteorclient.gui.widgets.pressable.WPressable.onMouseReleased(WPressable.java:27)
+	at meteordevelopment.meteorclient.gui.widgets.WWidget.mouseReleased(WWidget.java:96)
+	at meteordevelopment.meteorclient.gui.widgets.containers.WContainer.mouseReleased(WContainer.java:142)
+	at meteordevelopment.meteorclient.gui.widgets.containers.WContainer.mouseReleased(WContainer.java:142)
+	at meteordevelopment.meteorclient.gui.widgets.containers.WContainer.mouseReleased(WContainer.java:142)
+	at meteordevelopment.meteorclient.gui.widgets.containers.WContainer.mouseReleased(WContainer.java:142)
+	at meteordevelopment.meteorclient.gui.WidgetScreen.mouseReleased(WidgetScreen.java:136)
+	at net.minecraft.client.Mouse.method_1605(Mouse.java:103)
+	at net.minecraft.client.gui.screen.Screen.wrapScreenError(Screen.java:467)
+	at net.minecraft.client.Mouse.onMouseButton(Mouse.java:103)
+	at net.minecraft.client.Mouse.method_22686(Mouse.java:186)
+	at net.minecraft.util.thread.ThreadExecutor.execute(ThreadExecutor.java:108)
+	at net.minecraft.client.Mouse.method_22684(Mouse.java:186)
+	at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43)
+	at org.lwjgl.system.JNI.invokeV(Native Method)
+	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3438)
+	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:200)
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:218)
+
+-- Affected screen --
+Details:
+	Screen name: meteordevelopment.meteorclient.gui.screens.ModulesScreen
+Stacktrace:
+	at net.minecraft.client.gui.screen.Screen.wrapScreenError(Screen.java:467)
+	at net.minecraft.client.Mouse.onMouseButton(Mouse.java:103)
+	at net.minecraft.client.Mouse.method_22686(Mouse.java:186)
+	at net.minecraft.util.thread.ThreadExecutor.execute(ThreadExecutor.java:108)
+	at net.minecraft.client.Mouse.method_22684(Mouse.java:186)
+	at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43)
+	at org.lwjgl.system.JNI.invokeV(Native Method)
+	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3438)
+	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:200)
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:218)
+	at net.minecraft.client.util.Window.swapBuffers(Window.java:287)
+	at net.minecraft.client.MinecraftClient.render(MinecraftClient.java:1342)
+	at net.minecraft.client.MinecraftClient.run(MinecraftClient.java:888)
+	at net.minecraft.client.main.Main.main(Main.java:265)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+
+-- Uptime --
+Details:
+	JVM uptime: 34.452s
+	Wall uptime: 24.889s
+	High-res time: 24.331s
+	Client ticks: 370 ticks / 18.500s
+Stacktrace:
+	at net.minecraft.client.MinecraftClient.addDetailsToCrashReport(MinecraftClient.java:2548)
+	at net.minecraft.client.MinecraftClient.printCrashReport(MinecraftClient.java:983)
+	at net.minecraft.client.MinecraftClient.run(MinecraftClient.java:908)
+	at net.minecraft.client.main.Main.main(Main.java:265)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+
+-- Affected level --
+Details:
+	All players: 1 total; [ClientPlayerEntity['Player688'/4, l='ClientLevel', x=16.15, y=-60.00, z=-12.17]]
+	Chunk stats: 1521, 1021
+	Level dimension: minecraft:overworld
+	Level spawn location: World: (0,-60,0), Section: (at 0,4,0 in 0,-4,0; chunk contains blocks 0,-64,0 to 15,319,15), Region: (0,0; contains chunks 0,0 to 31,31, blocks 0,-64,0 to 511,319,511)
+	Level time: 2026 game time, 2026 day time
+	Server brand: fabric
+	Server type: Integrated singleplayer server
+	Tracked entity count: 27
+
+-- Last reload --
+Details:
+	Reload number: 1
+	Reload reason: initial
+	Finished: Yes
+	Packs: vanilla, fabric, fabric-resource-loader-v0, fabricloader, meteor-client
+
+-- System Details --
+Details:
+	Minecraft Version: 1.20.6
+	Minecraft Version ID: 1.20.6
+	Operating System: Windows 11 (amd64) version 10.0
+	Java Version: 21.0.3, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode, sharing), Oracle Corporation
+	Memory: 424651008 bytes (404 MiB) / 1174405120 bytes (1120 MiB) up to 8493465600 bytes (8100 MiB)
+	CPUs: 32
+	Processor Vendor: GenuineIntel
+	Processor Name: 13th Gen Intel(R) Core(TM) i9-13980HX
+	Identifier: Intel64 Family 6 Model 183 Stepping 1
+	Microarchitecture: Raptor Lake
+	Frequency (GHz): 2.42
+	Number of physical packages: 1
+	Number of physical CPUs: 24
+	Number of logical CPUs: 32
+	Graphics card #0 name: NVIDIA GeForce RTX 4060 Laptop GPU
+	Graphics card #0 vendor: NVIDIA
+	Graphics card #0 VRAM (MB): 8188.00
+	Graphics card #0 deviceId: VideoController1
+	Graphics card #0 versionInfo: 32.0.15.5599
+	Graphics card #1 name: Intel(R) UHD Graphics
+	Graphics card #1 vendor: Intel Corporation
+	Graphics card #1 VRAM (MB): 1024.00
+	Graphics card #1 deviceId: VideoController2
+	Graphics card #1 versionInfo: 31.0.101.4502
+	Memory slot #0 capacity (MB): 16384.00
+	Memory slot #0 clockSpeed (GHz): 4.80
+	Memory slot #0 type: Unknown
+	Memory slot #1 capacity (MB): 16384.00
+	Memory slot #1 clockSpeed (GHz): 4.80
+	Memory slot #1 type: Unknown
+	Virtual memory max (MB): 37250.62
+	Virtual memory used (MB): 24834.90
+	Swap memory total (MB): 4864.00
+	Swap memory used (MB): 101.46
+	JVM Flags: 0 total; 
+	Launched Version: Fabric
+	Backend library: LWJGL version 3.3.3-snapshot
+	Backend API: NVIDIA GeForce RTX 4060 Laptop GPU/PCIe/SSE2 GL version 3.2.0 NVIDIA 555.99, NVIDIA Corporation
+	Window size: 1920x1080
+	GL Caps: Using framebuffer using OpenGL 3.2
+	GL debug messages: 
+	Using VBOs: Yes
+	Is Modded: Definitely; Client brand changed to 'fabric'; Server brand changed to 'fabric'
+	Universe: 400921fb54442d18
+	Type: Integrated Server (map_client.txt)
+	Graphics mode: fabulous
+	Render Distance: 16/16 chunks
+	Resource Packs: vanilla, fabric, fabric-resource-loader-v0, fabricloader, meteor-client
+	Current Language: en_us
+	Locale: en_CA
+	CPU: 32x 13th Gen Intel(R) Core(TM) i9-13980HX
+	Server Running: true
+	Player Count: 1 / 8; [ServerPlayerEntity['Player688'/4, l='ServerLevel[New World]', x=16.15, y=-60.00, z=-12.17]]
+	Active Data Packs: vanilla, fabric
+	Available Data Packs: bundle, fabric, trade_rebalance, update_1_21, vanilla
+	Enabled Feature Flags: minecraft:vanilla
+	World Generation: Stable
+	World Seed: 3632775456481856956
+
+-- Meteor Client --
+
+Version: 0.5.7
+Dev Build: 2099
+
+[[ Active Modules ]]
+
+[Snail++]:
+Snail Bomber+
