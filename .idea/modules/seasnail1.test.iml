@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.id="seasnail1:test" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="GRADLE" external.system.module.group="com.example" external.system.module.type="sourceSet" external.system.module.version="" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="minecraft" name="Minecraft">
+      <configuration>
+        <autoDetectTypes>
+          <platformType>FABRIC</platformType>
+          <platformType>MIXIN</platformType>
+          <platformType>MCP</platformType>
+        </autoDetectTypes>
+        <projectReimportVersion>1</projectReimportVersion>
+      </configuration>
+    </facet>
+  </component>
+  <component name="McpModuleSettings">
+    <option name="srgType" value="SRG" />
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../src/test" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="seasnail1.main" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm:9.6" level="project" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm-analysis:9.6" level="project" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm-commons:9.6" level="project" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm-tree:9.6" level="project" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm-util:9.6" level="project" />
+    <orderEntry type="library" name="Gradle: net.fabricmc:sponge-mixin:0.13.3+mixin.0.8.5" level="project" />
+    <orderEntry type="library" name="Gradle: io.github.llamalad7:mixinextras-fabric:0.3.5" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.oshi:oshi-core:6.4.10" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.10.1" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.guava:failureaccess:1.0.1" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.guava:guava:32.1.2-jre" level="project" />
+    <orderEntry type="library" name="Gradle: com.ibm.icu:icu4j:73.2" level="project" />
+    <orderEntry type="library" name="Gradle: com.mojang:authlib:6.0.54" level="project" />
+    <orderEntry type="library" name="Gradle: com.mojang:blocklist:1.0.10" level="project" />
+    <orderEntry type="library" name="Gradle: com.mojang:brigadier:1.2.9" level="project" />
+    <orderEntry type="library" name="Gradle: com.mojang:datafixerupper:7.0.14" level="project" />
+    <orderEntry type="library" name="Gradle: com.mojang:logging:1.2.7" level="project" />
+    <orderEntry type="library" name="Gradle: com.mojang:patchy:2.2.10" level="project" />
+    <orderEntry type="library" name="Gradle: com.mojang:text2speech:1.17.9" level="project" />
+    <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.16.0" level="project" />
+    <orderEntry type="library" name="Gradle: commons-io:commons-io:2.15.1" level="project" />
+    <orderEntry type="library" name="Gradle: commons-logging:commons-logging:1.2" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-buffer:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-codec:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-common:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-handler:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-resolver:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-transport-classes-epoll:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-transport-native-unix-common:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-transport:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: it.unimi.dsi:fastutil:8.5.12" level="project" />
+    <orderEntry type="library" name="Gradle: net.java.dev.jna:jna-platform:5.14.0" level="project" />
+    <orderEntry type="library" name="Gradle: net.java.dev.jna:jna:5.14.0" level="project" />
+    <orderEntry type="library" name="Gradle: net.sf.jopt-simple:jopt-simple:5.0.4" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.commons:commons-compress:1.26.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.14.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpclient:4.5.13" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore:4.4.16" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-api:2.22.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-core:2.22.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-slf4j2-impl:2.22.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.jcraft:jorbis:0.0.17" level="project" />
+    <orderEntry type="library" name="Gradle: org.joml:joml:1.10.5" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-freetype:3.3.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-glfw:3.3.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-jemalloc:3.3.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-openal:3.3.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-opengl:3.3.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-stb:3.3.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl-tinyfd:3.3.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lwjgl:lwjgl:3.3.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.lz4:lz4-java:1.8.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:2.0.9" level="project" />
+    <orderEntry type="library" name="Gradle: net.minecraft:minecraft-merged-3848b19350:1.20.6-net.fabricmc.yarn.1_20_6.1.20.6+build.3-v2" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-transport-native-epoll:linux-aarch_64:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-transport-native-epoll:linux-x86_64:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Gradle: net.fabricmc:fabric-loader:0.15.11" level="project" />
+    <orderEntry type="library" name="Gradle: net_fabricmc_yarn_1_20_6_1_20_6_build_3_v2.meteordevelopment:meteor-client:0.5.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.jetbrains:annotations:24.1.0" level="project" />
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.gradle/caches/fabric-loom/1.20.6/net.fabricmc.yarn.1_20_6.1.20.6+build.3-v2/mappings.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: net.fabricmc:dev-launch-injector:0.2.1+build.8" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: net.minecrell:terminalconsoleappender:1.3.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-freetype:natives-windows:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-freetype:natives-windows-arm64:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-freetype:natives-windows-x86:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-glfw:natives-windows:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-glfw:natives-windows-arm64:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-glfw:natives-windows-x86:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-jemalloc:natives-windows:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-jemalloc:natives-windows-arm64:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-jemalloc:natives-windows-x86:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-openal:natives-windows:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-openal:natives-windows-arm64:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-openal:natives-windows-x86:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-opengl:natives-windows:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-opengl:natives-windows-arm64:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-opengl:natives-windows-x86:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-stb:natives-windows:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-stb:natives-windows-arm64:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-stb:natives-windows-x86:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-tinyfd:natives-windows:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-tinyfd:natives-windows-arm64:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl-tinyfd:natives-windows-x86:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl:natives-windows:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl:natives-windows-arm64:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.lwjgl:lwjgl:natives-windows-x86:3.3.3" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: meteordevelopment:orbit:0.2.4" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: meteordevelopment:starscript:0.2.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: meteordevelopment:discord-ipc:1.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.reflections:reflections:0.10.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.netty:netty-handler-proxy:4.1.90.Final" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: io.netty:netty-codec-socks:4.1.90.Final" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: de.florianmichael:WaybackAuthLib:1.0.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.javassist:javassist:3.28.0-GA" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.code.findbugs:jsr305:3.0.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: net_fabricmc_yarn_1_20_6_1_20_6_build_3_v2.net.fabricmc.fabric-api:fabric-resource-loader-v0:1.0.5+c5f2432cff" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jline:jline-reader:3.20.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.jline:jline-terminal:3.20.0" level="project" />
+  </component>
+  <component name="TestModuleProperties" production-module="seasnail1.main" />
+</module>

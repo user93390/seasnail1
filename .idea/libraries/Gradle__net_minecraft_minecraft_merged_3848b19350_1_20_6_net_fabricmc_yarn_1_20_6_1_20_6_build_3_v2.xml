@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: net.minecraft:minecraft-merged-3848b19350:1.20.6-net.fabricmc.yarn.1_20_6.1.20.6+build.3-v2" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="net.minecraft" artifactId="minecraft-merged-3848b19350" version="1.20.6-net.fabricmc.yarn.1_20_6.1.20.6+build.3-v2" />
+    <ANNOTATIONS>
+      <root url="jar://$APPLICATION_PLUGINS_DIR$/Minecraft Development/lib/resources/externalAnnotations.jar!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-3848b19350/1.20.6-net.fabricmc.yarn.1_20_6.1.20.6+build.3-v2/minecraft-merged-3848b19350-1.20.6-net.fabricmc.yarn.1_20_6.1.20.6+build.3-v2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

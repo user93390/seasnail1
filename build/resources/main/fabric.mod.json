@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "snailplus",
+  "version": "2.0",
+  "name": "snail++",
+  "description": "meteor addon to make meteor client better",
+  "authors": [
+    "seasnail1"
+  ],
+  "contact": {
+    "repo": "https://discord.gg/mZrSMrNfMw"
+  },
+  "icon": "assets/snail++/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "meteor": [
+      "org.Snail.Plus.Addon"
+    ]
+  },
+  "mixins": [
+    "Mixins.json"
+  ],
+  "custom": {
+    "meteor-client:color": "225,25,25"
+  },
+  "depends": {
+    "java": ">=21",
+    "minecraft": ">=1.20.4 <=1.20.6",
+    "meteor-client": "*"
+  }
+}
