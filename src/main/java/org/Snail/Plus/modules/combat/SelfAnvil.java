@@ -61,7 +61,7 @@ public class SelfAnvil extends Module {
             .build());
 
     public SelfAnvil() {
-        super(Addon.Snail, "SelfAnvil+", "Self anvil but better");
+        super(Addon.Snail, "Self Anvil+", "Places a anvil in the air to burrow yourself");
     }
 
     @EventHandler
@@ -87,7 +87,6 @@ public class SelfAnvil extends Module {
 
         if (autoDisable.get() && mc.world.getBlockState(playerPos).getBlock().equals(Blocks.ANVIL)) {
             toggle();
-            return;
         }
     }
 
