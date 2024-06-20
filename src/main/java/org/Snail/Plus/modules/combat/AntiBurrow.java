@@ -81,12 +81,12 @@ public class AntiBurrow extends Module {
 
             if (autoDisable.get()) {
                 this.toggle();
-                ChatUtils.sendMsg(Formatting.RED, "[auto disable] Anti Burrow has been Disabled");
             }
         }
     }
 
     @EventHandler
     private  void render(Renderer3D event) {
+
     }
 }

@@ -1,6 +1,6 @@
 snail++
 
-Meteor addon developed by: @Seasnail1, @Chronosuser, and @Silvercato
+Meteor addon developed by: @Seasnail1
 
 Modules list:
 
@@ -15,7 +15,7 @@ combat:
 1. AntiBurrow
 2. AntiCev
 3. AntiRush
-4. AutoAnchor
+4. AutoAnchor+
 5. AutoSand
 6. EchestFarmer+
 7. PistonPush+

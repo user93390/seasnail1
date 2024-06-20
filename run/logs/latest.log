@@ -1,5 +1,5 @@
-[19:12:48] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.6 with Fabric Loader 0.15.11
-[19:12:48] [main/INFO] (FabricLoader) Loading 7 mods:
+[19:42:28] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.6 with Fabric Loader 0.15.11
+[19:42:28] [main/INFO] (FabricLoader) Loading 7 mods:
 	- fabric-resource-loader-v0 1.0.5+c5f2432cff
 	- fabricloader 0.15.11
 	- java 21
@@ -7,41 +7,9 @@
 	- minecraft 1.20.6
 	- mixinextras 0.3.5
 	- snailplus 2.0
-[19:12:48] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/C:/Users/samue/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.13.3+mixin.0.8.5/9527e6b0d2449408958fd1302594dc65ec5ade9c/sponge-mixin-0.13.3+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
-[19:12:48] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[19:12:48] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
-[19:12:49] [main/WARN] (FabricLoader/Mixin) Error loading class: baritone/command/defaults/ComeCommand (java.lang.ClassNotFoundException: baritone/command/defaults/ComeCommand)
-[19:12:49] [main/WARN] (FabricLoader/Mixin) @Mixin target baritone.command.defaults.ComeCommand was not found meteor-client-baritone.mixins.json:ComeCommandMixin from mod meteor-client
-[19:12:49] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.5).
-[19:12:53] [Datafixer Bootstrap/INFO] (Minecraft) 222 Datafixer optimizations took 175 milliseconds
-[19:12:55] [Render thread/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
-[19:12:55] [Render thread/INFO] (Minecraft) Setting user: Player716
-[19:12:55] [Render thread/WARN] (ModNioResourcePack) Fabric NioResourcePack: ignored invalid namespace: snail++ in mod ID snailplus
-[19:12:55] [Render thread/INFO] (Minecraft) Backend library: LWJGL version 3.3.3-snapshot
-[19:12:56] [Render thread/WARN] (ModNioResourcePack) Fabric NioResourcePack: ignored invalid namespace: snail++ in mod ID snailplus
-[19:12:56] [Render thread/INFO] (Minecraft) Reloading ResourceManager: vanilla, fabric, fabric-resource-loader-v0, fabricloader, meteor-client
-[19:12:56] [Render thread/INFO] (Meteor Client) Initializing Meteor Client
-[19:12:57] [Worker-Main-2/INFO] (Minecraft) Found unifont_all_no_pua-15.1.04.hex, loading
-[19:12:57] [Worker-Main-20/INFO] (Minecraft) Found unifont_jp_patch-15.1.04.hex, loading
-[19:12:57] [Render thread/INFO] (Reflections) Reflections took 340 ms to scan 1 urls, producing 23 keys and 938 values
-[19:12:57] [Render thread/INFO] (Reflections) Reflections took 13 ms to scan 1 urls, producing 1 keys and 19 values
-[19:12:58] [Render thread/INFO] (Meteor Client) Found 66 font families.
-[19:12:58] [Render thread/INFO] (Meteor Client) Path Manager: none
-[19:12:58] [Render thread/INFO] (Addon) Loading Snail++...
-[19:12:58] [Render thread/INFO] (Minecraft) [STDOUT]: be340168edd172fbce1ac35a8ab717c137d189a92031a212350905ea2c28a189
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: java.io.FileNotFoundException: https://github.com/user93390/seasnail1/blob/main/Hwid.txt
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1994)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1599)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/sun.net.www.protocol.https.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:223)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.Snail.Plus.utils.HWID.CheckHWID(HWID.java:17)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.Snail.Plus.Addon.onInitialize(Addon.java:26)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at meteordevelopment.meteorclient.MeteorClient.onInitializeClient(MeteorClient.java:124)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.MinecraftClient.handler$zel004$meteor-client$onInit(MinecraftClient.java:3788)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.MinecraftClient.<init>(MinecraftClient.java:712)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.main.Main.main(Main.java:223)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
-[19:12:59] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
-[19:12:59] [Render thread/WARN] (Addon) Your HWID is : be340168edd172fbce1ac35a8ab717c137d189a92031a212350905ea2c28a189
+[19:42:28] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/C:/Users/samue/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.13.3+mixin.0.8.5/9527e6b0d2449408958fd1302594dc65ec5ade9c/sponge-mixin-0.13.3+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
+[19:42:28] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[19:42:28] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
+[19:42:28] [main/WARN] (FabricLoader/Mixin) Error loading class: baritone/command/defaults/ComeCommand (java.lang.ClassNotFoundException: baritone/command/defaults/ComeCommand)
+[19:42:28] [main/WARN] (FabricLoader/Mixin) @Mixin target baritone.command.defaults.ComeCommand was not found meteor-client-baritone.mixins.json:ComeCommandMixin from mod meteor-client
+[19:42:29] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.5).

@@ -1,14 +1,16 @@
 package org.Snail.Plus;
 
-import org.Snail.Plus.modules.combat.*;
-import org.Snail.Plus.modules.misc.*;
-import org.Snail.Plus.hud.*;
-
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import org.Snail.Plus.hud.Watermark;
+import org.Snail.Plus.modules.combat.*;
+import org.Snail.Plus.modules.misc.AutoEZ;
+import org.Snail.Plus.modules.misc.AutoKit;
+import org.Snail.Plus.modules.misc.ChatControl;
+import org.Snail.Plus.modules.misc.XPautomation;
 import org.Snail.Plus.utils.HWID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +25,32 @@ public class Addon extends MeteorAddon {
     @Override
     public void onInitialize() {
         LOG.info("Loading Snail++...");
-        if (!HWID.CheckHWID()) {
-            LOG.warn("Your HWID is : " + HWID.GetHWID());
+
+        String[] List = {
+                "be340168edd172fce1ac35a8ab717c137d189a92031a212350905ea2c28a189p"
+        };
+
+        String[] trollMessages = {
+                "Out of memory",
+                "io.netty.handler.timeout.ReadTimeoutException",
+                "Error 500: Java.Lang.NullPointerException",
+                "Incompatible mods found!",
+                "Disk write error",
+                "Unexpected end of file",
+                "Resource temporarily unavailable"
+        };
+
+        Random random = new Random();
+        int randomIndex = random.nextInt(trollMessages.length);
+
+        LOG.warn(trollMessages[randomIndex]);
+
+        if (HWID.GetHWID().equals(List)) {
+            System.out.println("Welcome to Snail++!");
+
+        } else {
             System.exit(0);
+
         }
         // Modules
         Modules.get().add(new AutoEZ());
@@ -44,13 +69,13 @@ public class Addon extends MeteorAddon {
         // HUD
         Hud.get().register(Watermark.INFO);
         LOG.info("Snail++ is loaded");
+
     }
 
     @Override
     public void onRegisterCategories() {
         Modules.registerCategory(Snail);
     }
-
 
     @Override
     public String getPackage() {
