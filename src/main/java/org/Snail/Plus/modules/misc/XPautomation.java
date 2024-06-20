@@ -1,17 +1,18 @@
 package org.Snail.Plus.modules.misc;
 
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.TPSSyncUtil;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
+import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.TPSSyncUtil;
+
 import java.util.stream.StreamSupport;
 
 public class XPautomation extends Module {
@@ -134,6 +135,7 @@ public class XPautomation extends Module {
             return;
         }
 
+        assert mc.player != null;
         if (mc.player.getHealth() <= health.get()) {
             return;
         }

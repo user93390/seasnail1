@@ -1,6 +1,5 @@
 package org.Snail.Plus.modules.combat;
 
-import org.Snail.Plus.Addon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -16,6 +15,7 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import org.Snail.Plus.Addon;
 
 public class autoCity extends Module {
 
@@ -98,3 +98,4 @@ public class autoCity extends Module {
         }
     }
 }
+/*<----------- TODO: Needs a rewrite for mining logic -----------> */

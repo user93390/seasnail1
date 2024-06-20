@@ -57,7 +57,7 @@ public class AutoAnchor extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private long lastPlaceTime = 0;
+    private final long lastPlaceTime = 0;
 
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
@@ -618,3 +618,4 @@ public class AutoAnchor extends Module {
         }
     }
 }
+/*<----------- TODO: make strict direction work and make prediction and placements better -----------> */

@@ -1,6 +1,5 @@
 package org.Snail.Plus.modules.misc;
 
-import org.Snail.Plus.Addon;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -13,6 +12,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import org.Snail.Plus.Addon;
 
 import java.util.HashSet;
 import java.util.List;
@@ -167,3 +167,4 @@ public class ChatControl extends Module {
         return message.matches(".*\\b-?\\d+\\s+-?\\d+\\s+-?\\d+\\b.*");
     }
 }
+/*<----------- TODO: player leaving render distance bugs out -----------> */
