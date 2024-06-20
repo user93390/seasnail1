@@ -198,19 +198,23 @@ public class AutoAnchor extends Module {
     private final BlockPos.Mutable Anchorpos = new BlockPos.Mutable();
     private CardinalDirection direction;
     private BlockPos AnchorPos;
+
+
     public AutoAnchor() {
         super(Addon.Snail, "Auto Anchor+", "Anchor aura but better");
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if (TargetUtils.isBadTarget(target, range.get())) return;
         assert mc.world != null;
-        ClientPlayerEntity player = mc.player;
-        if (player == null) return;
-
+        PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
         if (target != null) {
+            Vec3d targetPos = predictMovement.get() ? predictTargetPosition(target) : target.getPos();
+
+            if (TargetUtils.isBadTarget(target, range.get())) return;
+
+            ClientPlayerEntity player = mc.player;
+            if (player == null && target == null) return;
 
             if (mc.world.getDimension().respawnAnchorWorks()) {
                 error("Cannot use anchors in this Dimension");
@@ -232,12 +236,12 @@ public class AutoAnchor extends Module {
             boolean westChecked = false;
             boolean anchorPlaced = false;
 
-            // Update the anchor placement timer
+
             long currentTime = System.currentTimeMillis();
             if ((currentTime - lastAnchorPlaceTime) < AnchorDelay.get() * 1000) return;
             lastAnchorPlaceTime = currentTime;
 
-            // Update the glowstone placement timer
+
             if ((currentTime - lastGlowstonePlaceTime) < GlowstoneDelay.get() * 1000) return;
             lastGlowstonePlaceTime = currentTime;
 
@@ -251,7 +255,6 @@ public class AutoAnchor extends Module {
 
             float targetDamage = DamageUtils.anchorDamage(target, target.getBlockPos().toCenterPos());
             float selfDamage = DamageUtils.anchorDamage(player, target.getBlockPos().toCenterPos());
-            Vec3d targetPos = predictMovement.get() ? predictTargetPosition(target) : target.getPos();
 
             if (targetDamage < minDamage.get()) {
                 return;
@@ -266,8 +269,6 @@ public class AutoAnchor extends Module {
             if (placeSupport.get() && CombatUtils.isSurrounded(target)) {
                 placeSupportBlocks(target);
             }
-
-
             if (CombatUtils.isSurrounded(target) && (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
                 TargetHeadPos(target);
                 anchorPlaced = true;
@@ -372,12 +373,13 @@ public class AutoAnchor extends Module {
                 if (!respawnAnchorFound) {
                     if (airFound) {
 
-                        } else {
+                    } else {
                     }
                 }
             }
         }
     }
+
     private Vec3d predictTargetPosition(PlayerEntity target) {
         return target.getPos().add(target.getVelocity());
     }
@@ -429,7 +431,7 @@ public class AutoAnchor extends Module {
         } else if (SelfDamage < maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
             if (mc.world.getBlockState(anchorEast).getBlock() == Blocks.AIR) {
-                BlockUtils.place(anchorEast, anchor, rotate.get(), 0, false);
+                BlockUtils.place(anchorEast, anchor, rotate.get(), 0, true);
                 InvUtils.swapBack();
             }
             assert mc.interactionManager != null;
@@ -462,7 +464,7 @@ public class AutoAnchor extends Module {
 
             assert mc.world != null;
             if (mc.world.getBlockState(anchorWest).getBlock() == Blocks.AIR) {
-                BlockUtils.place(anchorWest, anchor, rotate.get(), 0, false);
+                BlockUtils.place(anchorWest, anchor, rotate.get(), 0, true);
                 InvUtils.swapBack();
             }
 
@@ -497,7 +499,7 @@ public class AutoAnchor extends Module {
 
             assert mc.world != null;
             if (mc.world.getBlockState(anchorSouth).getBlock() == Blocks.AIR) {
-                BlockUtils.place(anchorSouth, anchor, rotate.get(), 0, false);
+                BlockUtils.place(anchorSouth, anchor, rotate.get(), 0, true);
                 InvUtils.swapBack();
             }
             assert mc.interactionManager != null;
@@ -532,7 +534,7 @@ public class AutoAnchor extends Module {
 
             assert mc.world != null;
             if (mc.world.getBlockState(anchorNorth).getBlock() == Blocks.AIR) {
-                BlockUtils.place(anchorNorth, anchor, rotate.get(), 0, false);
+                BlockUtils.place(anchorNorth, anchor, rotate.get(), 0, true);
                 InvUtils.swapBack();
             }
             assert mc.interactionManager != null;
@@ -563,7 +565,7 @@ public class AutoAnchor extends Module {
 
         assert mc.world != null;
         if (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR) {
-            BlockUtils.place(targetHeadPos, anchor, rotate.get(), 0, false);
+            BlockUtils.place(targetHeadPos, anchor, rotate.get(), 0, true);
             InvUtils.swapBack();
             AnchorPos = targetHeadPos;
         }
@@ -597,7 +599,7 @@ public class AutoAnchor extends Module {
 
         assert mc.world != null;
         if (mc.world.getBlockState(TargetFeetPos).getBlock() == Blocks.AIR) {
-            BlockUtils.place(TargetFeetPos, anchor, rotate.get(), 0, false);
+            BlockUtils.place(TargetFeetPos, anchor, rotate.get(), 0, true);
             InvUtils.swapBack();
             AnchorPos = TargetFeetPos;
         }
@@ -616,6 +618,7 @@ public class AutoAnchor extends Module {
             mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
             InvUtils.swapBack();
         }
+
     }
 }
 /*<----------- TODO: make strict direction work and make prediction and placements better -----------> */
