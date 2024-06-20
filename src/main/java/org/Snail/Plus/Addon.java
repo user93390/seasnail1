@@ -24,10 +24,8 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
-        LOG.info("Loading Snail++...");
-
         String[] List = {
-                "be340168edd172fce1ac35a8ab717c137d189a92031a212350905ea2c28a189p"
+                "be340168edd172fbce1ac35a8ab717c137d189a92031a212350905ea2c28a189"
         };
 
         String[] trollMessages = {
@@ -42,16 +40,13 @@ public class Addon extends MeteorAddon {
 
         Random random = new Random();
         int randomIndex = random.nextInt(trollMessages.length);
-
-        LOG.warn(trollMessages[randomIndex]);
-
-        if (HWID.GetHWID().equals(List)) {
-            System.out.println("Welcome to Snail++!");
-
+        if (HWID.GetHWID().contains("be340168edd172fbce1ac35a8ab717c137d189a92031a212350905ea2c28a189")) {
+            LOG.info("Welcome to snail++");
         } else {
+            LOG.warn(trollMessages[randomIndex]);
             System.exit(0);
-
         }
+
         // Modules
         Modules.get().add(new AutoEZ());
         Modules.get().add(new AutoSand());
@@ -68,7 +63,6 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new autoCity());
         // HUD
         Hud.get().register(Watermark.INFO);
-        LOG.info("Snail++ is loaded");
 
     }
 
