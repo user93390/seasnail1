@@ -1,6 +1,5 @@
 package org.Snail.Plus.modules.combat;
 
-import org.Snail.Plus.utils.CombatUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -16,6 +15,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.CombatUtils;
 
 
 public class AutoTrap extends Module {
@@ -60,9 +60,9 @@ public class AutoTrap extends Module {
             .description("trap mode")
             .defaultValue(TrapMode.head)
             .build());
-    private final Setting<Boolean> AirPlace = sgGeneral.add(new BoolSetting.Builder()
-            .name("air place")
-            .description("uses no support blocks (does not work on every server)")
+    private final Setting<Boolean> SupportPlace = sgGeneral.add(new BoolSetting.Builder()
+            .name("support place")
+            .description("places support blocks")
             .defaultValue(true)
             .build());
     private final Setting<Boolean> AntiStep = sgGeneral.add(new BoolSetting.Builder()
@@ -104,31 +104,43 @@ public class AutoTrap extends Module {
         lastPlaceTime = time;
 
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-
-        if (CombatUtils.isCentered(target) && target instanceof PlayerEntity) {
-                if (OnlySurrounded.get() && CombatUtils.isSurrounded(target)) {
-                    if (Mode.get() == TrapMode.head) {
-                        System.out.println("Placing head blocks");
-                        placeTopBlocks(target);
-
-                    } else if (Mode.get() == TrapMode.full) {
-                        System.out.println("placing Full blocks");
-                        placeFullBlocks(target);
-                    } else if (Mode.get() == TrapMode.face) {
-                        PlaceFaceBlocks(target);
-                    }
-                }
+        if (SupportPlace.get() && OnlySurrounded.get()) {
+            if (CombatUtils.isSurrounded(target)) {
+                PlaceSupportBlocks(target);
             }
-            if (!AirPlace.get() && CombatUtils.isCentered(target)) {
-                if(OnlySurrounded.get() && CombatUtils.isSurrounded(target)) {
-                    PlaceSupportBlocks(target);
-                }
+        } else if (SupportPlace.get()) {
+            PlaceSupportBlocks(target);
+        }
+        if (CombatUtils.isCentered(target)) {
+            switch (Mode.get()) {
+                case head:
+                    placeTopBlocks(target);
+                    if (AutoDisable.get()) {
+                        toggle();
+                        return;
+                    }
+                    break;
+                case full:
+                    placeFullBlocks(target);
+                    if (AutoDisable.get()) {
+                        toggle();
+                        return;
+                    }
+                    break;
+                case face:
+                    placeFaceBlocks(target);
+                    if (AutoDisable.get()) {
+                        toggle();
+                        return;
+                    }
+                    break;
+            }
         }
     }
-
     @EventHandler
     private void TrapRender(Render3DEvent event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+        assert target != null;
         if(target != null) {
             BlockPos FullPosSouth = target.getBlockPos().south(1).up(1);
             BlockPos FullPosNorth = target.getBlockPos().north(1).up(1);
@@ -162,7 +174,7 @@ public class AutoTrap extends Module {
     @EventHandler
     private void SupportRender(Render3DEvent event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if(!AirPlace.get() && target != null) {
+        if (target != null && SupportPlace.get()) {
             BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
             BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
 
@@ -171,46 +183,48 @@ public class AutoTrap extends Module {
         }
     }
     private void placeFullBlocks(PlayerEntity target) {
-
         BlockPos HeadPos = target.getBlockPos().up(2);
-
-        BlockPos FullPosSouth = target.getBlockPos().south(1).up(1);
-        BlockPos FullPosNorth = target.getBlockPos().north(1).up(1);
-        BlockPos FullPosWest = target.getBlockPos().west(1).up(1);
-        BlockPos FullPosEast = target.getBlockPos().east(1).up(1);
-        BlockPos FullPosSouth1 = target.getBlockPos().south(1).up(2);
-        BlockPos FullPosNorth1 = target.getBlockPos().north(1).up(2);
-        BlockPos FullPosWest1 = target.getBlockPos().west(1).up(2);
-        BlockPos FullPosEast1 = target.getBlockPos().east(1).up(2);
-
-
-        BlockUtils.place(HeadPos, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockUtils.place(FullPosSouth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockUtils.place(FullPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockUtils.place(FullPosWest, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockUtils.place(FullPosEast, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+        if (target != null) {
+            BlockPos FullPosSouth = target.getBlockPos().south(1).up(1);
+            BlockPos FullPosNorth = target.getBlockPos().north(1).up(1);
+            BlockPos FullPosWest = target.getBlockPos().west(1).up(1);
+            BlockPos FullPosEast = target.getBlockPos().east(1).up(1);
+            BlockPos FullPosSouth1 = target.getBlockPos().south(1).up(2);
+            BlockPos FullPosNorth1 = target.getBlockPos().north(1).up(2);
+            BlockPos FullPosWest1 = target.getBlockPos().west(1).up(2);
+            BlockPos FullPosEast1 = target.getBlockPos().east(1).up(2);
 
 
-        if (AntiStep.get()) {
-            BlockUtils.place(FullPosSouth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosNorth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosEast1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(HeadPos, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosSouth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosWest, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosEast, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+
+
+            if (AntiStep.get()) {
+                BlockUtils.place(FullPosSouth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosNorth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosEast1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            }
         }
-
     }
 
     private void placeTopBlocks(PlayerEntity target) {
         BlockPos HeadPos = target.getBlockPos().up(2);
-        BlockUtils.place(HeadPos, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockPos AntiStepHead = target.getBlockPos().up(3);
-        if (AntiStep.get()) {
-            BlockUtils.place(AntiStepHead, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+        if (target != null) {
+            BlockUtils.place(HeadPos, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockPos AntiStepHead = target.getBlockPos().up(3);
+            if (AntiStep.get()) {
+                BlockUtils.place(AntiStepHead, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            }
         }
     }
 
-    private void PlaceFaceBlocks(PlayerEntity target) {
+    private void placeFaceBlocks(PlayerEntity target) {
+
         BlockPos FullPosSouth = target.getBlockPos().south(1).up(1);
         BlockPos FullPosNorth = target.getBlockPos().north(1).up(1);
         BlockPos FullPosWest = target.getBlockPos().west(1).up(1);
@@ -219,31 +233,32 @@ public class AutoTrap extends Module {
         BlockPos FullPosNorth1 = target.getBlockPos().north(1).up(2);
         BlockPos FullPosWest1 = target.getBlockPos().west(1).up(2);
         BlockPos FullPosEast1 = target.getBlockPos().east(1).up(2);
+        if (target != null) {
+            BlockUtils.place(FullPosSouth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosWest, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosEast, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
 
-        BlockUtils.place(FullPosSouth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockUtils.place(FullPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockUtils.place(FullPosWest, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockUtils.place(FullPosEast, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            if (AntiStep.get()) {
 
-        if (AntiStep.get()) {
-            BlockUtils.place(FullPosSouth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosNorth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosEast1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosSouth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosNorth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+                BlockUtils.place(FullPosEast1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            }
         }
     }
-
     private void PlaceSupportBlocks(PlayerEntity target) {
-        if(OnlySurrounded.get() && !CombatUtils.isSurrounded(target)) return;
+        if (target != null) {
         BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
         BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
 
 
-        BlockUtils.place(supportPosNorthUpOne, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-        BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(supportPosNorthUpOne, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+        }
     }
-
     public enum TrapMode {
         full,
         head,
