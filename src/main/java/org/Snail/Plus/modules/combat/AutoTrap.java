@@ -265,7 +265,7 @@ public class AutoTrap extends Module {
         face,
     }
 
-    public enum PlaceMode {
+    public enum Shape {
         side,
         line,
     }

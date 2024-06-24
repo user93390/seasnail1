@@ -15,6 +15,8 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import org.Snail.Plus.Addon;
 
+import java.util.Objects;
+
 public class AntiBurrow extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -68,7 +70,8 @@ public class AntiBurrow extends Module {
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        BlockPos targetPos = target.getBlockPos();
+
+        BlockPos targetPos = Objects.requireNonNull(target).getBlockPos();
         if (target != null) {
             long time = System.currentTimeMillis();
             if ((time - lastPlaceTime) < delay.get() * 1000) return;
@@ -88,4 +91,3 @@ public class AntiBurrow extends Module {
 
     }
 }
-/*<----------- TODO: Fix a crash and rewrite the code -----------> */

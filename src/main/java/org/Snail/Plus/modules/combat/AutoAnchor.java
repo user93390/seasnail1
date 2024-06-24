@@ -207,6 +207,12 @@ public class AutoAnchor extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         assert mc.world != null;
+        if (mc.world.getDimension().respawnAnchorWorks()) {
+            error("Cannot use anchors in this Dimension");
+            toggle();
+            return;
+        }
+
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
         if (target != null) {
             Vec3d targetPos = predictMovement.get() ? predictTargetPosition(target) : target.getPos();
@@ -216,11 +222,7 @@ public class AutoAnchor extends Module {
             ClientPlayerEntity player = mc.player;
             if (player == null && target == null) return;
 
-            if (mc.world.getDimension().respawnAnchorWorks()) {
-                error("Cannot use anchors in this Dimension");
-                toggle();
-                return;
-            }
+
 
             BlockPos targetHeadPos = target.getBlockPos().up(2);
             BlockPos anchorEast = target.getBlockPos().east(1);
@@ -245,13 +247,11 @@ public class AutoAnchor extends Module {
             if ((currentTime - lastGlowstonePlaceTime) < GlowstoneDelay.get() * 1000) return;
             lastGlowstonePlaceTime = currentTime;
 
-            if (player.getHealth() <= DisableHealth.get() && DisableHealth.get() > 0) {
-                return;
-            }
+            if (Objects.requireNonNull(player).getHealth() <= DisableHealth.get() && DisableHealth.get() > 0) return;
 
-            if (target.distanceTo(player) > range.get()) {
-                return;
-            }
+            if (CombatUtils.isBurrowed(target)) return;
+
+            if (target.distanceTo(player) > range.get()) return;
 
             float targetDamage = DamageUtils.anchorDamage(target, target.getBlockPos().toCenterPos());
             float selfDamage = DamageUtils.anchorDamage(player, target.getBlockPos().toCenterPos());
@@ -261,7 +261,7 @@ public class AutoAnchor extends Module {
             }
 
             for (CardinalDirection dir : CardinalDirection.values()) {
-                if (strictDirection.get()
+                if (this.strictDirection.get()
                         && dir.toDirection() != mc.player.getHorizontalFacing()
                         && dir.toDirection().getOpposite() != mc.player.getHorizontalFacing()) continue;
             }
@@ -269,7 +269,7 @@ public class AutoAnchor extends Module {
             if (placeSupport.get() && CombatUtils.isSurrounded(target)) {
                 placeSupportBlocks(target);
             }
-            if (CombatUtils.isSurrounded(target) && (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
+            if (CombatUtils.isSurrounded(target) && (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR || this.mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
                 TargetHeadPos(target);
                 anchorPlaced = true;
             } else {
@@ -288,20 +288,20 @@ public class AutoAnchor extends Module {
                 }
 
                 while (!respawnAnchorFound && (!eastChecked || !northChecked || !southChecked || !westChecked)) {
-                    if (safety.get() == SafetyMode.safe && selfDamage > maxSelfDamage.get())
+                    if (safety.get() == SafetyMode.safe && selfDamage > this.maxSelfDamage.get())
                         return;
 
-                    if (safety.get() == SafetyMode.balance && selfDamage <= maxSelfDamage.get())
+                    if (safety.get() == SafetyMode.balance && selfDamage <= this.maxSelfDamage.get())
                         continue;
 
-                    if (safety.get() == SafetyMode.off && selfDamage >= maxSelfDamage.get() || safety.get() == SafetyMode.off && selfDamage <= maxSelfDamage.get())
+                    if (safety.get() == SafetyMode.off && selfDamage >= this.maxSelfDamage.get() || safety.get() == SafetyMode.off && selfDamage <= this.maxSelfDamage.get())
                         continue;
 
                     if (!eastChecked) {
                         eastChecked = true;
-                        if (mc.world.getBlockState(anchorEast).isAir() || mc.world.getBlockState(anchorEast).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
+                        if (mc.world.getBlockState(anchorEast).isAir() || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
                             if (!anchorPlaced) {
-                                PlaceEastAnchor(target);
+                                this.PlaceEastAnchor(target);
                                 anchorPlaced = true;
                             }
 
@@ -320,7 +320,7 @@ public class AutoAnchor extends Module {
                         northChecked = true;
                         if (mc.world.getBlockState(anchorNorth).isAir() || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
                             if (!anchorPlaced) {
-                                PlaceNorthAnchor(target);
+                                this.PlaceNorthAnchor(target);
                                 anchorPlaced = true;
                             }
                             respawnAnchorFound = true;
@@ -336,9 +336,9 @@ public class AutoAnchor extends Module {
 
                     if (!southChecked) {
                         southChecked = true;
-                        if (mc.world.getBlockState(anchorSouth).isAir() || mc.world.getBlockState(anchorSouth).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
+                        if (this.mc.world.getBlockState(anchorSouth).isAir() || mc.world.getBlockState(anchorSouth).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
                             if (!anchorPlaced) {
-                                PlaceSouthAnchor(target);
+                                this.PlaceSouthAnchor(target);
                                 anchorPlaced = true;
                             }
                         } else {
@@ -353,7 +353,7 @@ public class AutoAnchor extends Module {
 
                     if (!westChecked) {
                         westChecked = true;
-                        if (mc.world.getBlockState(anchorWest).isAir() || mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
+                        if (this.mc.world.getBlockState(anchorWest).isAir() || mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
                             if (!anchorPlaced) {
                                 PlaceWestAnchor(target);
                                 anchorPlaced = true;
@@ -361,7 +361,7 @@ public class AutoAnchor extends Module {
 
 
                         } else {
-                            Block westBlock = mc.world.getBlockState(anchorWest).getBlock();
+                            Block westBlock = this.mc.world.getBlockState(anchorWest).getBlock();
                             if (westBlock == Blocks.OBSIDIAN) {
                                 obsidianFound = true;
                             } else if (westBlock != Blocks.FIRE) {
@@ -427,8 +427,8 @@ public class AutoAnchor extends Module {
         float SelfDamage = DamageUtils.anchorDamage(mc.player, anchorEast.toCenterPos());
 
 
-        if (SelfDamage > maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage >= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
-        } else if (SelfDamage < maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
+        if (SelfDamage > this.maxSelfDamage.get() || (this.safety.get() == SafetyMode.safe && SelfDamage >= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
+        } else if (SelfDamage < this.maxSelfDamage.get() || (this.safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
             if (mc.world.getBlockState(anchorEast).getBlock() == Blocks.AIR) {
                 BlockUtils.place(anchorEast, anchor, rotate.get(), 0, true);

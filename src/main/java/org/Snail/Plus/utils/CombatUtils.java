@@ -55,10 +55,11 @@ public class CombatUtils {
 
         return distanceX < threshold && distanceZ < threshold;
     }
-private  static  boolean isBurrowed(PlayerEntity target, BlockPos pos) {
+
+    public static boolean isBurrowed(PlayerEntity target) {
         if (target == null) return false;
         BlockPos blockPos = target.getBlockPos();
-        Block block = mc.world.getBlockState(pos).getBlock();
+        Block block = mc.world.getBlockState(blockPos).getBlock();
         return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK;
     }
 }

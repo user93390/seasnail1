@@ -13,6 +13,7 @@ import net.minecraft.util.Hand;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.TPSSyncUtil;
 
+import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public class XPautomation extends Module {
@@ -61,7 +62,7 @@ public class XPautomation extends Module {
             .name("tps-sync")
             .description("Sync the delay with server TPS")
             .defaultValue(false)
-            .onChanged(enabled -> TPSSyncUtil.setSyncEnabled(enabled))
+            .onChanged(TPSSyncUtil::setSyncEnabled)
             .build());
 
     private final Setting<Boolean> smartMode = sgGeneral.add(new BoolSetting.Builder()
@@ -171,13 +172,13 @@ public class XPautomation extends Module {
     }
 
     private void useXPBottle(FindItemResult exp) {
-        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+        Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
         swingHand();
     }
 
     private void silentUseXPBottle(FindItemResult exp) {
         InvUtils.swap(exp.slot(), true);
-        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+        Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
         swingHand();
         InvUtils.swapBack();
     }
@@ -186,13 +187,13 @@ public class XPautomation extends Module {
         if (swing.get()) {
             switch (handSwing.get()) {
                 case MainHand:
-                    mc.player.swingHand(Hand.MAIN_HAND);
+                    Objects.requireNonNull(mc.player).swingHand(Hand.MAIN_HAND);
                     break;
                 case Offhand:
-                    mc.player.swingHand(Hand.OFF_HAND);
+                    Objects.requireNonNull(mc.player).swingHand(Hand.OFF_HAND);
                     break;
                 case Packet:
-                    mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                    Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
                     break;
                 case none:
                     break;
@@ -228,7 +229,7 @@ public class XPautomation extends Module {
     }
 
     private boolean isArmorFullDurability() {
-        return StreamSupport.stream(mc.player.getArmorItems().spliterator(), false)
+        return StreamSupport.stream(Objects.requireNonNull(mc.player).getArmorItems().spliterator(), false)
                 .allMatch(itemStack -> itemStack.getDamage() == 0);
     }
 

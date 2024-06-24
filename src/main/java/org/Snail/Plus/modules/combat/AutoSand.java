@@ -1,6 +1,5 @@
 package org.Snail.Plus.modules.combat;
 
-import org.Snail.Plus.Addon;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -12,12 +11,15 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
-import meteordevelopment.orbit.EventHandler;
+import org.Snail.Plus.Addon;
+
+import java.util.Objects;
 
 public class AutoSand extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -107,9 +109,9 @@ public class AutoSand extends Module {
         FindItemResult Support = InvUtils.findInHotbar(Items.OBSIDIAN);
         BlockPos targetPos = target.getBlockPos().up(height.get());
 
-        if (mc.world.getBlockState(targetPos).getBlock().equals(Blocks.AIR) && Sand != null && target != null) {
+        if (Objects.requireNonNull(mc.world).getBlockState(targetPos).getBlock().equals(Blocks.AIR) && Sand != null && target != null) {
 
-            if (support.get()) {
+            if (this.support.get()) {
                 BlockPos supportPosNorth = target.getBlockPos().north(1);
                 BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
                 BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
@@ -124,9 +126,8 @@ public class AutoSand extends Module {
             boolean sandPlaced = BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.ANVIL), rotate.get(), 0, false);
             RenderUtils.renderTickingBlock(targetPos, SideColor.get(), LineColor.get(), ShapeMode.Both, 5, 5, true, false);
 
-            if (autoDisable.get() && sandPlaced) {
-                toggle();
-                return;
+            if (this.autoDisable.get() && sandPlaced) {
+                this.toggle();
             }
         }
     }

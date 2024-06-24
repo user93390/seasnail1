@@ -16,6 +16,8 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import org.Snail.Plus.Addon;
 
+import java.util.Objects;
+
 public class SelfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -110,7 +112,7 @@ public class SelfAnvil extends Module {
 
     @EventHandler
     public void AnvilRender(Render3DEvent event) {
-        BlockPos Pos = mc.player.getBlockPos().up(2);
+        BlockPos Pos = Objects.requireNonNull(mc.player).getBlockPos().up(2);
         if (Pos != null && mc.player != null && sideColor != null && lineColor != null && mc.world != null)
             event.renderer.box(Pos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
     }

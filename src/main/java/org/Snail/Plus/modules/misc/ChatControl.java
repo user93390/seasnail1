@@ -24,54 +24,55 @@ public class ChatControl extends Module {
     private final SettingGroup sgChat = settings.createGroup("Chat");
 
     private final Setting<Boolean> visual = sgVisualRange.add(new BoolSetting.Builder()
-        .name("visual-range")
-        .description("Toggle visual range notification.")
-        .defaultValue(true)
-        .build());
+            .name("visual-range")
+            .description("Toggle visual range notification.")
+            .defaultValue(true)
+            .build());
 
     private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
-        .name("check-uuid")
-        .description("Toggle checking player UUIDs.")
-        .defaultValue(true)
-        .visible(visual::get)
-        .build());
+            .name("check-uuid")
+            .description("Toggle checking player UUIDs.")
+            .defaultValue(true)
+            .visible(visual::get)
+            .build());
 
     private final Setting<List<SoundEvent>> sounds = sgVisualRange.add(new SoundEventListSetting.Builder()
-        .name("sounds")
-        .description("Sounds to play when a player is spotted")
-        .build());
+            .name("sounds")
+            .description("Sounds to play when a player is spotted")
+            .build());
 
     private final Setting<Integer> maxAmount = sgVisualRange.add(new IntSetting.Builder()
-        .name("max-amount")
-        .description("The cap of how many players the visual range notifies.")
-        .defaultValue(3)
-        .visible(visual::get)
-        .build());
+            .name("max-amount")
+            .description("The cap of how many players the visual range notifies.")
+            .defaultValue(3)
+            .visible(visual::get)
+            .build());
 
     private final Setting<Boolean> coordsProtection = sgChat.add(new BoolSetting.Builder()
-        .name("coords protection")
-        .description("Prevents you from sending messages in chat that may contain coordinates.")
-        .defaultValue(true)
-        .build());
+            .name("coords protection")
+            .description("Prevents you from sending messages in chat that may contain coordinates.")
+            .defaultValue(true)
+            .build());
 
     private final Setting<Boolean> prefix = sgChat.add(new BoolSetting.Builder()
-        .name("prefix")
-        .description("Adds a prefix to your chat messages.")
-        .defaultValue(true)
-        .build());
+            .name("prefix")
+            .description("Adds a prefix to your chat messages.")
+            .defaultValue(true)
+            .build());
 
     private final Setting<String> prefixText = sgChat.add(new StringSetting.Builder()
-        .name("prefix-text")
-        .description("The text to add as your prefix.")
-        .defaultValue(" | snail++")
-        .visible(prefix::get)
-        .build());
+            .name("prefix-text")
+            .description("The text to add as your prefix.")
+            .defaultValue("| snail++")
+            .visible(prefix::get)
+            .build());
 
     private final Setting<Boolean> green = sgChat.add(new BoolSetting.Builder()
-        .name("green-text")
-        .description("Adds a '>' to your text to make it green")
-        .defaultValue(true)
-        .build());
+            .name("green-text")
+            .description("Adds a '>' to your text to make it green")
+            .defaultValue(true)
+            .build());
+
 
     private final Set<UUID> alertedPlayers = new HashSet<>();
     private final Set<UUID> playersInRange = new HashSet<>();
@@ -95,7 +96,6 @@ public class ChatControl extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
-            
             if (!visual.get() || alertedPlayers.size() >= maxAmount.get()) return;
 
             MinecraftClient mc = MinecraftClient.getInstance();
@@ -152,7 +152,7 @@ public class ChatControl extends Module {
             }
 
             if (prefix.get()) {
-                event.message = event.message + prefixText.get();
+                event.message = event.message + " " + prefixText.get();
             }
 
             if (green.get()) {
@@ -167,4 +167,3 @@ public class ChatControl extends Module {
         return message.matches(".*\\b-?\\d+\\s+-?\\d+\\s+-?\\d+\\b.*");
     }
 }
-/*<----------- TODO: player leaving render distance bugs out -----------> */
