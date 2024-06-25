@@ -61,9 +61,9 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoTrap());
         Modules.get().add(new Blocker());
         Modules.get().add(new autoCity());
+        Modules.get().add(new AutoPearl());
         // HUD
         Hud.get().register(Watermark.INFO);
-
     }
 
     @Override
@@ -75,4 +75,5 @@ public class Addon extends MeteorAddon {
     public String getPackage() {
         return "org.Snail.Plus";
     }
+
 }
