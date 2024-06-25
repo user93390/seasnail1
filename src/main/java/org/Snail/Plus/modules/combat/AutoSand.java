@@ -94,7 +94,6 @@ public class AutoSand extends Module {
                 .defaultValue(new SettingColor(255, 0, 0, 255))
                 .build());
     }
-
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         long time = System.currentTimeMillis();

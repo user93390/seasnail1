@@ -37,7 +37,6 @@ public class AutoEZ extends Module {
             .name("auto-dm")
             .description("Sends a message to the player.")
             .defaultValue(true)
-            .visible(global::get)
             .build());
 
     final Setting<String> messageSetting = sgGeneral.add(new StringSetting.Builder()

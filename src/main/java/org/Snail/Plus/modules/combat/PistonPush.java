@@ -14,9 +14,12 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
 
@@ -152,6 +155,7 @@ public class PistonPush extends Module {
                 if (mc.world.getBlockState(Piston).isAir() && mc.world.getBlockState(Redstone).isAir() && CombatUtils.isSurrounded(target) && CombatUtils.isCentered(target)) {
                     TryNorthPiston(target, true);
 
+
                     if (MinePiston.get()) {
                         InvUtils.swap(Pickaxe.slot(), true);
                         Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, Piston, Direction.DOWN));
@@ -178,12 +182,21 @@ public class PistonPush extends Module {
     private void TryNorthPiston(PlayerEntity target, Boolean crouch) {
         BlockPos Piston = target.getBlockPos().north(1).up(1);
         BlockPos Redstone = target.getBlockPos().north(1).up(2);
+        PlayerEntity player = mc.player;
 
         FindItemResult ItemPiston = InvUtils.findInHotbar(Items.PISTON);
         FindItemResult ItemRedstone = InvUtils.findInHotbar(Items.REDSTONE_BLOCK, Items.REDSTONE_TORCH);
 
-        BlockUtils.place(Piston, ItemPiston, rotate.get(), 0, true);
-        BlockUtils.place(Redstone, ItemRedstone, rotate.get(), 0, true);
+        Direction pistonFacing = Objects.requireNonNull(player).getHorizontalFacing().getOpposite();
+
+        InvUtils.swap(ItemPiston.slot(), true);
+        (mc.getNetworkHandler()).sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(Piston), pistonFacing, Piston, false), ItemPiston.slot()));
+        InvUtils.swapBack();
+
+        InvUtils.swap(ItemRedstone.slot(), true);
+        (mc.getNetworkHandler()).sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(Redstone), Direction.DOWN, Redstone, false), ItemRedstone.slot()));
+        InvUtils.swapBack();
+
         if (crouch.equals(true)) {
             mc.player.setSneaking(true);
         }
@@ -196,8 +209,16 @@ public class PistonPush extends Module {
         FindItemResult ItemPiston = InvUtils.findInHotbar(Items.PISTON);
         FindItemResult ItemRedstone = InvUtils.findInHotbar(Items.REDSTONE_BLOCK, Items.REDSTONE_TORCH);
 
-        BlockUtils.place(Piston, ItemPiston, rotate.get(), 0, true);
-        BlockUtils.place(Redstone, ItemRedstone, rotate.get(), 0, true);
+        Direction pistonFacing = target.getHorizontalFacing().getOpposite();
+
+        InvUtils.swap(ItemPiston.slot(), true);
+        (mc.getNetworkHandler()).sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(Piston), pistonFacing, Piston, false), ItemPiston.slot()));
+        InvUtils.swapBack();
+
+        InvUtils.swap(ItemRedstone.slot(), true);
+        (mc.getNetworkHandler()).sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(Redstone), Direction.DOWN, Redstone, false), ItemRedstone.slot()));
+        InvUtils.swapBack();
+
         if (crouch.equals(true)) {
             mc.player.setSneaking(true);
         }
