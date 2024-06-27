@@ -1,0 +1,22 @@
+{
+  "stats": {
+    "minecraft:used": {
+      "minecraft:ender_pearl": 24,
+      "minecraft:flint_and_steel": 1
+    },
+    "minecraft:picked_up": {
+      "minecraft:redstone_block": 50,
+      "minecraft:end_crystal": 62
+    },
+    "minecraft:custom": {
+      "minecraft:jump": 2,
+      "minecraft:time_since_rest": 1574,
+      "minecraft:sprint_one_cm": 6,
+      "minecraft:play_time": 1574,
+      "minecraft:time_since_death": 1574,
+      "minecraft:walk_one_cm": 3120,
+      "minecraft:total_world_time": 7605
+    }
+  },
+  "DataVersion": 3839
+}

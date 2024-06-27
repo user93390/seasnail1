@@ -1,0 +1,18 @@
+{
+  "stats": {
+    "minecraft:used": {
+      "minecraft:redstone_torch": 376,
+      "minecraft:piston": 7
+    },
+    "minecraft:custom": {
+      "minecraft:jump": 2,
+      "minecraft:time_since_rest": 899,
+      "minecraft:leave_game": 1,
+      "minecraft:play_time": 899,
+      "minecraft:time_since_death": 899,
+      "minecraft:walk_one_cm": 446,
+      "minecraft:total_world_time": 5617
+    }
+  },
+  "DataVersion": 3839
+}

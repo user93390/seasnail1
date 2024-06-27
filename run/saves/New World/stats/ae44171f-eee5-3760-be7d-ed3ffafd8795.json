@@ -1,0 +1,29 @@
+{
+  "stats": {
+    "minecraft:used": {
+      "minecraft:netherite_pickaxe": 6,
+      "minecraft:piston": 4,
+      "minecraft:redstone_block": 4
+    },
+    "minecraft:mined": {
+      "minecraft:redstone_block": 3,
+      "minecraft:piston": 3
+    },
+    "minecraft:picked_up": {
+      "minecraft:redstone_block": 5,
+      "minecraft:piston": 5
+    },
+    "minecraft:custom": {
+      "minecraft:jump": 14,
+      "minecraft:time_since_rest": 978,
+      "minecraft:sprint_one_cm": 797,
+      "minecraft:play_time": 978,
+      "minecraft:time_since_death": 978,
+      "minecraft:walk_one_cm": 1457,
+      "minecraft:total_world_time": 2910,
+      "minecraft:fall_one_cm": 627,
+      "minecraft:fly_one_cm": 783
+    }
+  },
+  "DataVersion": 3839
+}

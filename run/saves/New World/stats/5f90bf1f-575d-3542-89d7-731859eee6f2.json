@@ -1,0 +1,40 @@
+{
+  "stats": {
+    "minecraft:dropped": {
+      "minecraft:magenta_shulker_box": 13
+    },
+    "minecraft:picked_up": {
+      "minecraft:redstone_torch": 22,
+      "minecraft:oak_button": 1,
+      "minecraft:magenta_shulker_box": 34
+    },
+    "minecraft:custom": {
+      "minecraft:open_barrel": 2,
+      "minecraft:time_since_rest": 13094,
+      "minecraft:sprint_one_cm": 11586,
+      "minecraft:crouch_one_cm": 13,
+      "minecraft:play_time": 13094,
+      "minecraft:open_shulker_box": 10,
+      "minecraft:walk_one_cm": 17389,
+      "minecraft:sneak_time": 229,
+      "minecraft:drop": 13,
+      "minecraft:jump": 132,
+      "minecraft:leave_game": 3,
+      "minecraft:time_since_death": 13094,
+      "minecraft:total_world_time": 18547,
+      "minecraft:fly_one_cm": 12205,
+      "minecraft:open_chest": 4
+    },
+    "minecraft:used": {
+      "minecraft:redstone_torch": 40,
+      "minecraft:piston": 55,
+      "minecraft:oak_button": 19,
+      "minecraft:chest": 2,
+      "minecraft:redstone_block": 20,
+      "minecraft:magenta_shulker_box": 5,
+      "minecraft:obsidian": 131,
+      "minecraft:barrel": 2
+    }
+  },
+  "DataVersion": 3839
+}

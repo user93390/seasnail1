@@ -1,0 +1,34 @@
+{
+  "stats": {
+    "minecraft:custom": {
+      "minecraft:jump": 12,
+      "minecraft:time_since_rest": 2937,
+      "minecraft:crouch_one_cm": 111,
+      "minecraft:leave_game": 1,
+      "minecraft:play_time": 2937,
+      "minecraft:damage_taken": 30,
+      "minecraft:time_since_death": 2937,
+      "minecraft:walk_one_cm": 2126,
+      "minecraft:sneak_time": 37,
+      "minecraft:total_world_time": 14133,
+      "minecraft:drop": 1
+    },
+    "minecraft:picked_up": {
+      "minecraft:redstone_torch": 19
+    },
+    "minecraft:mined": {
+      "minecraft:fire": 1
+    },
+    "minecraft:dropped": {
+      "minecraft:redstone_torch": 1
+    },
+    "minecraft:used": {
+      "minecraft:redstone_torch": 333,
+      "minecraft:piston": 18,
+      "minecraft:redstone_block": 459,
+      "minecraft:enchanted_golden_apple": 1,
+      "minecraft:flint_and_steel": 1
+    }
+  },
+  "DataVersion": 3839
+}

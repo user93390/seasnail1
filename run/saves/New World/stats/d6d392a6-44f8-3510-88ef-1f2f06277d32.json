@@ -1,0 +1,19 @@
+{
+  "stats": {
+    "minecraft:used": {
+      "minecraft:ender_pearl": 9,
+      "minecraft:flint_and_steel": 1
+    },
+    "minecraft:custom": {
+      "minecraft:jump": 2,
+      "minecraft:time_since_rest": 550,
+      "minecraft:sprint_one_cm": 598,
+      "minecraft:leave_game": 2,
+      "minecraft:play_time": 550,
+      "minecraft:time_since_death": 550,
+      "minecraft:walk_one_cm": 1370,
+      "minecraft:total_world_time": 552
+    }
+  },
+  "DataVersion": 3839
+}

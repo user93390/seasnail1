@@ -224,6 +224,7 @@ public class PistonPush extends Module {
         }
     }
 
+
     private void TryEastPiston(PlayerEntity target, Boolean crouch) {
         BlockPos Piston = target.getBlockPos().east(1).up(1);
         BlockPos Redstone = target.getBlockPos().east(1).up(2);

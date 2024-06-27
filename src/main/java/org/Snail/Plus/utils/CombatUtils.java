@@ -6,6 +6,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.Objects;
+
 public class CombatUtils {
 
     private static final MinecraftClient mc = MinecraftClient.getInstance();
@@ -59,7 +61,7 @@ public class CombatUtils {
     public static boolean isBurrowed(PlayerEntity target) {
         if (target == null) return false;
         BlockPos blockPos = target.getBlockPos();
-        Block block = mc.world.getBlockState(blockPos).getBlock();
+        Block block = Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock();
         return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK;
     }
 }

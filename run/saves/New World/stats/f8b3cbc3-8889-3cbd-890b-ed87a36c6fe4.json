@@ -1,0 +1,20 @@
+{
+  "stats": {
+    "minecraft:custom": {
+      "minecraft:jump": 6,
+      "minecraft:time_since_rest": 555,
+      "minecraft:leave_game": 1,
+      "minecraft:play_time": 555,
+      "minecraft:time_since_death": 555,
+      "minecraft:walk_one_cm": 876,
+      "minecraft:total_world_time": 3843
+    },
+    "minecraft:used": {
+      "minecraft:redstone_torch": 1,
+      "minecraft:piston": 1,
+      "minecraft:redstone_block": 1,
+      "minecraft:obsidian": 1
+    }
+  },
+  "DataVersion": 3839
+}

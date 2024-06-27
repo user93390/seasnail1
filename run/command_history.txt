@@ -1,0 +1,21 @@
+/give Player392 minecraft:obsidian 64
+/give Player373 minecraft:diamond_pickaxe 1
+/give Player454 minecraft:respawn_anchor 64
+/give Player454 minecraft:glowstone 64
+/gamemode creative
+/gamemode survival
+/give Player575 minecraft:item_frame
+/give Player575 minecraft:end_crystal 64
+/gamemode creative
+/gamemode survival
+/give Player333 minecraft:netherite_pickaxe 1
+/enchant @a minecraft:efficiency 5
+/gamemode creative
+/gamemode survival
+/gamemode creative
+/gamemode survival
+/give Player832 minecraft:flint_and_steel
+/give Player864 minecraft:enchanted_golden_apple 64
+/give Player864 minecraft:ender_pearl 64
+/gamemode creative
+/weather clear

@@ -1,0 +1,23 @@
+{
+  "stats": {
+    "minecraft:picked_up": {
+      "minecraft:obsidian": 2
+    },
+    "minecraft:custom": {
+      "minecraft:jump": 4,
+      "minecraft:time_since_rest": 538,
+      "minecraft:leave_game": 1,
+      "minecraft:play_time": 538,
+      "minecraft:time_since_death": 538,
+      "minecraft:walk_one_cm": 362,
+      "minecraft:total_world_time": 557
+    },
+    "minecraft:used": {
+      "minecraft:diamond_pickaxe": 2
+    },
+    "minecraft:mined": {
+      "minecraft:obsidian": 2
+    }
+  },
+  "DataVersion": 3839
+}

@@ -1,0 +1,29 @@
+{
+  "stats": {
+    "minecraft:picked_up": {
+      "minecraft:obsidian": 2,
+      "minecraft:dirt": 1
+    },
+    "minecraft:used": {
+      "minecraft:diamond_pickaxe": 3
+    },
+    "minecraft:mined": {
+      "minecraft:obsidian": 2,
+      "minecraft:dirt": 1
+    },
+    "minecraft:custom": {
+      "minecraft:jump": 5,
+      "minecraft:time_since_rest": 810,
+      "minecraft:leave_game": 1,
+      "minecraft:sprint_one_cm": 219,
+      "minecraft:play_time": 810,
+      "minecraft:damage_taken": 20,
+      "minecraft:time_since_death": 810,
+      "minecraft:walk_one_cm": 564,
+      "minecraft:total_world_time": 1100,
+      "minecraft:fall_one_cm": 739,
+      "minecraft:fly_one_cm": 284
+    }
+  },
+  "DataVersion": 3839
+}
