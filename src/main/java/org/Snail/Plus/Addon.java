@@ -7,10 +7,7 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.Snail.Plus.hud.Watermark;
 import org.Snail.Plus.modules.combat.*;
-import org.Snail.Plus.modules.misc.AutoEZ;
-import org.Snail.Plus.modules.misc.AutoKit;
-import org.Snail.Plus.modules.misc.ChatControl;
-import org.Snail.Plus.modules.misc.XPautomation;
+import org.Snail.Plus.modules.misc.*;
 import org.Snail.Plus.utils.HWID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +58,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoTrap());
         Modules.get().add(new Blocker());
         Modules.get().add(new autoCity());
+        Modules.get().add(new MiddleClick());
         Modules.get().add(new AutoPearl());
         // HUD
         Hud.get().register(Watermark.INFO);
