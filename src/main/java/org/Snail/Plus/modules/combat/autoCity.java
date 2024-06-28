@@ -15,6 +15,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.modules.misc.StealthMine;
 import org.Snail.Plus.utils.CombatUtils;
@@ -64,7 +65,6 @@ public class autoCity extends Module {
     public autoCity() {
         super(Addon.Snail, "Auto city+", "Uses StealthMine+ to auto city blocks");
     }
-
     @EventHandler
     private void onTick(TickEvent.Post event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
@@ -85,31 +85,30 @@ public class autoCity extends Module {
 
                 if (Objects.requireNonNull(mc.world).getBlockState(East).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(East).isAir()) {
                     currentPos = East;
-                    StealthMine.BreakBlock(StartBreakingBlockEvent.get(currentPos, Direction.DOWN));
+                    StealthMine.BreakBlock(StartBreakingBlockEvent.get(currentPos,  Direction.DOWN));
                     if (support.get() && mc.world.getBlockState(SupportPosEast).isAir()) {
-                        SupportPlace(target, SupportPosEast);
+                        SupportPlace(SupportPosEast);
                     }
-
                 } else {
                     if (mc.world.getBlockState(West).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(West).isAir()) {
                         currentPos = West;
                         StealthMine.BreakBlock(StartBreakingBlockEvent.get(currentPos, Direction.DOWN));
                         if (support.get() && mc.world.getBlockState(SupportPosWest).isAir()) {
-                            SupportPlace(target, SupportPosWest);
+                            SupportPlace(SupportPosWest);
                         }
                     } else {
                         if (mc.world.getBlockState(North).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(North).isAir()) {
                             currentPos = North;
                             StealthMine.BreakBlock(StartBreakingBlockEvent.get(currentPos, Direction.DOWN));
                             if (support.get() && mc.world.getBlockState(SupportPosNorth).isAir()) {
-                                SupportPlace(target, SupportPosNorth);
+                                SupportPlace(SupportPosNorth);
                             }
                         } else {
                             if (mc.world.getBlockState(South).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(South).isAir()) {
 
                                 currentPos = South;
                                 if (support.get() && mc.world.getBlockState(SupportPosSouth).isAir()) {
-                                    SupportPlace(target, SupportPosSouth);
+                                    SupportPlace(SupportPosSouth);
                                 }
                             }
                         }
@@ -124,7 +123,7 @@ public class autoCity extends Module {
             }
         }
     }
-    private void SupportPlace(PlayerEntity target, BlockPos pos) {
+    private void SupportPlace(BlockPos pos) {
         FindItemResult Block = InvUtils.findInHotbar(Items.OBSIDIAN);
         BlockUtils.place(pos, Block, rotate.get(), 100, true);
     }

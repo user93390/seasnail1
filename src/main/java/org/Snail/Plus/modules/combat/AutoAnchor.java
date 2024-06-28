@@ -30,6 +30,7 @@ import net.minecraft.util.math.Vec3d;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
 import org.Snail.Plus.utils.SwapUtils;
+import org.Snail.Plus.utils.TPSSyncUtil;
 import org.Snail.Plus.utils.WorldUtils;
 
 import java.util.Objects;
@@ -136,7 +137,7 @@ public class AutoAnchor extends Module {
             .description("the radius for Z")
             .defaultValue(2)
             .sliderMax(5)
-            .sliderMin(0)
+            .sliderMin(-5)
             .visible(Smart::get)
             .build());
     private final Setting<Integer> RadiusX = sgGeneral.add(new IntSetting.Builder()
@@ -144,7 +145,7 @@ public class AutoAnchor extends Module {
             .description("the radius for X")
             .defaultValue(2)
             .sliderMax(5)
-            .sliderMin(0)
+            .sliderMin(-5)
             .visible(Smart::get)
             .build());
     private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
@@ -236,6 +237,21 @@ public class AutoAnchor extends Module {
             lastAnchorPlaceTime = currentTime;
             if ((currentTime - lastGlowstonePlaceTime) < GlowstoneDelay.get() * 1000) return;
             lastGlowstonePlaceTime = currentTime;
+            if(TpsSync.get()) {
+                /* sync delay to tps */
+                double currentDelay = TpsSync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : AnchorDelay.get();
+
+                /* glowstone delay */
+                if ((currentDelay - lastGlowstonePlaceTime) < lastGlowstonePlaceTime * 1000) return;
+                lastGlowstonePlaceTime  = currentTime;
+
+                /* anchor delay */
+
+                if ((currentDelay - lastAnchorPlaceTime) < lastAnchorPlaceTime * 1000) return;
+                lastAnchorPlaceTime  = currentTime;
+            }
+
+
             targetHeadPos = target.getBlockPos().up(2);
             if (predictMovement.get()) {
                 targetPos = Vec3d.of(target.getBlockPos());
@@ -249,7 +265,7 @@ public class AutoAnchor extends Module {
                 Swapped = false;
             }
             for (Direction dir : Direction.values()) {
-                if (strictDirection.get() && !WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite())) continue;
+                if (strictDirection.get() && WorldUtils.strictDirection(AnchorPos.offset(dir), dir.getOpposite())) continue;
             }
             if (CombatUtils.isBurrowed(target)) return;
 
@@ -264,8 +280,8 @@ public class AutoAnchor extends Module {
                 }
             }
             if (!Smart.get() && WorldUtils.isAir(targetHeadPos) || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
-                TargetHeadPos(target);
                 AnchorPos = targetHeadPos;
+                TargetHeadPos(target);
                 SwapAndPlace();
             }
             if (placeSupport.get() && CombatUtils.isSurrounded(target)) {
@@ -297,9 +313,11 @@ public class AutoAnchor extends Module {
         return DamageUtils.anchorDamage(target, pos.toCenterPos());
     }
 
-    private void DamagePosition(BlockPos position, double Damage, double SelfDamage) {
-        while(Damage < minDamage.get() || SelfDamage < maxSelfDamage.get()) {
-            AnchorPos = position;
+    private BlockPos findDamagePosition(BlockPos position, double Damage, double SelfDamage) {
+        int maxInteractions = 10;
+        int interactions = 0;
+        while(Damage < minDamage.get() || SelfDamage < maxSelfDamage.get() && maxInteractions < interactions) {
+            interactions++;
             position = BlockPos.fromLong(position.getX() + 1);
             position = BlockPos.fromLong(position.getZ() + 1);
             if(WorldUtils.willMiss(position, target) && Damage >= minDamage.get() && SelfDamage < maxSelfDamage.get()) {
@@ -321,13 +339,12 @@ public class AutoAnchor extends Module {
                         position = BlockPos.fromLong(position.getX() - 1);
                         if (WorldUtils.willMiss(position, target) && Damage >= minDamage.get() && SelfDamage < maxSelfDamage.get()) {
                             continue;
-                        } else {
-                            info("found no good positions based off of the self damage and min damage");
                         }
                     }
                 }
             }
         }
+       return AnchorPos = position;
     }
 
     private void SafetyChecks(BlockPos pos) {
@@ -340,27 +357,35 @@ public class AutoAnchor extends Module {
             switch (safety.get()) {
                 case safe -> {
                     if (bestSelfScore < maxSelfDamage.get() || Objects.requireNonNull(mc.player).getHealth() > maxSelfDamage.get()) {
-                        DamagePosition(pos, minDamage.get(), maxSelfDamage.get());
-                        continue;
+                        findDamagePosition(pos, bestDamageScore, bestSelfScore);
+                        System.out.println("finding best damage position...");
                     }
                     if (bestDamageScore < minDamage.get()) {
-                        DamagePosition(pos, minDamage.get(), maxSelfDamage.get());
+                        findDamagePosition(pos, bestDamageScore, bestSelfScore);
+                        System.out.println("finding best damage position...");
+                    } else {
                         continue;
                     }
                     float damageRatio = bestDamageScore / bestSelfScore;
                     if (damageRatio >= this.DamageRatio.get() || damageRatio == this.DamageRatio.get()) {
-                        DamagePosition(pos, minDamage.get(), maxSelfDamage.get());
+                        findDamagePosition(pos, bestDamageScore, bestSelfScore);
+                        System.out.println("finding best damage position...");
+                    } else {
                         continue;
                     }
                 break;
                 }
                 case balance -> {
-                    if (Objects.requireNonNull(mc.player).getHealth() > maxSelfDamage.get()) {
-                        DamagePosition(pos, minDamage.get(), maxSelfDamage.get());
+                    if (Objects.requireNonNull(mc.player).getHealth() >= maxSelfDamage.get()) {
+                        findDamagePosition(pos, bestDamageScore, bestSelfScore);
+                        System.out.println("finding best damage position...");
+                    } else {
                         continue;
                     }
                     if (bestDamageScore >= minDamage.get()) {
-                        DamagePosition(pos, minDamage.get(), maxSelfDamage.get());
+                        findDamagePosition(pos, bestDamageScore, bestSelfScore);
+                        System.out.println("finding best damage position...");
+                    } else {
                         continue;
                     }
                     break;
@@ -494,9 +519,9 @@ public class AutoAnchor extends Module {
                     }
                 }
                 if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
-                    SwapUtils.SilentSwap(glowstone.slot(), 1.0F);
+                    SwapUtils.SilentSwap(glowstone.slot(), 1.0);
                     Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
-                    SwapUtils.SilentSwap(anchor.slot(), 0.0F);
+                    SwapUtils.SilentSwap(anchor.slot(), 0.0);
                     Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
                     Swapped = true;
                 }
@@ -515,7 +540,7 @@ public class AutoAnchor extends Module {
                 if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
                     SwapUtils.invSwitch(originalSlot, anchor.slot(), true, 0.0F);
                     Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
-                    SwapUtils.SilentSwap(anchor.slot(), 0.0F);
+                    SwapUtils.SilentSwap(anchor.slot(), 0.0);
                     Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
                     Swapped = true;
                 }

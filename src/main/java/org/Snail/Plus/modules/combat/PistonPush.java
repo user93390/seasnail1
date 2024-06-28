@@ -12,10 +12,12 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -25,7 +27,8 @@ import org.Snail.Plus.Addon;
 
 import java.util.Objects;
 
-import static net.minecraft.network.encryption.NetworkEncryptionUtils.SignatureData.write;
+import static meteordevelopment.meteorclient.utils.world.CardinalDirection.East;
+import static meteordevelopment.meteorclient.utils.world.CardinalDirection.South;
 
 public class PistonPush extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -138,10 +141,13 @@ public class PistonPush extends Module {
             .defaultValue(true)
             .build());
 
-    private CardinalDirection direction;
-
     public PistonPush() {
         super(Addon.Snail, "Piston Push+", "Pushes players out of their holes using pistons.");
+    }
+    private CardinalDirection direction;
+    @Override
+    public void onActivate() {
+        direction = CardinalDirection.North;
     }
 
     @EventHandler
@@ -152,7 +158,7 @@ public class PistonPush extends Module {
             BlockPos Piston = Objects.requireNonNull(target).getBlockPos().north(1).up(2);
                 BlockPos Redstone = target.getBlockPos().north(1).up(3);
                 FindItemResult Pickaxe = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
-            TryNorthPiston(target);
+                TryNorthPiston(target);
                     if (MinePiston.get()) {
                         InvUtils.swap(Pickaxe.slot(), true);
                         Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, Piston, Direction.DOWN));
@@ -173,26 +179,23 @@ public class PistonPush extends Module {
         }
     }
 
-    private void TryNorthPiston(PlayerEntity target) {
-        double yaw = switch (direction) {
 
-            case East -> 90;
-            case South -> 180;
-            case West -> -90;
-            default -> 0;
-        };
+    private void TryNorthPiston(PlayerEntity target) {
+            double yaw = switch (direction) {
+                case East -> 90;
+                case South -> 180;
+                case West -> -90;
+                default -> 0;
+            };
 
         BlockPos Piston = target.getBlockPos().north(1).up(1);
         BlockPos Redstone = target.getBlockPos().north(1).up(2);
-
         FindItemResult ItemPiston = InvUtils.findInHotbar(Items.PISTON);
         FindItemResult ItemRedstone = InvUtils.findInHotbar(Items.REDSTONE_BLOCK, Items.REDSTONE_TORCH);
-
-        Rotations.rotate(yaw, Rotations.getPitch(Piston), () -> BlockUtils.place(Piston, Hand.MAIN_HAND, ItemPiston.slot(), false, 0, false, true, false));
-        BlockUtils.place(Redstone, Hand.MAIN_HAND, ItemRedstone.slot(), false, 0, false, true, false);
-        System.out.println("placed both redstone and piston");
+        Rotations.rotate(yaw, Rotations.getPitch(Piston));
+        BlockUtils.place(Piston, ItemPiston, rotate.get(), 0, true);
+        BlockUtils.place(Redstone, ItemRedstone, rotate.get(), 0, true);
     }
-
     private void TrySouthPiston(PlayerEntity target, Boolean crouch) {
         BlockPos Piston = target.getBlockPos().south(1).up(1);
         BlockPos Redstone = target.getBlockPos().south(1).up(2);
@@ -211,7 +214,7 @@ public class PistonPush extends Module {
         InvUtils.swapBack();
 
         if (crouch.equals(true)) {
-            mc.player.setSneaking(true);
+            Objects.requireNonNull(mc.player).setSneaking(true);
         }
     }
     private void TryEastPiston(PlayerEntity target, Boolean crouch) {

@@ -11,19 +11,16 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
-import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
+import org.Snail.Plus.utils.WorldUtils;
 
 import java.util.Objects;
-
-import static net.minecraft.item.Items.BLUE_CONCRETE_POWDER;
-import static net.minecraft.item.Items.RED_SAND;
 
 public class AutoSand extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -136,12 +133,9 @@ public class AutoSand extends Module {
 
         if (onlySurrounded.get() && CombatUtils.isSurrounded(target) && Objects.requireNonNull(mc.world).getBlockState(targetPos).isAir()) {
 
-            for (CardinalDirection dir : CardinalDirection.values()) {
-                if (this.strictDirection.get()
-                        && dir.toDirection() != Objects.requireNonNull(mc.player).getHorizontalFacing()
-                        && dir.toDirection().getOpposite() != mc.player.getHorizontalFacing()) continue;
+            for (Direction dir : Direction.values()) {
+                if (strictDirection.get() && WorldUtils.strictDirection(targetPos.offset(dir), dir.getOpposite())) continue;
             }
-
             if (this.support.get()) {
                 BlockPos supportPosNorth = target.getBlockPos().north(1);
                 BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(height.get());

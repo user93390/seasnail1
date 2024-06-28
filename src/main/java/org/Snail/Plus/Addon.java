@@ -1,11 +1,16 @@
 package org.Snail.Plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.mixininterface.IChatHud;
+import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.client.tutorial.TutorialStep;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.Snail.Plus.hud.Watermark;
 import org.Snail.Plus.modules.combat.*;
 import org.Snail.Plus.modules.misc.*;
@@ -37,7 +42,6 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoAnchor());
         Modules.get().add(new SnailBomber());
         Modules.get().add(new AutoTrap());
-        Modules.get().add(new Blocker());
         Modules.get().add(new autoCity());
         Modules.get().add(new MiddleClick());
         Modules.get().add(new AutoPearl());
@@ -45,8 +49,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new Autoweb());
         Modules.get().add(new FOV());
         Modules.get().add(new BurrowEsp());
-
-        LOG.info("snail++ installed!");
+        Modules.get().add(new PvpInfo());
         // HUD
         Hud.get().register(Watermark.INFO);
     }

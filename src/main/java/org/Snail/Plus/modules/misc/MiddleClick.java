@@ -134,7 +134,7 @@ public class MiddleClick extends Module {
         switch (swapMethod.get()) {
 
             case silent:
-                SwapUtils.SilentSwap(item.slot(), 1.0F);
+                SwapUtils.SilentSwap(item.slot(), 1.0);
                 Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
                 InvUtils.swapBack();
                 break;

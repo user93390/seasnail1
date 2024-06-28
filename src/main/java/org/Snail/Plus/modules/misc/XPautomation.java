@@ -124,6 +124,7 @@ public class XPautomation extends Module {
     @Override
     public void onDeactivate() {
         returnXPBottleToOriginalSlot();
+
     }
 
     @EventHandler
@@ -134,9 +135,7 @@ public class XPautomation extends Module {
             return;
         }
 
-        if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) {
-            return;
-        }
+        if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) return;
 
         double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : delay.get();
         long time = System.currentTimeMillis();
@@ -146,7 +145,7 @@ public class XPautomation extends Module {
 
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if (!exp.found() || !exp.isHotbar()) {
-            replenish();
+            reFill();
             return;
         }
 
@@ -162,22 +161,15 @@ public class XPautomation extends Module {
         }
 
         if (autoSwitch.get() == AutoSwitchMode.Normal) {
-            useXPBottle(exp);
+            InvUtils.swap(exp.slot(), false);
+            Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+            swingHand();
         } else if (autoSwitch.get() == AutoSwitchMode.Silent) {
-            silentUseXPBottle(exp);
+            InvUtils.swap(exp.slot(), true);
+            Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+            swingHand();
+            InvUtils.swapBack();
         }
-    }
-
-    private void useXPBottle(FindItemResult exp) {
-        Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-        swingHand();
-    }
-
-    private void silentUseXPBottle(FindItemResult exp) {
-        InvUtils.swap(exp.slot(), true);
-        Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-        swingHand();
-        InvUtils.swapBack();
     }
 
     private void swingHand() {
@@ -230,7 +222,7 @@ public class XPautomation extends Module {
                 .allMatch(itemStack -> itemStack.getDamage() == 0);
     }
 
-    private void replenish() {
+    private void reFill() {
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if (exp.found() && !exp.isHotbar()) {
             originalSlot = exp.slot();

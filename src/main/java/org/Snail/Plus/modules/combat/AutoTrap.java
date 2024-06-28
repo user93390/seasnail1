@@ -226,6 +226,7 @@ public class AutoTrap extends Module {
         BlockPos FullPosNorth1 = target.getBlockPos().north(1).up(2);
         BlockPos FullPosWest1 = target.getBlockPos().west(1).up(2);
         BlockPos FullPosEast1 = target.getBlockPos().east(1).up(2);
+
         BlockUtils.place(FullPosSouth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
         BlockUtils.place(FullPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
         BlockUtils.place(FullPosWest, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
@@ -243,7 +244,6 @@ public class AutoTrap extends Module {
         if (target != null) {
         BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
         BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
-
 
             BlockUtils.place(supportPosNorthUpOne, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
             BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);

@@ -15,9 +15,33 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.FriendUtils;
+import meteordevelopment.meteorclient.mixininterface.IChatHud;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.config.Config;
+import meteordevelopment.meteorclient.systems.modules.Category;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import net.minecraft.client.network.PendingUpdateManager;
+import net.minecraft.client.network.SequencedPacketCreator;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+
+import java.util.Objects;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.function.Supplier;
 
 import static net.minecraft.text.Text.*;
 
@@ -41,18 +65,6 @@ public class ChatControl extends Module {
             .description("The cap of how many players the visual range notifies.")
             .defaultValue(3)
             .visible(visual::get)
-            .build());
-    private final Setting<Boolean> Alert = sgVisualRange.add(new BoolSetting.Builder()
-            .name("friend alert")
-            .description("messages you're friend when they have low armor durability")
-            .defaultValue(true)
-            .build());
-    private final Setting<Double> Durability = sgChat.add(new DoubleSetting.Builder()
-            .name("durability ")
-            .description("the durability to notify you're friend")
-            .defaultValue(20)
-            .sliderMax(100)
-            .sliderMin(1.0)
             .build());
     private final Setting<List<SoundEvent>> sounds = sgVisualRange.add(new SoundEventListSetting.Builder()
             .name("sounds")
@@ -85,7 +97,7 @@ public class ChatControl extends Module {
     private final Set<UUID> playersInRange = new HashSet<>();
 
     public ChatControl() {
-        super(Addon.Snail, "Chat Control+", "View way more chat stuff, useful for anarchy servers");
+        super(Addon.Snail, "Chat Control", "Custom prefix and visual range :)");
     }
 
     @Override
@@ -99,7 +111,7 @@ public class ChatControl extends Module {
         alertedPlayers.clear();
         playersInRange.clear();
     }
-
+    private final String Prefix = Formatting.DARK_RED + "Snail++";
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
@@ -142,21 +154,14 @@ public class ChatControl extends Module {
             playersInRange.clear();
             playersInRange.addAll(currentPlayersInRange);
 
-            if (Alert.get()) {
-
-                if (FriendUtils.HasLowArmor(Friends.get(), Durability.get())) {
-
-                    ChatUtils.sendPlayerMsg(new StringBuilder().append("/msg ").append(Friends.get().getName().toString()).append(" you're armor has").append(Durability.get()).append("% left. Watch out!").toString());
-                }
-            }
         } catch (Exception e) {
             ChatUtils.sendMsg(of(Formatting.RED + "Error in onTick: " + e.getMessage()));
         }
     }
-
     @EventHandler
     private void onMessageSend(SendMessageEvent event) {
         try {
+
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.player == null) return;
 
@@ -181,4 +186,5 @@ public class ChatControl extends Module {
     private boolean containsCoords(String message) {
         return message.matches(".*\\b-?\\d+\\s+-?\\d+\\s+-?\\d+\\b.*");
     }
+
 }

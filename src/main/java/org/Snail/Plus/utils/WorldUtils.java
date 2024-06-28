@@ -1,8 +1,9 @@
 package org.Snail.Plus.utils;
 
-import meteordevelopment.meteorclient.utils.world.Dir;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
@@ -35,5 +36,14 @@ public class WorldUtils {
             case NORTH, WEST -> Objects.requireNonNull(mc.player).getZ() < position.getZ();
             case EAST, SOUTH -> Objects.requireNonNull(mc.player).getX() >= position.getX() + 1;
         };
+    }
+
+    public static void playSound(SoundEvent sound, float Pitch) {
+        mc.getSoundManager().play(PositionedSoundInstance.master(sound, Pitch));
+        return;
+    }
+
+    public static String getName(PlayerEntity player) {
+        return player.getName().getString();
     }
 }

@@ -71,9 +71,8 @@ public class SelfAnvil extends Module {
         long time = System.currentTimeMillis();
         if ((time - lastPlaceTime) < delay.get() * 1000) return;
         lastPlaceTime = time;
-        assert mc.player != null;
 
-        BlockPos playerPos = mc.player.getBlockPos().up(2);
+        BlockPos playerPos = Objects.requireNonNull(mc.player).getBlockPos().up(2);
         FindItemResult Anvil = InvUtils.findInHotbar(Items.ANVIL);
         int AnvilSlot = Anvil.slot();
         assert mc.world != null;
