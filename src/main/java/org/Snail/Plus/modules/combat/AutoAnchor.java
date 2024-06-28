@@ -248,6 +248,7 @@ public class AutoAnchor extends Module {
             if (targetDamage < minDamage.get()) {
                 return;
             }
+            //will crash
             for (CardinalDirection dir : CardinalDirection.values()) {
                 if (this.strictDirection.get()
                         && dir.toDirection() != Objects.requireNonNull(mc.player).getHorizontalFacing()
