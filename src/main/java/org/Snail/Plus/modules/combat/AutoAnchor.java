@@ -198,8 +198,7 @@ public class AutoAnchor extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
 
-        assert mc.world != null;
-        if (mc.world.getDimension().respawnAnchorWorks()) {
+        if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
             toggle();
             return;
         }
@@ -255,37 +254,26 @@ public class AutoAnchor extends Module {
                         && dir.toDirection().getOpposite() != mc.player.getHorizontalFacing()) continue;
             }
 
+            if (AntiStuck.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.GLOWSTONE) {
+                BlockUtils.breakBlock(targetHeadPos, false);
+            }
+
             if (placeSupport.get() && CombatUtils.isSurrounded(target)) {
                 placeSupportBlocks(target);
             }
 
-            if ((mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR || this.mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
-                if (Smart.get()) {
-                    TargetHeadPos(target);
-                    anchorPlaced = true;
-                } else if (!Smart.get()) {
-                    TargetHeadPos(target);
-                    anchorPlaced = true;
-                }
+            if (!Smart.get() && (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR || this.mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
+                TargetHeadPos(target);
+                anchorPlaced = true;
+            } else if (Smart.get() && CombatUtils.isSurrounded(target) && mc.world.getBlockState(targetHeadPos).isAir()) {
+                TargetHeadPos(target);
+                anchorPlaced = true;
+            } else if (!Smart.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.OBSIDIAN && this.mc.world.getBlockState(targetFeetPos).isAir()) {
+                TargetFeetPos(target);
+                anchorPlaced = true;
+            }
 
-
-                if (AntiStuck.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.GLOWSTONE) {
-                    BlockUtils.breakBlock(targetHeadPos, false);
-                }
-            } else {
-                if (!Smart.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.OBSIDIAN && this.mc.world.getBlockState(targetFeetPos).isAir()) {
-                    if (Smart.get()) {
-                        TargetFeetPos(target);
-                        anchorPlaced = true;
-                    } else if (!Smart.get()) {
-                        TargetFeetPos(target);
-                        anchorPlaced = true;
-                    }
-                } else {
-                    obsidianFound = true;
-                }
-
-                if (obsidianFound) {
+            if (obsidianFound) {
 
                 } else {
                     airFound = true;
@@ -372,7 +360,6 @@ public class AutoAnchor extends Module {
                             }
                         }
                     }
-                }
             }
         }
     }
