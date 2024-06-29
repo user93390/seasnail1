@@ -57,6 +57,8 @@ public class AutoAnchor extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private Thread thread;
+    private volatile boolean running;
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("range")
@@ -193,9 +195,19 @@ public class AutoAnchor extends Module {
     public AutoAnchor() {
         super(Addon.Snail, "Auto Anchor+", "Anchor aura but better");
     }
+
+    @Override
+    public void onActivate() {
+        running = true;
+        thread = new Thread(() -> {
+            while (running) {
+
+            }
+        });
+        thread.start();
+    }
     @EventHandler
     private void onTick(TickEvent.Post event) {
-
         if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
             toggle();
             return;
@@ -274,91 +286,91 @@ public class AutoAnchor extends Module {
 
             if (obsidianFound) {
 
-                } else {
-                    airFound = true;
+            } else {
+                airFound = true;
+            }
+
+            while (!respawnAnchorFound && (!eastChecked || !northChecked || !southChecked || !westChecked)) {
+                if (safety.get() == SafetyMode.safe && selfDamage > this.maxSelfDamage.get()) continue;
+
+                if (safety.get() == SafetyMode.balance && selfDamage <= this.maxSelfDamage.get())
+                    continue;
+
+                if (safety.get() == SafetyMode.off && selfDamage >= this.maxSelfDamage.get() || safety.get() == SafetyMode.off && selfDamage <= this.maxSelfDamage.get())
+                    continue;
+
+                if (!eastChecked) {
+                    eastChecked = true;
+                    if (Smart.get() && mc.world.getBlockState(anchorEast).isAir() || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
+                        if (!anchorPlaced) {
+                            this.PlaceEastAnchor(target);
+                            anchorPlaced = true;
+                        }
+
+                        respawnAnchorFound = true;
+                    } else {
+                        Block eastBlock = mc.world.getBlockState(anchorEast).getBlock();
+                        if (eastBlock == Blocks.OBSIDIAN) {
+                            obsidianFound = true;
+                        } else if (eastBlock != Blocks.FIRE) {
+                            airFound = true;
+                        }
+                    }
                 }
 
-                while (!respawnAnchorFound && (!eastChecked || !northChecked || !southChecked || !westChecked)) {
-                    if (safety.get() == SafetyMode.safe && selfDamage > this.maxSelfDamage.get()) continue;
-
-                    if (safety.get() == SafetyMode.balance && selfDamage <= this.maxSelfDamage.get())
-                        continue;
-
-                    if (safety.get() == SafetyMode.off && selfDamage >= this.maxSelfDamage.get() || safety.get() == SafetyMode.off && selfDamage <= this.maxSelfDamage.get())
-                        continue;
-
-                    if (!eastChecked) {
-                        eastChecked = true;
-                        if (Smart.get() && mc.world.getBlockState(anchorEast).isAir() || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
-                            if (!anchorPlaced) {
-                                this.PlaceEastAnchor(target);
-                                anchorPlaced = true;
-                            }
-
-                            respawnAnchorFound = true;
-                        } else {
-                            Block eastBlock = mc.world.getBlockState(anchorEast).getBlock();
-                            if (eastBlock == Blocks.OBSIDIAN) {
-                                obsidianFound = true;
-                            } else if (eastBlock != Blocks.FIRE) {
-                                airFound = true;
-                            }
+                if (!northChecked) {
+                    northChecked = true;
+                    if (Smart.get() && mc.world.getBlockState(anchorNorth).isAir() || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
+                        if (!anchorPlaced) {
+                            this.PlaceNorthAnchor(target);
+                            anchorPlaced = true;
+                        }
+                        respawnAnchorFound = true;
+                    } else {
+                        Block northBlock = mc.world.getBlockState(anchorNorth).getBlock();
+                        if (northBlock == Blocks.OBSIDIAN) {
+                            obsidianFound = true;
+                        } else if (northBlock != Blocks.FIRE) {
+                            airFound = true;
                         }
                     }
+                }
 
-                    if (!northChecked) {
-                        northChecked = true;
-                        if (Smart.get() && mc.world.getBlockState(anchorNorth).isAir() || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
-                            if (!anchorPlaced) {
-                                this.PlaceNorthAnchor(target);
-                                anchorPlaced = true;
-                            }
-                            respawnAnchorFound = true;
-                        } else {
-                            Block northBlock = mc.world.getBlockState(anchorNorth).getBlock();
-                            if (northBlock == Blocks.OBSIDIAN) {
-                                obsidianFound = true;
-                            } else if (northBlock != Blocks.FIRE) {
-                                airFound = true;
-                            }
+                if (!southChecked) {
+                    southChecked = true;
+                    if (Smart.get() && this.mc.world.getBlockState(anchorSouth).isAir() || mc.world.getBlockState(anchorSouth).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
+                        if (!anchorPlaced) {
+                            this.PlaceSouthAnchor(target);
+                            anchorPlaced = true;
+                        }
+                    } else {
+                        Block southBlock = mc.world.getBlockState(anchorSouth).getBlock();
+                        if (southBlock == Blocks.OBSIDIAN) {
+                            obsidianFound = true;
+                        } else if (southBlock != Blocks.FIRE) {
+                            airFound = true;
                         }
                     }
+                }
 
-                    if (!southChecked) {
-                        southChecked = true;
-                        if (Smart.get() && this.mc.world.getBlockState(anchorSouth).isAir() || mc.world.getBlockState(anchorSouth).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
-                            if (!anchorPlaced) {
-                                this.PlaceSouthAnchor(target);
-                                anchorPlaced = true;
-                            }
-                        } else {
-                            Block southBlock = mc.world.getBlockState(anchorSouth).getBlock();
-                            if (southBlock == Blocks.OBSIDIAN) {
-                                obsidianFound = true;
-                            } else if (southBlock != Blocks.FIRE) {
-                                airFound = true;
-                            }
+                if (!westChecked) {
+                    westChecked = true;
+                    if (Smart.get() && this.mc.world.getBlockState(anchorWest).isAir() || mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
+                        if (!anchorPlaced) {
+                            PlaceWestAnchor(target);
+                            anchorPlaced = true;
+                        }
+
+
+                    } else {
+                        Block westBlock = this.mc.world.getBlockState(anchorWest).getBlock();
+                        if (westBlock == Blocks.OBSIDIAN) {
+                            obsidianFound = true;
+                        } else if (westBlock != Blocks.FIRE) {
+                            airFound = true;
                         }
                     }
-
-                    if (!westChecked) {
-                        westChecked = true;
-                        if (Smart.get() && this.mc.world.getBlockState(anchorWest).isAir() || mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
-                            if (!anchorPlaced) {
-                                PlaceWestAnchor(target);
-                                anchorPlaced = true;
-                            }
-
-
-                        } else {
-                            Block westBlock = this.mc.world.getBlockState(anchorWest).getBlock();
-                            if (westBlock == Blocks.OBSIDIAN) {
-                                obsidianFound = true;
-                            } else if (westBlock != Blocks.FIRE) {
-                                airFound = true;
-                            }
-                        }
-                    }
+                }
             }
         }
     }
@@ -578,6 +590,14 @@ public class AutoAnchor extends Module {
 
             mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
             InvUtils.swapBack();
+        }
+    }
+
+    @Override
+    public void onDeactivate() {
+        running = false;
+        if (thread != null) {
+            thread.interrupt();
         }
     }
 }

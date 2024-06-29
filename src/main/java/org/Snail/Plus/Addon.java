@@ -9,6 +9,7 @@ import org.Snail.Plus.hud.Watermark;
 import org.Snail.Plus.modules.combat.*;
 import org.Snail.Plus.modules.misc.*;
 import org.Snail.Plus.utils.HWID;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,14 +17,12 @@ import java.util.Random;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Addon");
+
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
 
     @Override
     public void onInitialize() {
-        String[] List = {
-                "be340168edd172fbce1ac35a8ab717c137d189a92031a212350905ea2c28a189"
-        };
 
         String[] trollMessages = {
                 "Out of memory",
@@ -37,11 +36,12 @@ public class Addon extends MeteorAddon {
 
         Random random = new Random();
         int randomIndex = random.nextInt(trollMessages.length);
-        if (HWID.GetHWID().contains("be340168edd172fbce1ac35a8ab717c137d189a92031a212350905ea2c28a189")) {
+        if (HWID.CheckHWID()) {
             LOG.info("Welcome to snail++");
         } else {
             LOG.warn(trollMessages[randomIndex]);
-            System.exit(0);
+            System.out.println(getHWID());
+            System.exit(-254798112);
         }
 
         // Modules
@@ -64,6 +64,10 @@ public class Addon extends MeteorAddon {
         Hud.get().register(Watermark.INFO);
     }
 
+    private String getHWID() {
+        return DigestUtils.sha3_256Hex(DigestUtils.md2Hex(DigestUtils.sha512Hex(DigestUtils.sha512Hex(System.getenv("os") + System.getProperty("os.name") + System.getProperty("os.arch") + System.getProperty("os.version") + System.getProperty("user.language") + System.getenv("SystemRoot") + System.getenv("HOMEDRIVE") + System.getenv("PROCESSOR_LEVEL") + System.getenv("PROCESSOR_REVISION") + System.getenv("PROCESSOR_IDENTIFIER") + System.getenv("PROCESSOR_ARCHITECTURE") + System.getenv("PROCESSOR_ARCHITEW6432") + System.getenv("NUMBER_OF_PROCESSORS")))));
+    }
+
     @Override
     public void onRegisterCategories() {
         Modules.registerCategory(Snail);
@@ -73,5 +77,4 @@ public class Addon extends MeteorAddon {
     public String getPackage() {
         return "org.Snail.Plus";
     }
-
 }
