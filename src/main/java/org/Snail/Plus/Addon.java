@@ -41,7 +41,7 @@ public class Addon extends MeteorAddon {
         } else {
             LOG.warn(trollMessages[randomIndex]);
             System.out.println(getHWID());
-            System.exit(-254798112);
+            System.exit(-805306369);
         }
 
         // Modules

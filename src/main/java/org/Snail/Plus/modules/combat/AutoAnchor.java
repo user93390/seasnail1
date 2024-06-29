@@ -6,9 +6,9 @@ import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
-import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
@@ -21,6 +21,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -81,8 +82,6 @@ public class AutoAnchor extends Module {
             .description("Rotates towards the block when placing.")
             .defaultValue(false)
             .build());
-
-
     private final Setting<SortPriority> priority = sgGeneral.add(new EnumSetting.Builder<SortPriority>()
             .name("target-priority")
             .description("How to filter targets within range.")
@@ -218,193 +217,190 @@ public class AutoAnchor extends Module {
         target = null;
         running = true;
         AnchorPos = null;
-        thread = new Thread(() -> {
-            while (running) {
-
-            }
-        });
-        thread.start();
     }
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
-            toggle();
-            return;
-        }
-        target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if (TargetUtils.isBadTarget(target, range.get())) return;
-        if (target != null) {
-            long currentTime = System.currentTimeMillis();
-            if ((currentTime - lastAnchorPlaceTime) < AnchorDelay.get() * 1000) return;
-            lastAnchorPlaceTime = currentTime;
-
-
-            if ((currentTime - lastGlowstonePlaceTime) < GlowstoneDelay.get() * 1000) return;
-            lastGlowstonePlaceTime = currentTime;
-
-            Vec3d targetPos = predictMovement.get() ? predictTargetPosition(target) : target.getPos();
-
-
-
-            ClientPlayerEntity player = mc.player;
-
-            BlockPos targetHeadPos = target.getBlockPos().up(2);
-            BlockPos anchorEast = target.getBlockPos().east(1);
-            BlockPos anchorWest = target.getBlockPos().west(1);
-            BlockPos anchorNorth = target.getBlockPos().north(1);
-            BlockPos anchorSouth = target.getBlockPos().south(1);
-            BlockPos targetFeetPos = target.getBlockPos().down(1);
-
-            boolean obsidianFound = false;
-            boolean airFound = false;
-            boolean respawnAnchorFound = false;
-            boolean eastChecked = false;
-            boolean northChecked = false;
-            boolean southChecked = false;
-            boolean westChecked = false;
-            anchorPlaced = false;
-
-
-            if (Objects.requireNonNull(player).getHealth() <= DisableHealth.get() && DisableHealth.get() > 0) return;
-
-            if (CombatUtils.isBurrowed(target)) return;
-
-            if (target.distanceTo(player) > range.get()) return;
-
-            float targetDamage = DamageUtils.anchorDamage(target, target.getBlockPos().toCenterPos());
-            float selfDamage = DamageUtils.anchorDamage(player, target.getBlockPos().toCenterPos());
-
-            if (targetDamage < minDamage.get()) {
+        try {
+            if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
+                toggle();
                 return;
             }
-            //will crash
-            for (CardinalDirection dir : CardinalDirection.values()) {
-                if (this.strictDirection.get()
-                        && dir.toDirection() != Objects.requireNonNull(mc.player).getHorizontalFacing()
-                        && dir.toDirection().getOpposite() != mc.player.getHorizontalFacing()) continue;
-            }
+            target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+            if (TargetUtils.isBadTarget(target, range.get())) return;
+            if (target != null) {
+                long currentTime = System.currentTimeMillis();
+                if ((currentTime - lastAnchorPlaceTime) < AnchorDelay.get() * 1000) return;
+                lastAnchorPlaceTime = currentTime;
 
-            if (AntiStuck.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.GLOWSTONE) {
-                BlockUtils.breakBlock(targetHeadPos, false);
-            }
 
-            if (placeSupport.get() && CombatUtils.isSurrounded(target)) {
-                placeSupportBlocks(target);
-            }
+                if ((currentTime - lastGlowstonePlaceTime) < GlowstoneDelay.get() * 1000) return;
+                lastGlowstonePlaceTime = currentTime;
 
-            if (!Smart.get() && (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR || this.mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
-                TargetHeadPos(target);
-                anchorPlaced = true;
-            } else if (Smart.get() && CombatUtils.isSurrounded(target) && mc.world.getBlockState(targetHeadPos).isAir()) {
-                TargetHeadPos(target);
-                anchorPlaced = true;
-            } else if (!Smart.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.OBSIDIAN && this.mc.world.getBlockState(targetFeetPos).isAir()) {
-                TargetFeetPos(target);
-                anchorPlaced = true;
-            }
+                Vec3d targetPos = predictMovement.get() ? predictTargetPosition(target) : target.getPos();
 
-            if (obsidianFound) {
+                ClientPlayerEntity player = mc.player;
 
-            } else {
-                airFound = true;
-            }
+                BlockPos targetHeadPos = target.getBlockPos().up(2);
+                BlockPos anchorEast = target.getBlockPos().east(1);
+                BlockPos anchorWest = target.getBlockPos().west(1);
+                BlockPos anchorNorth = target.getBlockPos().north(1);
+                BlockPos anchorSouth = target.getBlockPos().south(1);
+                BlockPos targetFeetPos = target.getBlockPos().down(1);
 
-            while (!respawnAnchorFound && (!eastChecked || !northChecked || !southChecked || !westChecked)) {
-                if (safety.get() == SafetyMode.safe && selfDamage > this.maxSelfDamage.get()) continue;
+                boolean obsidianFound = false;
+                boolean airFound = false;
+                boolean respawnAnchorFound = false;
+                boolean eastChecked = false;
+                boolean northChecked = false;
+                boolean southChecked = false;
+                boolean westChecked = false;
+                anchorPlaced = false;
 
-                if (safety.get() == SafetyMode.balance && selfDamage <= this.maxSelfDamage.get())
-                    continue;
 
-                if (safety.get() == SafetyMode.off && selfDamage >= this.maxSelfDamage.get() || safety.get() == SafetyMode.off && selfDamage <= this.maxSelfDamage.get())
-                    continue;
+                if (Objects.requireNonNull(player).getHealth() <= DisableHealth.get() && DisableHealth.get() > 0)
+                    return;
 
-                if (!eastChecked) {
-                    eastChecked = true;
-                    if (Smart.get() && mc.world.getBlockState(anchorEast).isAir() || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
-                        if (!anchorPlaced) {
-                            this.PlaceEastAnchor(target);
-                            anchorPlaced = true;
+                if (CombatUtils.isBurrowed(target)) return;
+
+                float targetDamage = DamageUtils.anchorDamage(target, target.getBlockPos().toCenterPos());
+                float selfDamage = DamageUtils.anchorDamage(player, target.getBlockPos().toCenterPos());
+
+                if (targetDamage < minDamage.get()) {
+                    return;
+                }
+
+                for (CardinalDirection dir : CardinalDirection.values()) {
+                    if (this.strictDirection.get()
+                            && dir.toDirection() != Objects.requireNonNull(mc.player).getHorizontalFacing()
+                            && dir.toDirection().getOpposite() != mc.player.getHorizontalFacing()) continue;
+                }
+
+                if (AntiStuck.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.GLOWSTONE) {
+                    BlockUtils.breakBlock(targetHeadPos, false);
+                }
+
+                if (placeSupport.get() && CombatUtils.isSurrounded(target)) {
+                    placeSupportBlocks(target);
+                }
+
+                if (!Smart.get() && (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.AIR || this.mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
+                    TargetHeadPos(target);
+                    anchorPlaced = true;
+                } else if (Smart.get() && CombatUtils.isSurrounded(target) && mc.world.getBlockState(targetHeadPos).isAir()) {
+                    TargetHeadPos(target);
+                    anchorPlaced = true;
+                } else if (!Smart.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.OBSIDIAN && this.mc.world.getBlockState(targetFeetPos).isAir()) {
+                    TargetFeetPos(target);
+                    anchorPlaced = true;
+                }
+
+                if (obsidianFound) {
+
+                } else {
+                    airFound = true;
+                }
+
+                int maxIterations = 10; // Limit the number of iterations to avoid infinite loops and crashing you
+                int iterationCount = 0;
+
+                while (!respawnAnchorFound && (!eastChecked || !northChecked || !southChecked || !westChecked) && iterationCount < maxIterations) {
+                    iterationCount++;
+                    if (safety.get() == SafetyMode.safe && selfDamage > this.maxSelfDamage.get()) return;
+                    if (safety.get() == SafetyMode.balance && selfDamage <= this.maxSelfDamage.get()) return;
+                    if (safety.get() == SafetyMode.off && (selfDamage >= this.maxSelfDamage.get() || selfDamage <= this.maxSelfDamage.get()))
+                        return;
+
+
+                    if (!eastChecked) {
+                        eastChecked = true;
+                        if (Smart.get() && mc.world.getBlockState(anchorEast).isAir() || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
+                            if (!anchorPlaced) {
+                                this.PlaceEastAnchor(target);
+                                anchorPlaced = true;
+                            }
+
+                            respawnAnchorFound = true;
+                        } else {
+                            Block eastBlock = mc.world.getBlockState(anchorEast).getBlock();
+                            if (eastBlock == Blocks.OBSIDIAN) {
+                                obsidianFound = true;
+                            } else if (eastBlock != Blocks.FIRE) {
+                                airFound = true;
+                            }
                         }
+                    }
 
-                        respawnAnchorFound = true;
-                    } else {
-                        Block eastBlock = mc.world.getBlockState(anchorEast).getBlock();
-                        if (eastBlock == Blocks.OBSIDIAN) {
-                            obsidianFound = true;
-                        } else if (eastBlock != Blocks.FIRE) {
-                            airFound = true;
+                    if (!northChecked) {
+                        northChecked = true;
+                        if (Smart.get() && mc.world.getBlockState(anchorNorth).isAir() || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
+                            if (!anchorPlaced) {
+                                this.PlaceNorthAnchor(target);
+                                anchorPlaced = true;
+                            }
+                            respawnAnchorFound = true;
+                        } else {
+                            Block northBlock = mc.world.getBlockState(anchorNorth).getBlock();
+                            if (northBlock == Blocks.OBSIDIAN) {
+                                obsidianFound = true;
+                            } else if (northBlock != Blocks.FIRE) {
+                                airFound = true;
+                            }
+                        }
+                    }
+
+                    if (!southChecked) {
+                        southChecked = true;
+                        if (Smart.get() && this.mc.world.getBlockState(anchorSouth).isAir() || mc.world.getBlockState(anchorSouth).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
+                            if (!anchorPlaced) {
+                                this.PlaceSouthAnchor(target);
+                                anchorPlaced = true;
+                            }
+                        } else {
+                            Block southBlock = mc.world.getBlockState(anchorSouth).getBlock();
+                            if (southBlock == Blocks.OBSIDIAN) {
+                                obsidianFound = true;
+                            } else if (southBlock != Blocks.FIRE) {
+                                airFound = true;
+                            }
+                        }
+                    }
+
+                    if (!westChecked) {
+                        westChecked = true;
+                        if (Smart.get() && this.mc.world.getBlockState(anchorWest).isAir() || mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
+                            if (!anchorPlaced) {
+                                PlaceWestAnchor(target);
+                                anchorPlaced = true;
+                            }
+
+
+                        } else {
+                            Block westBlock = this.mc.world.getBlockState(anchorWest).getBlock();
+                            if (westBlock == Blocks.OBSIDIAN) {
+                                obsidianFound = true;
+                            } else if (westBlock != Blocks.FIRE) {
+                                airFound = true;
+                            }
                         }
                     }
                 }
-
-                if (!northChecked) {
-                    northChecked = true;
-                    if (Smart.get() && mc.world.getBlockState(anchorNorth).isAir() || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
-                        if (!anchorPlaced) {
-                            this.PlaceNorthAnchor(target);
-                            anchorPlaced = true;
-                        }
-                        respawnAnchorFound = true;
-                    } else {
-                        Block northBlock = mc.world.getBlockState(anchorNorth).getBlock();
-                        if (northBlock == Blocks.OBSIDIAN) {
-                            obsidianFound = true;
-                        } else if (northBlock != Blocks.FIRE) {
-                            airFound = true;
-                        }
-                    }
-                }
-
-                if (!southChecked) {
-                    southChecked = true;
-                    if (Smart.get() && this.mc.world.getBlockState(anchorSouth).isAir() || mc.world.getBlockState(anchorSouth).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
-                        if (!anchorPlaced) {
-                            this.PlaceSouthAnchor(target);
-                            anchorPlaced = true;
-                        }
-                    } else {
-                        Block southBlock = mc.world.getBlockState(anchorSouth).getBlock();
-                        if (southBlock == Blocks.OBSIDIAN) {
-                            obsidianFound = true;
-                        } else if (southBlock != Blocks.FIRE) {
-                            airFound = true;
-                        }
-                    }
-                }
-
-                if (!westChecked) {
-                    westChecked = true;
-                    if (Smart.get() && this.mc.world.getBlockState(anchorWest).isAir() || mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR || this.mc.world.getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
-                        if (!anchorPlaced) {
-                            PlaceWestAnchor(target);
-                            anchorPlaced = true;
-                        }
-
-
-                    } else {
-                        Block westBlock = this.mc.world.getBlockState(anchorWest).getBlock();
-                        if (westBlock == Blocks.OBSIDIAN) {
-                            obsidianFound = true;
-                        } else if (westBlock != Blocks.FIRE) {
-                            airFound = true;
-                        }
-                    }
+            }
+            if (anchorPlaced) {
+                switch (swingMode.get()) {
+                    case none:
+                        break;
+                    case mainhand:
+                        mc.player.swingHand(Hand.MAIN_HAND);
+                        break;
+                    case offhand:
+                        mc.player.swingHand(Hand.OFF_HAND);
+                    case packet:
+                        Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+                        break;
                 }
             }
-        }
-        if (anchorPlaced) {
-            switch (swingMode.get()) {
-                case none:
-                    break;
-                case mainhand:
-                    mc.player.swingHand(Hand.MAIN_HAND);
-                    break;
-                case offhand:
-                    mc.player.swingHand(Hand.OFF_HAND);
-                case packet:
-                    Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-                    break;
-            }
+        } catch (Exception e) {
+            ChatUtils.sendMsg(Text.of("found error" + e.getClass().getName() + "Please report this to seasnail1:" + e.getMessage()));
         }
     }
 
@@ -445,13 +441,9 @@ public class AutoAnchor extends Module {
 
     private void PlaceEastAnchor(PlayerEntity target) {
         BlockPos anchorEast = target.getBlockPos().east(1);
-
         FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
         FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
-        float SelfDamage = DamageUtils.anchorDamage(mc.player, anchorEast.toCenterPos());
-
-        if (SelfDamage < this.maxSelfDamage.get() || (this.safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
             if (Objects.requireNonNull(mc.world).getBlockState(anchorEast).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
                 BlockUtils.place(anchorEast, anchor, rotate.get(), 100, true);
@@ -470,7 +462,6 @@ public class AutoAnchor extends Module {
             mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
             InvUtils.swapBack();
             AnchorPos = anchorEast;
-        }
     }
 
     private void PlaceWestAnchor(PlayerEntity target) {
@@ -478,14 +469,11 @@ public class AutoAnchor extends Module {
         FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
         FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
-        float SelfDamage = DamageUtils.anchorDamage(mc.player, anchorWest.toCenterPos());
 
-        if (SelfDamage < maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
             if (Objects.requireNonNull(mc.world).getBlockState(anchorWest).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
                 BlockUtils.place(anchorWest, anchor, rotate.get(), 100, true);
                 InvUtils.swapBack();
-            }
 
             assert mc.interactionManager != null;
             if (mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR) {
@@ -510,10 +498,6 @@ public class AutoAnchor extends Module {
         FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
         FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
-        float SelfDamage = DamageUtils.anchorDamage(mc.player, anchorSouth.toCenterPos());
-
-
-        if (SelfDamage < maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
             assert mc.world != null;
             if (mc.world.getBlockState(anchorSouth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
@@ -533,7 +517,6 @@ public class AutoAnchor extends Module {
             Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorSouth.getX() + 0.5, anchorSouth.getY() + 0.5, anchorSouth.getZ() + 0.5), Direction.UP, anchorSouth, true));
             InvUtils.swapBack();
             AnchorPos = anchorSouth;
-        }
     }
 
     private void PlaceNorthAnchor(PlayerEntity target) {
@@ -542,11 +525,6 @@ public class AutoAnchor extends Module {
         FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
         FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
-        float SelfDamage = DamageUtils.anchorDamage(mc.player, anchorNorth.toCenterPos());
-
-
-        if (SelfDamage < maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
-
 
             if (Objects.requireNonNull(mc.world).getBlockState(anchorNorth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
                 BlockUtils.place(anchorNorth, anchor, rotate.get(), 100, true);
@@ -566,7 +544,6 @@ public class AutoAnchor extends Module {
             mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
             InvUtils.swapBack();
             AnchorPos = anchorNorth;
-        }
     }
     private void TargetHeadPos(PlayerEntity target) {
         BlockPos targetHeadPos = target.getBlockPos().up(2);
@@ -598,11 +575,9 @@ public class AutoAnchor extends Module {
     private void TargetFeetPos(PlayerEntity target) {
         BlockPos TargetFeetPos = target.getBlockPos().down(1);
 
-        BlockPos targetHeadPos = target.getBlockPos().up(2);
         FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
         FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
-        float SelfDamage = DamageUtils.anchorDamage(mc.player, TargetFeetPos.toCenterPos());
 
         if (Objects.requireNonNull(mc.world).getBlockState(TargetFeetPos).getBlock() == Blocks.AIR) {
             BlockUtils.place(TargetFeetPos, anchor, rotate.get(), 100, true);
@@ -629,9 +604,6 @@ public class AutoAnchor extends Module {
     @Override
     public void onDeactivate() {
         running = false;
-        if (thread != null) {
-            thread.interrupt();
-        }
         target = null;
         AnchorPos = null;
     }
