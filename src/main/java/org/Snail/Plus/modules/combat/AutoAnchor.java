@@ -206,6 +206,7 @@ public class AutoAnchor extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
     private BlockPos AnchorPos;
+    private boolean anchorPlaced = false;
     public AutoAnchor() {
         super(Addon.Snail, "Auto Anchor+", "Anchor aura but better");
     }
@@ -257,7 +258,7 @@ public class AutoAnchor extends Module {
             boolean northChecked = false;
             boolean southChecked = false;
             boolean westChecked = false;
-            boolean anchorPlaced = false;
+            anchorPlaced = false;
 
 
             if (Objects.requireNonNull(player).getHealth() <= DisableHealth.get() && DisableHealth.get() > 0) return;
@@ -387,17 +388,19 @@ public class AutoAnchor extends Module {
                 }
             }
         }
-        switch (swingMode.get()) {
-            case none:
-                break;
-            case mainhand:
-                mc.player.swingHand(Hand.MAIN_HAND);
-                break;
-            case offhand:
-                mc.player.swingHand(Hand.OFF_HAND);
-            case packet:
-                Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-                break;
+        if (anchorPlaced) {
+            switch (swingMode.get()) {
+                case none:
+                    break;
+                case mainhand:
+                    mc.player.swingHand(Hand.MAIN_HAND);
+                    break;
+                case offhand:
+                    mc.player.swingHand(Hand.OFF_HAND);
+                case packet:
+                    Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+                    break;
+            }
         }
     }
 
