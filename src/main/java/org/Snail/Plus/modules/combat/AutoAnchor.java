@@ -164,8 +164,6 @@ public class AutoAnchor extends Module {
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
-
-
     private final Setting<Boolean> shrink = sgGeneral.add(new BoolSetting.Builder()
             .name("shrink")
             .description("shrinks the render")
