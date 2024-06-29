@@ -55,6 +55,13 @@ public class AutoAnchor extends Module {
         normal,
     }
 
+    public enum SwingMode {
+        offhand,
+        mainhand,
+        packet,
+        none
+    }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private Thread thread;
@@ -184,6 +191,13 @@ public class AutoAnchor extends Module {
             .defaultValue(3)
             .sliderMax(100)
             .sliderMin(1)
+            .visible(() -> renderMode.get() == RenderMode.fading)
+            .build());
+
+    private final Setting<SwingMode> swingMode = sgGeneral.add(new EnumSetting.Builder<SwingMode>()
+            .name("swing type")
+            .description("swing type")
+            .defaultValue(SwingMode.mainhand)
             .build());
 
     private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
@@ -373,6 +387,18 @@ public class AutoAnchor extends Module {
                 }
             }
         }
+        switch (swingMode.get()) {
+            case none:
+                break;
+            case mainhand:
+                mc.player.swingHand(Hand.MAIN_HAND);
+                break;
+            case offhand:
+                mc.player.swingHand(Hand.OFF_HAND);
+            case packet:
+                Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+                break;
+        }
     }
 
     private Vec3d predictTargetPosition(PlayerEntity target) {
@@ -420,7 +446,7 @@ public class AutoAnchor extends Module {
 
         if (SelfDamage < this.maxSelfDamage.get() || (this.safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
-            if (Objects.requireNonNull(mc.world).getBlockState(anchorEast).getBlock() == Blocks.AIR) {
+            if (Objects.requireNonNull(mc.world).getBlockState(anchorEast).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
                 BlockUtils.place(anchorEast, anchor, rotate.get(), 100, true);
                 InvUtils.swapBack();
             }
@@ -449,7 +475,7 @@ public class AutoAnchor extends Module {
 
         if (SelfDamage < maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
-            if (Objects.requireNonNull(mc.world).getBlockState(anchorWest).getBlock() == Blocks.AIR) {
+            if (Objects.requireNonNull(mc.world).getBlockState(anchorWest).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
                 BlockUtils.place(anchorWest, anchor, rotate.get(), 100, true);
                 InvUtils.swapBack();
             }
@@ -483,7 +509,7 @@ public class AutoAnchor extends Module {
         if (SelfDamage < maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
             assert mc.world != null;
-            if (mc.world.getBlockState(anchorSouth).getBlock() == Blocks.AIR) {
+            if (mc.world.getBlockState(anchorSouth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
                 BlockUtils.place(anchorSouth, anchor, rotate.get(), 100, true);
                 InvUtils.swapBack();
             }
@@ -515,7 +541,7 @@ public class AutoAnchor extends Module {
         if (SelfDamage < maxSelfDamage.get() || (safety.get() == SafetyMode.safe && SelfDamage <= EntityUtils.getTotalHealth(Objects.requireNonNull(mc.player)))) {
 
 
-            if (Objects.requireNonNull(mc.world).getBlockState(anchorNorth).getBlock() == Blocks.AIR) {
+            if (Objects.requireNonNull(mc.world).getBlockState(anchorNorth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
                 BlockUtils.place(anchorNorth, anchor, rotate.get(), 100, true);
                 InvUtils.swapBack();
             }
@@ -541,7 +567,7 @@ public class AutoAnchor extends Module {
         FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
 
-        if (Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).getBlock() == Blocks.AIR) {
+        if (Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).isAir()) {
             BlockUtils.place(targetHeadPos, anchor, rotate.get(), 100, true);
             InvUtils.swapBack();
             AnchorPos = targetHeadPos;
