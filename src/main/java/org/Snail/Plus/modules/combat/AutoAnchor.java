@@ -66,6 +66,7 @@ public class AutoAnchor extends Module {
 
     private Thread thread;
     private volatile boolean running;
+    private PlayerEntity target;
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("range")
@@ -207,13 +208,16 @@ public class AutoAnchor extends Module {
             .build());
     private BlockPos AnchorPos;
     private boolean anchorPlaced = false;
+
     public AutoAnchor() {
         super(Addon.Snail, "Auto Anchor+", "Anchor aura but better");
     }
 
     @Override
     public void onActivate() {
+        target = null;
         running = true;
+        AnchorPos = null;
         thread = new Thread(() -> {
             while (running) {
 
@@ -227,8 +231,8 @@ public class AutoAnchor extends Module {
             toggle();
             return;
         }
-
-        PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+        target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+        if (TargetUtils.isBadTarget(target, range.get())) return;
         if (target != null) {
             long currentTime = System.currentTimeMillis();
             if ((currentTime - lastAnchorPlaceTime) < AnchorDelay.get() * 1000) return;
@@ -240,7 +244,7 @@ public class AutoAnchor extends Module {
 
             Vec3d targetPos = predictMovement.get() ? predictTargetPosition(target) : target.getPos();
 
-            if (TargetUtils.isBadTarget(target, range.get())) return;
+
 
             ClientPlayerEntity player = mc.player;
 
@@ -411,7 +415,7 @@ public class AutoAnchor extends Module {
     @EventHandler
     public void AnchorRender(Render3DEvent event) {
         RenderMode mode = renderMode.get();
-
+        if (TargetUtils.isBadTarget(target, range.get())) return;
         if (AnchorPos != null) {
             if (mode == RenderMode.normal) {
                 event.renderer.box(AnchorPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
@@ -628,5 +632,7 @@ public class AutoAnchor extends Module {
         if (thread != null) {
             thread.interrupt();
         }
+        target = null;
+        AnchorPos = null;
     }
 }
