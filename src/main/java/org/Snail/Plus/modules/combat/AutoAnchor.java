@@ -35,40 +35,7 @@ import java.util.Objects;
 
 public class AutoAnchor extends Module {
 
-    private long lastAnchorPlaceTime = 0;
-    private long lastGlowstonePlaceTime = 0;
-
-
-    public enum SafetyMode {
-        safe,
-        balance,
-        off,
-    }
-
-    public enum PlaceMode {
-        side,
-        line,
-    }
-
-
-    public enum RenderMode {
-        fading,
-        normal,
-    }
-
-    public enum SwingMode {
-        offhand,
-        mainhand,
-        packet,
-        none
-    }
-
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-
-    private Thread thread;
-    private volatile boolean running;
-    private PlayerEntity target;
-
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("range")
             .description("Range to target player(s)")
@@ -76,7 +43,6 @@ public class AutoAnchor extends Module {
             .sliderMax(10.0)
             .sliderMin(1.0)
             .build());
-
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotation")
             .description("Rotates towards the block when placing.")
@@ -87,13 +53,16 @@ public class AutoAnchor extends Module {
             .description("How to filter targets within range.")
             .defaultValue(SortPriority.LowestDistance)
             .build());
-
     private final Setting<SafetyMode> safety = sgGeneral.add(new EnumSetting.Builder<SafetyMode>()
             .name("safe-mode")
             .description("Safety mode")
             .defaultValue(SafetyMode.safe)
             .build());
-
+    private final Setting<SwapMode> swapMethod = sgGeneral.add(new EnumSetting.Builder<SwapMode>()
+            .name("swap mode")
+            .description("swap mode. Silent is most consistent, but invswitch is more convenient")
+            .defaultValue(SwapMode.silent)
+            .build());
     private final Setting<Double> AnchorDelay = sgGeneral.add(new DoubleSetting.Builder()
             .name("anchor delay")
             .description("the anchor delay")
@@ -101,7 +70,6 @@ public class AutoAnchor extends Module {
             .min(0)
             .sliderMax(5)
             .build());
-
     private final Setting<Double> GlowstoneDelay = sgGeneral.add(new DoubleSetting.Builder()
             .name("glowstone delay")
             .description("the glowstone delay")
@@ -116,7 +84,6 @@ public class AutoAnchor extends Module {
             .sliderMax(36.0)
             .sliderMin(0.0)
             .build());
-
     private final Setting<Double> maxSelfDamage = sgGeneral.add(new DoubleSetting.Builder()
             .name("self damage")
             .description("the max amount to deal to you")
@@ -124,7 +91,6 @@ public class AutoAnchor extends Module {
             .sliderMax(36.0)
             .sliderMin(0.0)
             .build());
-
     private final Setting<Double> minDamage = sgGeneral.add(new DoubleSetting.Builder()
             .name("min damage")
             .description("the lowest amount of damage you should deal to the target (higher = less targets | lower = more targets)")
@@ -132,7 +98,6 @@ public class AutoAnchor extends Module {
             .sliderMax(36.0)
             .sliderMin(0.0)
             .build());
-
     private final Setting<Boolean> strictDirection = sgGeneral.add(new BoolSetting.Builder()
             .name("strict direction")
             .description("Only places anchors in the direction you are facing. Will crash if you are falling")
@@ -143,31 +108,26 @@ public class AutoAnchor extends Module {
             .description("Whether to place support blocks.")
             .defaultValue(true)
             .build());
-
     private final Setting<Boolean> predictMovement = sgGeneral.add(new BoolSetting.Builder()
             .name("movement predict")
             .description("predicts the targets movement")
             .defaultValue(false)
             .build());
-
     private final Setting<Boolean> AntiStuck = sgGeneral.add(new BoolSetting.Builder()
             .name("anti stuck")
             .description("breaks glowstone in the way")
             .defaultValue(true)
             .build());
-
     private final Setting<Boolean> Smart = sgGeneral.add(new BoolSetting.Builder()
             .name("smart")
             .description("more calculations. Highly recommended")
             .defaultValue(true)
             .build());
-
     private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
             .name("side color")
             .description("Side color")
             .defaultValue(new SettingColor(255, 0, 0, 75))
             .build());
-
     private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
             .name("line color")
             .description("Line color")
@@ -178,13 +138,11 @@ public class AutoAnchor extends Module {
             .description("shrinks the render")
             .defaultValue(true)
             .build());
-
     private final Setting<RenderMode> renderMode = sgGeneral.add(new EnumSetting.Builder<RenderMode>()
             .name("render mode")
             .description("render mode")
             .defaultValue(RenderMode.normal)
             .build());
-
     private final Setting<Integer> rendertime = sgGeneral.add(new IntSetting.Builder()
             .name("render time")
             .description("render time")
@@ -193,18 +151,24 @@ public class AutoAnchor extends Module {
             .sliderMin(1)
             .visible(() -> renderMode.get() == RenderMode.fading)
             .build());
-
     private final Setting<SwingMode> swingMode = sgGeneral.add(new EnumSetting.Builder<SwingMode>()
             .name("swing type")
             .description("swing type")
             .defaultValue(SwingMode.mainhand)
             .build());
-
     private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape-mode")
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
+    private long lastAnchorPlaceTime = 0;
+    private long lastGlowstonePlaceTime = 0;
+    private Thread thread;
+    private volatile boolean running;
+    private PlayerEntity target;
+    private boolean Swapped;
+    private FindItemResult anchor;
+    private FindItemResult glowstone;
     private BlockPos AnchorPos;
     private boolean anchorPlaced = false;
 
@@ -218,8 +182,11 @@ public class AutoAnchor extends Module {
         running = true;
         AnchorPos = null;
     }
+
     @EventHandler
     private void onTick(TickEvent.Post event) {
+
+
         try {
             if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
                 toggle();
@@ -247,6 +214,7 @@ public class AutoAnchor extends Module {
                 BlockPos anchorSouth = target.getBlockPos().south(1);
                 BlockPos targetFeetPos = target.getBlockPos().down(1);
 
+
                 boolean obsidianFound = false;
                 boolean airFound = false;
                 boolean respawnAnchorFound = false;
@@ -255,6 +223,7 @@ public class AutoAnchor extends Module {
                 boolean southChecked = false;
                 boolean westChecked = false;
                 anchorPlaced = false;
+                Swapped = false;
 
 
                 if (Objects.requireNonNull(player).getHealth() <= DisableHealth.get() && DisableHealth.get() > 0)
@@ -425,6 +394,7 @@ public class AutoAnchor extends Module {
             }
         }
     }
+
     private void placeSupportBlocks(PlayerEntity target) {
         BlockPos supportPosNorth = target.getBlockPos().north(1);
         BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
@@ -441,164 +411,322 @@ public class AutoAnchor extends Module {
 
     private void PlaceEastAnchor(PlayerEntity target) {
         BlockPos anchorEast = target.getBlockPos().east(1);
-        FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
-        FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
+
+
         ClientPlayerEntity player = mc.player;
+        anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+        glowstone = InvUtils.find(Items.GLOWSTONE);
 
-            if (Objects.requireNonNull(mc.world).getBlockState(anchorEast).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
-                BlockUtils.place(anchorEast, anchor, rotate.get(), 100, true);
-                InvUtils.swapBack();
-            }
-            assert mc.interactionManager != null;
+        if (!Swapped) {
+            switch (swapMethod.get()) {
+                case normal:
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorEast).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorEast, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
+                    InvUtils.swap(anchor.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
+                    InvUtils.swapBack();
+                    Swapped = true;
+                    break;
+                case silent:
+                    anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorEast).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorEast, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), true);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
+                    InvUtils.swapBack();
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
+                    Swapped = true;
+                    break;
+                case invSwitch:
+                    anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+                    int originalSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
+                    InvUtils.quickSwap().fromId(originalSlot).to(anchor.slot());
 
-            if (mc.world.getBlockState(anchorEast).getBlock() == Blocks.RESPAWN_ANCHOR) {
-                if (glowStone.found()) {
-                    InvUtils.swap(glowStone.slot(), true);
-                    mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
-                }
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorEast).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorEast).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorEast, anchor, rotate.get(), 100, true);
+                        InvUtils.quickSwap().fromId(anchor.slot()).to(originalSlot); // Swap back to original slot after placing anchor
+                        Swapped = true;
+                        AnchorPos = anchorEast;
+                    }
+
+                    InvUtils.quickSwap().fromId(originalSlot).to(glowstone.slot());
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
+                    InvUtils.quickSwap().fromId(glowstone.slot()).to(originalSlot); // Swap back to original slot after interacting with glowstone
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
+                    Swapped = true;
             }
-            if (mc.world.getBlockState(anchorEast).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(anchorEast).getBlock() == Blocks.FIRE)
-                InvUtils.swap(anchor.slot(), true);
-            mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorEast.getX() + 0.5, anchorEast.getY() + 0.5, anchorEast.getZ() + 0.5), Direction.UP, anchorEast, true));
-            InvUtils.swapBack();
-            AnchorPos = anchorEast;
+        }
+        AnchorPos = anchorEast;
     }
 
     private void PlaceWestAnchor(PlayerEntity target) {
         BlockPos anchorWest = target.getBlockPos().west(1);
-        FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
-        FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
+        anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+        glowstone = InvUtils.find(Items.GLOWSTONE);
 
+        if (!Swapped) {
+            switch (swapMethod.get()) {
+                case normal:
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorWest).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorWest, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorWest.getX() + 0.5, anchorWest.getY() + 0.5, anchorWest.getZ() + 0.5), Direction.UP, anchorWest, true));
+                    InvUtils.swap(anchor.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorWest.getX() + 0.5, anchorWest.getY() + 0.5, anchorWest.getZ() + 0.5), Direction.UP, anchorWest, true));
+                    InvUtils.swap(anchor.slot(), true);
+                    Swapped = true;
+                    break;
+                case silent:
+                    anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorWest).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorWest, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), true);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorWest.getX() + 0.5, anchorWest.getY() + 0.5, anchorWest.getZ() + 0.5), Direction.UP, anchorWest, true));
+                    InvUtils.swapBack();
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorWest.getX() + 0.5, anchorWest.getY() + 0.5, anchorWest.getZ() + 0.5), Direction.UP, anchorWest, true));
+                    Swapped = true;
 
-            if (Objects.requireNonNull(mc.world).getBlockState(anchorWest).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
-                BlockUtils.place(anchorWest, anchor, rotate.get(), 100, true);
-                InvUtils.swapBack();
+                    break;
+                case invSwitch:
+                    anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+                    int originalSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
+                    InvUtils.quickSwap().fromId(originalSlot).to(anchor.slot());
 
-            assert mc.interactionManager != null;
-            if (mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR) {
-                if (glowStone.found()) {
-                    InvUtils.swap(glowStone.slot(), true);
-                    mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorWest.getX() + 0.5, anchorWest.getY() + 0.5, anchorWest.getZ() + 0.5), Direction.UP, anchorWest, true));
-                }
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorWest).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorWest).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorWest, anchor, rotate.get(), 100, true);
+                        InvUtils.quickSwap().fromId(anchor.slot()).to(originalSlot); // Swap back to original slot after placing anchor
+                        Swapped = true;
+                        AnchorPos = anchorWest;
+                    }
+
+                    InvUtils.quickSwap().fromId(originalSlot).to(glowstone.slot());
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorWest.getX() + 0.5, anchorWest.getY() + 0.5, anchorWest.getZ() + 0.5), Direction.UP, anchorWest, true));
+                    InvUtils.quickSwap().fromId(glowstone.slot()).to(originalSlot); // Swap back to original slot after interacting with glowstone
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorWest.getX() + 0.5, anchorWest.getY() + 0.5, anchorWest.getZ() + 0.5), Direction.UP, anchorWest, true));
+                    Swapped = true;
             }
-
-            if (mc.world.getBlockState(anchorWest).getBlock() == Blocks.RESPAWN_ANCHOR)
-                InvUtils.swap(anchor.slot(), true);
-
-            mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorWest.getX() + 0.5, anchorWest.getY() + 0.5, anchorWest.getZ() + 0.5), Direction.UP, anchorWest, true));
-            InvUtils.swapBack();
-            AnchorPos = anchorWest;
         }
+        AnchorPos = anchorWest;
     }
 
     private void PlaceSouthAnchor(PlayerEntity target) {
         BlockPos anchorSouth = target.getBlockPos().south(1);
 
-        FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
-        FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
+        anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+        glowstone = InvUtils.find(Items.GLOWSTONE);
 
-            assert mc.world != null;
-            if (mc.world.getBlockState(anchorSouth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
-                BlockUtils.place(anchorSouth, anchor, rotate.get(), 100, true);
-                InvUtils.swapBack();
-            }
-            if (mc.world.getBlockState(anchorSouth).getBlock() == Blocks.RESPAWN_ANCHOR) {
-                if (glowStone.found()) {
-                    InvUtils.swap(glowStone.slot(), true);
-
+        if (!Swapped) {
+            switch (swapMethod.get()) {
+                case normal:
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorSouth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorSouth, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), false);
                     Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorSouth.getX() + 0.5, anchorSouth.getY() + 0.5, anchorSouth.getZ() + 0.5), Direction.UP, anchorSouth, true));
-                }
-            }
-            if (mc.world.getBlockState(anchorSouth).getBlock() == Blocks.RESPAWN_ANCHOR)
-                InvUtils.swap(anchor.slot(), true);
+                    InvUtils.swap(anchor.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorSouth.getX() + 0.5, anchorSouth.getY() + 0.5, anchorSouth.getZ() + 0.5), Direction.UP, anchorSouth, true));
+                    Swapped = true;
+                    break;
+                case silent:
+                    anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorSouth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorSouth, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), true);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorSouth.getX() + 0.5, anchorSouth.getY() + 0.5, anchorSouth.getZ() + 0.5), Direction.UP, anchorSouth, true));
+                    InvUtils.swapBack();
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorSouth.getX() + 0.5, anchorSouth.getY() + 0.5, anchorSouth.getZ() + 0.5), Direction.UP, anchorSouth, true));
+                    Swapped = true;
+                    break;
+                case invSwitch:
+                    anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+                    int originalSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
+                    InvUtils.quickSwap().fromId(originalSlot).to(anchor.slot());
 
-            Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorSouth.getX() + 0.5, anchorSouth.getY() + 0.5, anchorSouth.getZ() + 0.5), Direction.UP, anchorSouth, true));
-            InvUtils.swapBack();
-            AnchorPos = anchorSouth;
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorSouth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorSouth).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorSouth, anchor, rotate.get(), 100, true);
+                        InvUtils.quickSwap().fromId(anchor.slot()).to(originalSlot); // Swap back to original slot after placing anchor
+                        Swapped = true;
+                        AnchorPos = anchorSouth;
+                    }
+
+                    InvUtils.quickSwap().fromId(originalSlot).to(glowstone.slot());
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorSouth.getX() + 0.5, anchorSouth.getY() + 0.5, anchorSouth.getZ() + 0.5), Direction.UP, anchorSouth, true));
+                    InvUtils.quickSwap().fromId(glowstone.slot()).to(originalSlot); // Swap back to original slot after interacting with glowstone
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorSouth.getX() + 0.5, anchorSouth.getY() + 0.5, anchorSouth.getZ() + 0.5), Direction.UP, anchorSouth, true));
+                    Swapped = true;
+            }
+        }
+        AnchorPos = anchorSouth;
     }
 
     private void PlaceNorthAnchor(PlayerEntity target) {
         BlockPos anchorNorth = target.getBlockPos().north(1);
 
-        FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
-        FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
+        anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+        glowstone = InvUtils.find(Items.GLOWSTONE);
 
-            if (Objects.requireNonNull(mc.world).getBlockState(anchorNorth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
-                BlockUtils.place(anchorNorth, anchor, rotate.get(), 100, true);
-                InvUtils.swapBack();
+        if (!Swapped) {
+            switch (swapMethod.get()) {
+                case normal:
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorNorth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorNorth, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
+                    InvUtils.swap(anchor.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
+                    InvUtils.swapBack();
+                    Swapped = true;
+                    break;
+                case silent:
+                    anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorNorth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorNorth, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), true);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
+                    InvUtils.swapBack();
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
+                    Swapped = true;
+                    break;
+                case invSwitch:
+                    anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+                    int originalSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
+                    InvUtils.quickSwap().fromId(originalSlot).to(anchor.slot());
+
+                    if (Objects.requireNonNull(mc.world).getBlockState(anchorNorth).isAir() || Objects.requireNonNull(mc.world).getBlockState(anchorNorth).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(anchorNorth, anchor, rotate.get(), 100, true);
+                        InvUtils.quickSwap().fromId(anchor.slot()).to(originalSlot); // Swap back to original slot after placing anchor
+                        Swapped = true;
+                        AnchorPos = anchorNorth;
+                    }
+
+                    InvUtils.quickSwap().fromId(originalSlot).to(glowstone.slot());
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
+                    InvUtils.quickSwap().fromId(glowstone.slot()).to(originalSlot); // Swap back to original slot after interacting with glowstone
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
+                    Swapped = true;
             }
-            assert mc.interactionManager != null;
-
-            if (mc.world.getBlockState(anchorNorth).getBlock() == Blocks.RESPAWN_ANCHOR) {
-                if (glowStone.found()) {
-                    InvUtils.swap(glowStone.slot(), true);
-                    mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
-                }
-            }
-            if (mc.world.getBlockState(anchorNorth).getBlock() == Blocks.RESPAWN_ANCHOR)
-                InvUtils.swap(anchor.slot(), true);
-
-            mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(anchorNorth.getX() + 0.5, anchorNorth.getY() + 0.5, anchorNorth.getZ() + 0.5), Direction.UP, anchorNorth, true));
-            InvUtils.swapBack();
-            AnchorPos = anchorNorth;
+        }
+        AnchorPos = anchorNorth;
     }
+
+
     private void TargetHeadPos(PlayerEntity target) {
         BlockPos targetHeadPos = target.getBlockPos().up(2);
-        FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
-        FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
+        anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+        glowstone = InvUtils.find(Items.GLOWSTONE);
 
-        if (Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).isAir()) {
-            BlockUtils.place(targetHeadPos, anchor, rotate.get(), 100, true);
-            InvUtils.swapBack();
-            AnchorPos = targetHeadPos;
-        }
-        if (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
-            if (glowStone.found()) {
-                InvUtils.swap(glowStone.slot(), true);
-                Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+        if (!Swapped) {
+            switch (swapMethod.get()) {
+                case normal:
+
+                    if (Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).isAir() || Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(targetHeadPos, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+                    InvUtils.swap(anchor.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+                    InvUtils.swapBack();
+                    Swapped = true;
+                    break;
+                case silent:
+                    anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                    if (Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).isAir() || Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(targetHeadPos, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), true);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+                    InvUtils.swapBack();
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+                    Swapped = true;
+                    break;
+                case invSwitch:
+                    anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+                    int originalSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
+                    InvUtils.quickSwap().fromId(originalSlot).to(anchor.slot());
+
+                    if (Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).isAir() || Objects.requireNonNull(mc.world).getBlockState(targetHeadPos).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(targetHeadPos, anchor, rotate.get(), 100, true);
+                        InvUtils.quickSwap().fromId(anchor.slot()).to(originalSlot); // Swap back to original slot after placing anchor
+                        Swapped = true;
+                        AnchorPos = targetHeadPos;
+                    }
+
+                    InvUtils.quickSwap().fromId(originalSlot).to(glowstone.slot());
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+                    InvUtils.quickSwap().fromId(glowstone.slot()).to(originalSlot); // Swap back to original slot after interacting with glowstone
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
+                    Swapped = true;
             }
         }
-
-
-        if (mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
-            InvUtils.swap(anchor.slot(), true);
-
-            Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetHeadPos.getX() + 0.5, targetHeadPos.getY() + 0.5, targetHeadPos.getZ() + 0.5), Direction.UP, targetHeadPos, true));
-            InvUtils.swapBack();
-        }
+        AnchorPos = targetHeadPos;
     }
 
     private void TargetFeetPos(PlayerEntity target) {
         BlockPos TargetFeetPos = target.getBlockPos().down(1);
 
-        FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
-        FindItemResult glowStone = InvUtils.findInHotbar(Items.GLOWSTONE);
         ClientPlayerEntity player = mc.player;
+        anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+        glowstone = InvUtils.find(Items.GLOWSTONE);
 
-        if (Objects.requireNonNull(mc.world).getBlockState(TargetFeetPos).getBlock() == Blocks.AIR) {
-            BlockUtils.place(TargetFeetPos, anchor, rotate.get(), 100, true);
-            InvUtils.swapBack();
-            AnchorPos = TargetFeetPos;
-        }
-        assert mc.interactionManager != null;
+        if (!Swapped) {
+            switch (swapMethod.get()) {
+                case normal:
 
-        if (mc.world.getBlockState(TargetFeetPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
-            if (glowStone.found()) {
-                InvUtils.swap(glowStone.slot(), true);
-                mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
+                    if (Objects.requireNonNull(mc.world).getBlockState(TargetFeetPos).isAir() || Objects.requireNonNull(mc.world).getBlockState(TargetFeetPos).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(TargetFeetPos, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
+                    InvUtils.swap(anchor.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
+                    InvUtils.swapBack();
+                    Swapped = true;
+                    break;
+                case silent:
+                    anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                    if (Objects.requireNonNull(mc.world).getBlockState(TargetFeetPos).isAir() || Objects.requireNonNull(mc.world).getBlockState(TargetFeetPos).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(TargetFeetPos, anchor, rotate.get(), 100, true);
+                    }
+                    InvUtils.swap(glowstone.slot(), true);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
+                    InvUtils.swapBack();
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
+                    Swapped = true;
+                    break;
+                case invSwitch:
+                    anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+                    int originalSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
+                    InvUtils.quickSwap().fromId(originalSlot).to(anchor.slot());
+
+                    if (Objects.requireNonNull(mc.world).getBlockState(TargetFeetPos).isAir() || Objects.requireNonNull(mc.world).getBlockState(TargetFeetPos).getBlock() == Blocks.FIRE) {
+                        BlockUtils.place(TargetFeetPos, anchor, rotate.get(), 100, true);
+                        InvUtils.quickSwap().fromId(anchor.slot()).to(originalSlot); // Swap back to original slot after placing anchor
+                        Swapped = true;
+                        AnchorPos = TargetFeetPos;
+                    }
+
+                    InvUtils.quickSwap().fromId(originalSlot).to(glowstone.slot());
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
+                    InvUtils.quickSwap().fromId(glowstone.slot()).to(originalSlot); // Swap back to original slot after interacting with glowstone
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
+                    Swapped = true;
             }
         }
-
-        if (mc.world.getBlockState(TargetFeetPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
-            InvUtils.swap(anchor.slot(), true);
-
-            mc.interactionManager.interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(TargetFeetPos.getX() + 0.5, TargetFeetPos.getY() + 0.5, TargetFeetPos.getZ() + 0.5), Direction.UP, TargetFeetPos, true));
-            InvUtils.swapBack();
-        }
+        AnchorPos = TargetFeetPos;
     }
 
     @Override
@@ -606,5 +734,34 @@ public class AutoAnchor extends Module {
         running = false;
         target = null;
         AnchorPos = null;
+    }
+
+    public enum SafetyMode {
+        safe,
+        balance,
+        off,
+    }
+
+    public enum PlaceMode {
+        side,
+        line,
+    }
+
+    public enum SwapMode {
+        silent,
+        normal,
+        invSwitch,
+    }
+
+    public enum RenderMode {
+        fading,
+        normal,
+    }
+
+    public enum SwingMode {
+        offhand,
+        mainhand,
+        packet,
+        none
     }
 }
