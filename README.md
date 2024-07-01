@@ -14,9 +14,10 @@ misc:
 combat:
 1. AntiBurrow
 2. AntiCev
-3. AntiRush
+3. SelfAnvil+
 4. AutoAnchor+
 5. AutoSand
 6. EchestFarmer+
 7. PistonPush+
 8. SnailBomber
+9. AutoTrap+
