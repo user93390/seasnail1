@@ -17,12 +17,6 @@
     },
     "done": true
   },
-  "minecraft:adventure/adventuring_time": {
-    "criteria": {
-      "minecraft:plains": "2024-06-23 00:18:15 -0400"
-    },
-    "done": false
-  },
   "minecraft:recipes/redstone/redstone": {
     "criteria": {
       "has_redstone_block": "2024-06-23 00:18:14 -0400"
@@ -38,6 +32,18 @@
   "minecraft:recipes/redstone/repeater": {
     "criteria": {
       "has_redstone_torch": "2024-06-23 00:18:14 -0400"
+    },
+    "done": true
+  },
+  "minecraft:adventure/adventuring_time": {
+    "criteria": {
+      "minecraft:plains": "2024-06-23 00:18:15 -0400"
+    },
+    "done": false
+  },
+  "minecraft:recipes/redstone/redstone_lamp": {
+    "criteria": {
+      "has_glowstone": "2024-07-01 18:09:49 -0400"
     },
     "done": true
   },

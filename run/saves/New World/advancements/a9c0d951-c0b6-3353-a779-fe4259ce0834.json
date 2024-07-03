@@ -47,6 +47,12 @@
     },
     "done": true
   },
+  "minecraft:recipes/misc/mojang_banner_pattern": {
+    "criteria": {
+      "has_enchanted_golden_apple": "2024-06-25 18:15:39 -0400"
+    },
+    "done": true
+  },
   "minecraft:husbandry/balanced_diet": {
     "criteria": {
       "enchanted_golden_apple": "2024-06-25 18:15:50 -0400"
@@ -59,9 +65,9 @@
     },
     "done": true
   },
-  "minecraft:recipes/misc/mojang_banner_pattern": {
+  "minecraft:recipes/redstone/redstone_lamp": {
     "criteria": {
-      "has_enchanted_golden_apple": "2024-06-25 18:15:39 -0400"
+      "has_glowstone": "2024-06-29 13:19:29 -0400"
     },
     "done": true
   },

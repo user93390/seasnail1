@@ -23,17 +23,17 @@
     },
     "done": true
   },
-  "minecraft:adventure/adventuring_time": {
-    "criteria": {
-      "minecraft:plains": "2024-06-21 18:36:40 -0400"
-    },
-    "done": false
-  },
   "minecraft:recipes/decorations/enchanting_table": {
     "criteria": {
       "has_obsidian": "2024-06-21 18:36:39 -0400"
     },
     "done": true
+  },
+  "minecraft:adventure/adventuring_time": {
+    "criteria": {
+      "minecraft:plains": "2024-06-21 18:36:40 -0400"
+    },
+    "done": false
   },
   "DataVersion": 3839
 }

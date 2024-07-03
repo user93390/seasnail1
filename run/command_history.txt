@@ -19,3 +19,10 @@
 /give Player864 minecraft:ender_pearl 64
 /gamemode creative
 /weather clear
+/give Player577 minecraft:chorus_fruit 64
+/give Player275 minecraft:respawn_anchor 65
+/give Player275 minecraft:respawn_anchor 64
+/give Player275 minecraft:glowstone 6545
+/give Player275 minecraft:glowstone 6205
+/difficulty peaceful
+/give Player698 minecraft:ender_pearl 65

@@ -17,15 +17,27 @@
     },
     "done": true
   },
+  "minecraft:recipes/decorations/enchanting_table": {
+    "criteria": {
+      "has_obsidian": "2024-06-20 20:20:31 -0400"
+    },
+    "done": true
+  },
   "minecraft:adventure/adventuring_time": {
     "criteria": {
       "minecraft:plains": "2024-06-20 20:20:32 -0400"
     },
     "done": false
   },
-  "minecraft:recipes/decorations/enchanting_table": {
+  "minecraft:nether/charge_respawn_anchor": {
     "criteria": {
-      "has_obsidian": "2024-06-20 20:20:31 -0400"
+      "charge_respawn_anchor": "2024-06-29 23:51:03 -0400"
+    },
+    "done": true
+  },
+  "minecraft:recipes/redstone/redstone_lamp": {
+    "criteria": {
+      "has_glowstone": "2024-06-29 23:50:35 -0400"
     },
     "done": true
   },

@@ -413,18 +413,18 @@ public class AutoAnchor extends Module {
                 if (renderBoxOne == null) renderBoxOne = new Box(AnchorPos);
                 if (renderBoxTwo == null) renderBoxTwo = new Box(AnchorPos);
 
-                // Set renderBoxTwo to the target position (AnchorPos)
+
                 ((IBox) renderBoxTwo).set(
                         AnchorPos.getX(), AnchorPos.getY(), AnchorPos.getZ(),
                         AnchorPos.getX() + 1, AnchorPos.getY() + 1, AnchorPos.getZ() + 1
                 );
 
-                // Calculate the offsets
+
                 double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
                 double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
                 double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
 
-                // Update renderBoxOne position
+
                 ((IBox) renderBoxOne).set(
                         renderBoxOne.minX + offsetX,
                         renderBoxOne.minY + offsetY,
@@ -446,7 +446,6 @@ public class AutoAnchor extends Module {
         BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
         BlockPos supportPosNorthUpThree = target.getBlockPos().north(1).up(3);
         BlockPos supportPosNorthUpFour = target.getBlockPos().up(3);
-
         BlockUtils.place(supportPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 100, true);
         BlockUtils.place(supportPosNorthUpOne, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 100, true);
         BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 100, true);
@@ -455,7 +454,6 @@ public class AutoAnchor extends Module {
     }
 
     private void PlaceEastAnchor(PlayerEntity target) {
-        ClientPlayerEntity player = mc.player;
         AnchorPos = anchorEast;
         if (!Swapped) {
             SwapAndPlace();
@@ -503,7 +501,6 @@ public class AutoAnchor extends Module {
         target = null;
         AnchorPos = null;
     }
-
     private void SwapAndPlace() {
         ClientPlayerEntity player = mc.player;
 

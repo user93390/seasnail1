@@ -17,12 +17,6 @@
     },
     "done": true
   },
-  "minecraft:adventure/adventuring_time": {
-    "criteria": {
-      "minecraft:plains": "2024-06-21 19:32:32 -0400"
-    },
-    "done": false
-  },
   "minecraft:recipes/redstone/redstone": {
     "criteria": {
       "has_redstone_block": "2024-06-21 19:32:31 -0400"
@@ -32,6 +26,18 @@
   "minecraft:recipes/decorations/enchanting_table": {
     "criteria": {
       "has_obsidian": "2024-06-21 19:32:31 -0400"
+    },
+    "done": true
+  },
+  "minecraft:adventure/adventuring_time": {
+    "criteria": {
+      "minecraft:plains": "2024-06-21 19:32:32 -0400"
+    },
+    "done": false
+  },
+  "minecraft:recipes/redstone/redstone_lamp": {
+    "criteria": {
+      "has_glowstone": "2024-06-29 23:10:52 -0400"
     },
     "done": true
   },

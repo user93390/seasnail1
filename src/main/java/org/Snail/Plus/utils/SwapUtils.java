@@ -7,11 +7,12 @@ public class SwapUtils {
     private static long lastTimeoutCheck = 0;
 
     public static void SilentSwap(int ItemSlot, float Delay) {
+
+        InvUtils.swap(ItemSlot, true);
+
         long currentTime = System.currentTimeMillis();
         if ((currentTime - lastTimeoutCheck) < Delay * 1000) return;
         lastTimeoutCheck = currentTime;
-
-        InvUtils.swap(ItemSlot, true);
 
         InvUtils.swapBack();
 

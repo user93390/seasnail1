@@ -77,7 +77,7 @@ rawMouseInput:true
 glDebugVerbosity:1
 skipMultiplayerWarning:true
 hideMatchedNames:true
-joinedFirstServer:false
+joinedFirstServer:true
 hideBundleTutorial:false
 syncChunkWrites:true
 showAutosaveIndicator:true

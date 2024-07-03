@@ -53,5 +53,17 @@
     },
     "done": true
   },
+  "minecraft:nether/charge_respawn_anchor": {
+    "criteria": {
+      "charge_respawn_anchor": "2024-06-29 21:33:46 -0400"
+    },
+    "done": true
+  },
+  "minecraft:recipes/decorations/chest": {
+    "criteria": {
+      "has_lots_of_items": "2024-06-29 21:33:26 -0400"
+    },
+    "done": true
+  },
   "DataVersion": 3839
 }
