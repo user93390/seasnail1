@@ -32,6 +32,7 @@ import net.minecraft.util.math.Vec3d;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
 import org.Snail.Plus.utils.SwapUtils;
+import org.Snail.Plus.utils.TPSSyncUtil;
 
 import java.util.Objects;
 
@@ -65,6 +66,12 @@ public class AutoAnchor extends Module {
             .name("swap mode")
             .description("swap mode. Silent is most consistent, but invswitch is more convenient")
             .defaultValue(SwapMode.silent)
+            .build());
+
+    private final Setting<Boolean>  TpsSync = sgGeneral.add(new BoolSetting.Builder()
+            .name("TPS sync")
+            .description("syncs delay with current server tps")
+            .defaultValue(true)
             .build());
     private final Setting<Double> AnchorDelay = sgGeneral.add(new DoubleSetting.Builder()
             .name("anchor delay")
@@ -184,7 +191,6 @@ public class AutoAnchor extends Module {
     private BlockPos AnchorPos;
     private Box renderBoxOne, renderBoxTwo;
     private boolean anchorPlaced = false;
-
     private BlockPos anchorWest;
     private BlockPos anchorEast;
     private BlockPos anchorNorth;
@@ -202,7 +208,6 @@ public class AutoAnchor extends Module {
         target = null;
         AnchorPos = null;
     }
-
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
@@ -213,6 +218,8 @@ public class AutoAnchor extends Module {
             target = TargetUtils.getPlayerTarget(range.get(), priority.get());
             if (TargetUtils.isBadTarget(target, range.get())) return;
             if (target != null) {
+                double SyncAnchor = TpsSync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : AnchorDelay.get();
+                double SyncGlowstone =  TpsSync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : GlowstoneDelay.get();
                 long currentTime = System.currentTimeMillis();
                 if ((currentTime - lastAnchorPlaceTime) < AnchorDelay.get() * 1000) return;
                 lastAnchorPlaceTime = currentTime;
@@ -244,13 +251,14 @@ public class AutoAnchor extends Module {
                 Swapped = false;
 
 
-                if (Objects.requireNonNull(player).getHealth() <= DisableHealth.get() && DisableHealth.get() > 0)
-                    return;
 
                 if (CombatUtils.isBurrowed(target)) return;
 
                 float targetDamage = DamageUtils.anchorDamage(target, target.getBlockPos().toCenterPos());
                 float selfDamage = DamageUtils.anchorDamage(player, target.getBlockPos().toCenterPos());
+
+                if (selfDamage == DisableHealth.get()) return;
+
 
                 if (targetDamage < minDamage.get()) {
                     return;
@@ -286,7 +294,6 @@ public class AutoAnchor extends Module {
                 } else {
                     airFound = true;
                 }
-
                 int maxIterations = 10; // Limit the number of iterations to avoid infinite loops and crashing you
                 int iterationCount = 0;
 
