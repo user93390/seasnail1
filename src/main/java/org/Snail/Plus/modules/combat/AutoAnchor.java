@@ -317,7 +317,7 @@ public class AutoAnchor extends Module {
                             Block eastBlock = mc.world.getBlockState(anchorEast).getBlock();
                             if (eastBlock == Blocks.OBSIDIAN) {
                                 obsidianFound = true;
-                            } else if (eastBlock != Blocks.FIRE) {
+                            } else if (eastBlock != Blocks.FIRE && eastBlock != Blocks.AIR) {
                                 airFound = true;
                             }
                         }
@@ -335,7 +335,7 @@ public class AutoAnchor extends Module {
                             Block northBlock = mc.world.getBlockState(anchorNorth).getBlock();
                             if (northBlock == Blocks.OBSIDIAN) {
                                 obsidianFound = true;
-                            } else if (northBlock != Blocks.FIRE) {
+                            } else if (northBlock == Blocks.FIRE || northBlock == Blocks.AIR) {
                                 airFound = true;
                             }
                         }
@@ -352,7 +352,7 @@ public class AutoAnchor extends Module {
                             Block southBlock = mc.world.getBlockState(anchorSouth).getBlock();
                             if (southBlock == Blocks.OBSIDIAN) {
                                 obsidianFound = true;
-                            } else if (southBlock != Blocks.FIRE) {
+                            } else if (southBlock == Blocks.FIRE || southBlock == Blocks.AIR) {
                                 airFound = true;
                             }
                         }
@@ -371,7 +371,7 @@ public class AutoAnchor extends Module {
                             Block westBlock = this.mc.world.getBlockState(anchorWest).getBlock();
                             if (westBlock == Blocks.OBSIDIAN) {
                                 obsidianFound = true;
-                            } else if (westBlock != Blocks.FIRE) {
+                            } else if (westBlock == Blocks.FIRE || westBlock == Blocks.AIR) {
                                 airFound = true;
                             }
                         }
