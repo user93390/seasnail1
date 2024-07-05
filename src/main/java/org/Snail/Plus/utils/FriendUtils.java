@@ -9,9 +9,9 @@ import java.util.stream.StreamSupport;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class FriendUtils {
-    public static Boolean HasLowArmor(PlayerEntity entity, float durability) {
+    public static Boolean HasLowArmor(Friends friend, double durability) {
 
-        if (entity.isAlive() && Friends.get().isFriend(entity)) {
+        if (friend != null) {
             StreamSupport
                     .stream(
                             Objects.requireNonNull(mc.player).getArmorItems().spliterator(), false

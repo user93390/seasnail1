@@ -58,7 +58,6 @@ public class AutoSand extends Module {
             .defaultValue(false)
             .build());
 
-    // Static variables for colors
     private static Setting<SettingColor> SideColor;
     private static Setting<SettingColor> LineColor;
 

@@ -3,6 +3,8 @@ package org.Snail.Plus.modules.misc;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friend;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -13,6 +15,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.FriendUtils;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -26,7 +29,19 @@ public class ChatControl extends Module {
             .description("Toggle visual range notification.")
             .defaultValue(true)
             .build());
+    private final Setting<Boolean> Alert = sgVisualRange.add(new BoolSetting.Builder()
+            .name("friend alert")
+            .description("messages you're friend when they have low armor durability")
+            .defaultValue(true)
+            .build());
 
+    private final Setting<Double> Durability = sgChat.add(new DoubleSetting.Builder()
+            .name("durability ")
+            .description("the durability to notify you're friend")
+            .defaultValue(20)
+            .sliderMax(100)
+            .sliderMin(1.0)
+            .build());
     private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
             .name("check-uuid")
             .description("Toggle checking player UUIDs.")
@@ -127,6 +142,13 @@ public class ChatControl extends Module {
 
             playersInRange.clear();
             playersInRange.addAll(currentPlayersInRange);
+
+            if(Alert.get()) {
+
+                if(FriendUtils.HasLowArmor(Friends.get(), Durability.get())) {
+                    ChatUtils.sendPlayerMsg(String.valueOf(Text.of( "/msg" +" Hey! You're armor has " + Durability.get() + "% left. Watch out!")));
+                }
+            }
         } catch (Exception e) {
             ChatUtils.sendMsg(Text.of(Formatting.RED + "Error in onTick: " + e.getMessage()));
         }
@@ -140,7 +162,7 @@ public class ChatControl extends Module {
 
             if (coordsProtection.get() && containsCoords(event.message)) {
                 event.cancel();
-                ChatUtils.sendMsg(Text.of(Formatting.RED + "Your message contains coordinates, and was not sent."));
+                ChatUtils.sendMsg(Text.of(Formatting.RED + "Your message contains coordinates and was not sent."));
                 return;
             }
 

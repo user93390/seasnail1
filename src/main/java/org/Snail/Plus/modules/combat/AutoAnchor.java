@@ -130,7 +130,7 @@ public class AutoAnchor extends Module {
             .build());
     private final Setting<Boolean> Smart = sgGeneral.add(new BoolSetting.Builder()
             .name("smart")
-            .description("more calculations. Highly recommended")
+            .description("Places respawn anchors at south, east, west, north. And places up top and below if the player is surrounded")
             .defaultValue(true)
             .build());
     private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
@@ -150,8 +150,8 @@ public class AutoAnchor extends Module {
             .build());
     private final Setting<RenderMode> renderMode = sgGeneral.add(new EnumSetting.Builder<RenderMode>()
             .name("render mode")
-            .description("render mode")
-            .defaultValue(RenderMode.normal)
+            .description("render mode. Smooth is cool")
+            .defaultValue(RenderMode.smooth)
             .build());
     private final Setting<Integer> rendertime = sgGeneral.add(new IntSetting.Builder()
             .name("render time")
@@ -403,8 +403,8 @@ public class AutoAnchor extends Module {
 
     @EventHandler
     public void AnchorRender(Render3DEvent event) {
-
         RenderMode mode = renderMode.get();
+        boolean ShrinkNow = shrink.get() && TargetUtils.isBadTarget(target, range.get()) || AnchorPos == null;
         if (TargetUtils.isBadTarget(target, range.get())) return;
         if (AnchorPos != null) {
             if (mode == RenderMode.normal) {
@@ -413,9 +413,9 @@ public class AutoAnchor extends Module {
                 RenderUtils.renderTickingBlock(
                         AnchorPos, sideColor.get(),
                         lineColor.get(), shapeMode.get(),
-                        0, rendertime.get(), true,
-                        shrink.get()
+                        0, rendertime.get(), true, ShrinkNow
                 );
+
             } else if (mode == RenderMode.smooth) {
                 if (renderBoxOne == null) renderBoxOne = new Box(AnchorPos);
                 if (renderBoxTwo == null) renderBoxTwo = new Box(AnchorPos);
