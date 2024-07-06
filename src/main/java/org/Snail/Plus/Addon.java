@@ -21,23 +21,29 @@ public class Addon extends MeteorAddon {
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
 
+    private String getHWID() {
+        return DigestUtils.sha3_256Hex(DigestUtils.md2Hex(DigestUtils.sha512Hex(DigestUtils.sha512Hex(System.getenv("os") + System.getProperty("os.name") + System.getProperty("os.arch") + System.getProperty("os.version") + System.getProperty("user.language") + System.getenv("SystemRoot") + System.getenv("HOMEDRIVE") + System.getenv("PROCESSOR_LEVEL") + System.getenv("PROCESSOR_REVISION") + System.getenv("PROCESSOR_IDENTIFIER") + System.getenv("PROCESSOR_ARCHITECTURE") + System.getenv("PROCESSOR_ARCHITEW6432") + System.getenv("NUMBER_OF_PROCESSORS")))));
+    }
     @Override
     public void onInitialize() {
-
         String[] trollMessages = {
                 "Out of memory",
                 "io.netty.handler.timeout.ReadTimeoutException",
                 "Error 500: Java.Lang.NullPointerException",
                 "Incompatible mods found!",
+                "please visit https://stackoverflow.com/questions/5492937/windows-ignores-java-home-how-to-set-jdk-as-default. To fix the issue",
                 "Disk write error",
                 "Unexpected end of file",
-                "Resource temporarily unavailable"
+                "Resource temporarily unavailable",
+                "ArrayIndexOutOfBoundsException",
+                "please visit https://stackoverflow.com/questions/77141340/cant-use-latest-java-version-jdk-21-in-intellij-idea. To fix the issue",
         };
 
         Random random = new Random();
         int randomIndex = random.nextInt(trollMessages.length);
         if (HWID.CheckHWID()) {
             LOG.info("Welcome to snail++");
+            System.out.println(getHWID());
         } else {
             LOG.warn(trollMessages[randomIndex]);
             System.out.println(getHWID());
@@ -64,9 +70,7 @@ public class Addon extends MeteorAddon {
         Hud.get().register(Watermark.INFO);
     }
 
-    private String getHWID() {
-        return DigestUtils.sha3_256Hex(DigestUtils.md2Hex(DigestUtils.sha512Hex(DigestUtils.sha512Hex(System.getenv("os") + System.getProperty("os.name") + System.getProperty("os.arch") + System.getProperty("os.version") + System.getProperty("user.language") + System.getenv("SystemRoot") + System.getenv("HOMEDRIVE") + System.getenv("PROCESSOR_LEVEL") + System.getenv("PROCESSOR_REVISION") + System.getenv("PROCESSOR_IDENTIFIER") + System.getenv("PROCESSOR_ARCHITECTURE") + System.getenv("PROCESSOR_ARCHITEW6432") + System.getenv("NUMBER_OF_PROCESSORS")))));
-    }
+
 
     @Override
     public void onRegisterCategories() {

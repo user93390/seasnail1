@@ -12,7 +12,7 @@ public class HWID {
     public static boolean CheckHWID() {
         String hwid = GetHWID();
         try {
-            URL url = new URL("https://textsaver.flap.tv/lists/6lkt");
+            URL url = new URL("https://pastebin.com/9hU5dxE3");
             URLConnection conn = url.openConnection();
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String line;

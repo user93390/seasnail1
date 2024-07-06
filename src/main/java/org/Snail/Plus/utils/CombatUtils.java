@@ -9,10 +9,11 @@ import net.minecraft.util.math.BlockPos;
 import java.util.Objects;
 
 public class CombatUtils {
+        private static boolean block;
 
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+        private static final MinecraftClient mc = MinecraftClient.getInstance();
 
-    public static boolean isSurrounded(PlayerEntity target) {
+        public static boolean isSurrounded (PlayerEntity target){
         if (target == null) return false;
 
         BlockPos north = target.getBlockPos().north();
@@ -28,13 +29,13 @@ public class CombatUtils {
         return isNorthBlocked && isEastBlocked && isSouthBlocked && isWestBlocked;
     }
 
-    private static boolean IsValidBlock(BlockPos pos) {
+        private static boolean IsValidBlock (BlockPos pos){
         assert mc.world != null;
         Block block = mc.world.getBlockState(pos).getBlock();
         return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK;
     }
 
-    public static boolean isCentered(PlayerEntity target) {
+        public static boolean isCentered (PlayerEntity target){
         if (target == null) return false;
 
 
@@ -58,10 +59,31 @@ public class CombatUtils {
         return distanceX < threshold && distanceZ < threshold;
     }
 
-    public static boolean isBurrowed(PlayerEntity target) {
+        public static boolean isBurrowed (PlayerEntity target){
         if (target == null) return false;
         BlockPos blockPos = target.getBlockPos();
         Block block = Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock();
         return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK;
     }
+        public static boolean isTrapped (PlayerEntity target){
+        if (target == null) return false;
+        boolean trapped = false;
+        BlockPos Headtrap = target.getBlockPos().up(2);
+        boolean pos = Objects.requireNonNull(mc.world).getBlockState(Headtrap).getBlock() == Blocks.OBSIDIAN || mc.world.getBlockState(Headtrap).getBlock() == Blocks.NETHERITE_BLOCK || mc.world.getBlockState(Headtrap).getBlock() == Blocks.REINFORCED_DEEPSLATE;
+
+        if (pos) {
+            trapped = true;
+
+            if (!trapped) {
+            return !trapped;
+            }
+        }
+
+            if(
+                    trapped
+            ) {
+                return pos;
+            }
+            return true;
+        }
 }
