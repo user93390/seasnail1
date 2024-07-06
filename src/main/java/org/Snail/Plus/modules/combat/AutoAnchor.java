@@ -365,8 +365,6 @@ public class AutoAnchor extends Module {
                                 PlaceWestAnchor(target);
                                 anchorPlaced = true;
                             }
-
-
                         } else {
                             Block westBlock = this.mc.world.getBlockState(anchorWest).getBlock();
                             if (westBlock == Blocks.OBSIDIAN) {
