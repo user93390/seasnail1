@@ -1,6 +1,6 @@
 snail++
 
-Meteor addon developed by: @Seasnail1
+Meteor addon developed by: @Seasnail1 and @ChronosUser
 
 Modules list:
 
