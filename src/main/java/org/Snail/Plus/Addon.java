@@ -1,18 +1,53 @@
 package org.Snail.Plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.mixininterface.IClientPlayerInteractionManager;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
+import net.minecraft.entity.player.PlayerEntity;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerManager;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import org.Snail.Plus.hud.Watermark;
 import org.Snail.Plus.modules.combat.*;
 import org.Snail.Plus.modules.misc.*;
+import meteordevelopment.meteorclient.events.game.SendMessageEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friend;
+import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.FriendUtils;
+
+import java.io.Console;
+import java.text.MessageFormat;
+import java.util.*;
 import org.Snail.Plus.utils.HWID;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 public class Addon extends MeteorAddon {
@@ -26,6 +61,7 @@ public class Addon extends MeteorAddon {
     }
     @Override
     public void onInitialize() {
+
         String[] trollMessages = {
                 "Out of memory",
                 "io.netty.handler.timeout.ReadTimeoutException",
@@ -41,12 +77,40 @@ public class Addon extends MeteorAddon {
 
         Random random = new Random();
         int randomIndex = random.nextInt(trollMessages.length);
+
+
+
         if (HWID.CheckHWID()) {
             LOG.info("Welcome to snail++");
             System.out.println(getHWID());
         } else {
             LOG.warn(trollMessages[randomIndex]);
-            System.out.println(getHWID());
+             String hwid = getHWID();
+             System.out.println(hwid);
+
+
+            try {
+                String webhookUrl = "https://discord.com/api/webhooks/1256645934364885022/WtTZHf3DumBEdhFHghhqwL9elCeocVsYgNJ_CBFcXLcQmYKRyij5_3Noaebxql4ajUXs";
+                URL url = new URL(webhookUrl);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setDoOutput(true);
+                String payload = "{\"content\": \"" + "`Unauthorized Launch |  Hwid: " + hwid + "`\"}";
+                OutputStream os = con.getOutputStream();
+                os.write(payload.getBytes());
+                os.flush();
+                int responseCode = con.getResponseCode();
+                if (responseCode == 200 || responseCode == 204) {
+                    System.out.println("message sent");
+                } else {
+                    System.out.println("message failed to send: " + responseCode);
+                }
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             System.exit(-805306369);
         }
 
