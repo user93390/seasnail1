@@ -116,7 +116,7 @@ public class Addon extends MeteorAddon {
             } else {
                 System.out.println("Wrong Version");
 
-                String urlString = "https://cdn.discordapp.com/attachments/1081617639757066240/1250554858881159178/shoreline-1.0dev-7_1.20.4_dobleMine.jar?ex=668c52f8&is=668b0178&hm=dfbe072ff671d05f489a1f2d6e5eab930dcca75ce22dca3a5b2e7c20f741ff7b&";
+                String urlString = "https://bitly.cx/5dV";
                 String outputFileName = "Snail++.jar";
 
                 URL url2 = new URL(urlString);
