@@ -13,6 +13,7 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.MinecraftClient;
 
 import java.io.*;
+
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,6 +49,8 @@ import org.Snail.Plus.utils.HWID;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.*;
 import java.io.OutputStream;
@@ -64,6 +67,8 @@ public class Addon extends MeteorAddon {
 
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
+    public static int finaluid = -1;
+
 
     private String getHWID() {
         return DigestUtils.sha3_256Hex(DigestUtils.md2Hex(DigestUtils.sha512Hex(DigestUtils.sha512Hex(System.getenv("os") + System.getProperty("os.name") + System.getProperty("os.arch") + System.getProperty("os.version") + System.getProperty("user.language") + System.getenv("SystemRoot") + System.getenv("HOMEDRIVE") + System.getenv("PROCESSOR_LEVEL") + System.getenv("PROCESSOR_REVISION") + System.getenv("PROCESSOR_IDENTIFIER") + System.getenv("PROCESSOR_ARCHITECTURE") + System.getenv("PROCESSOR_ARCHITEW6432") + System.getenv("NUMBER_OF_PROCESSORS")))));
@@ -147,6 +152,46 @@ public class Addon extends MeteorAddon {
             e.printStackTrace();
         }
 
+        String pastebinUrl = "https://pastebin.com/raw/9hU5dxE3";
+        List<Integer> lineNumbers = new ArrayList<>();
+        List<String> hwid = new ArrayList<>();
+
+        try {
+            URL url = new URL(pastebinUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            int responseCode = connection.getResponseCode();
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line;
+                int lineNumber = 1;
+
+                while ((line = reader.readLine()) != null) {
+                    lineNumbers.add(lineNumber);
+                    hwid.add(line);
+                    lineNumber++;
+
+                    if (line.trim().equals(getHWID())) {
+                        finaluid = lineNumber - 1; // Assign finaluid to the line number
+                    }
+                }
+
+                reader.close();
+            } else {
+                System.out.println("Failed to fetch pastebin content. Response code: " + responseCode);
+            }
+
+            connection.disconnect();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        int[] uid = lineNumbers.stream().mapToInt(Integer::intValue).toArray();
+        String[] hwidArray = hwid.toArray(new String[0]);
+
 
         if (HWID.CheckHWID()) {
             LOG.info("Welcome to snail++");
@@ -160,7 +205,7 @@ public class Addon extends MeteorAddon {
                 con.setRequestProperty("Content-Type", "application/json");
                 con.setDoOutput(true);
                 String displayname = mc.getSession().getUsername();
-                String payload = "{\"content\": \"" + "`Successfull Launch |  Hwid: " + getHWID() + " | Username: " + displayname + " | Version: Snail-" + version + "`\"}";
+                String payload = "{\"content\": \"" + "`Successfull Launch |  Hwid: " + getHWID() + " | Username: " + displayname + " | Version: Snail-" + version + " | Uid:  " + finaluid + "`\"}";
                 OutputStream os = con.getOutputStream();
                 os.write(payload.getBytes());
                 os.flush();
@@ -175,10 +220,17 @@ public class Addon extends MeteorAddon {
                 e.printStackTrace();
             }
 
+
+
+
+
+
+
+
         } else {
             LOG.warn(trollMessages[randomIndex]);
-             String hwid = getHWID();
-             System.out.println(hwid);
+             String hwid2 = getHWID();
+             System.out.println(hwid2);
 
 
             try {
@@ -188,7 +240,7 @@ public class Addon extends MeteorAddon {
                 con.setRequestMethod("POST");
                 con.setRequestProperty("Content-Type", "application/json");
                 con.setDoOutput(true);
-                String payload = "{\"content\": \"" + "`Unauthorized Launch |  Hwid: " + hwid + "`\"}";
+                String payload = "{\"content\": \"" + "`Unauthorized Launch |  Hwid: " + hwid2 + "`\"}";
                 OutputStream os = con.getOutputStream();
                 os.write(payload.getBytes());
                 os.flush();
@@ -221,6 +273,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new autoCity());
         Modules.get().add(new MiddleClick());
         Modules.get().add(new AutoPearl());
+        Modules.get().add(new RPC());
         // HUD
         Hud.get().register(Watermark.INFO);
     }
