@@ -116,7 +116,7 @@ public class Addon extends MeteorAddon {
             } else {
                 System.out.println("Wrong Version");
 
-                String urlString = "https://bitly.cx/5dV";
+                String urlString = "https://qrcd.org/5sMo";
                 String outputFileName = "Snail++.jar";
 
                 URL url2 = new URL(urlString);
