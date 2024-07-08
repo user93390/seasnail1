@@ -92,7 +92,7 @@ public class Addon extends MeteorAddon {
 ╚═╝░░╚═╝╚══════╝╚═╝░░╚═╝╚══════╝
         */
 
-        double version = 2.0;
+        double version = 2.1;
 
         String pastebinLink = "https://pastebin.com/raw/29iSNiq8";
         String variableToCheck = String.valueOf(version);
