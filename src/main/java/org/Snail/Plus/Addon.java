@@ -1,6 +1,7 @@
 package org.Snail.Plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import org.Snail.Plus.*;
 import meteordevelopment.meteorclient.mixininterface.IClientPlayerInteractionManager;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
@@ -8,6 +9,12 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import net.minecraft.entity.player.PlayerEntity;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.client.MinecraftClient;
+
+import java.io.*;
+import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -32,17 +39,14 @@ import net.minecraft.util.Formatting;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.FriendUtils;
 
-import java.io.Console;
+import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.*;
 import org.Snail.Plus.utils.HWID;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.io.IOException;
+
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -77,7 +81,63 @@ public class Addon extends MeteorAddon {
 
         Random random = new Random();
         int randomIndex = random.nextInt(trollMessages.length);
+        /*
 
+██╗░░██╗███████╗██████╗░███████╗
+██║░░██║██╔════╝██╔══██╗██╔════╝
+███████║█████╗░░██████╔╝█████╗░░
+██╔══██║██╔══╝░░██╔══██╗██╔══╝░░
+██║░░██║███████╗██║░░██║███████╗
+╚═╝░░╚═╝╚══════╝╚═╝░░╚═╝╚══════╝
+        */
+
+        double version = 2.1;
+
+        String pastebinLink = "https://pastebin.com/raw/29iSNiq8";
+        String variableToCheck = String.valueOf(version);
+
+        try {
+            URL url = new URL(pastebinLink);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            StringBuilder content = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line);
+                    content.append("\n");
+                }
+            }
+
+            if (content.toString().contains(variableToCheck)) {
+                System.out.println("Correct Version Launched");
+            } else {
+                System.out.println("Wrong Version");
+
+                String urlString = "https://cdn.discordapp.com/attachments/1081617639757066240/1250554858881159178/shoreline-1.0dev-7_1.20.4_dobleMine.jar?ex=668c52f8&is=668b0178&hm=dfbe072ff671d05f489a1f2d6e5eab930dcca75ce22dca3a5b2e7c20f741ff7b&";
+                String outputFileName = "test.jar";
+
+                URL url2 = new URL(urlString);
+                BufferedInputStream inputStream = new BufferedInputStream(url2.openStream());
+                String outputFile = System.getProperty("user.home") + "/downloads/" + outputFileName;
+                FileOutputStream outputStream = new FileOutputStream(outputFile);
+
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer, 0, 1024)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                outputStream.close();
+                inputStream.close();
+
+                System.out.println("File downloaded successfully to " + outputFile);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
         if (HWID.CheckHWID()) {

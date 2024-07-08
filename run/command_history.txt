@@ -26,3 +26,10 @@
 /give Player275 minecraft:glowstone 6205
 /difficulty peaceful
 /give Player698 minecraft:ender_pearl 65
+/give diamond_pickaxe
+/gamemode survival
+/enchant @s minecraft:efficiency 5
+/give @s minecraft:obsidian 64
+/gamemode creative
+/give @s piston
+/give @s minecraft:redstone_block

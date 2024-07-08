@@ -5,7 +5,8 @@
   "name": "snail++",
   "description": "1.21 meteor addon",
   "authors": [
-    "seasnail1"
+    "seasnail1",
+    "chronosuser"
   ],
   "contact": {
     "repo": "https://discord.gg/mZrSMrNfMw"
@@ -24,8 +25,8 @@
     "meteor-client:color": "225,25,25"
   },
   "depends": {
-    "java": ">=21",
-    "minecraft": ">1.20.4 <=1.21",
+    "java": ">=17",
+    "minecraft": ">=1.20.4 <=1.21",
     "meteor-client": "*"
   },
   "breaks": {
