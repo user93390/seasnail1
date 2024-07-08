@@ -274,6 +274,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new MiddleClick());
         Modules.get().add(new AutoPearl());
         Modules.get().add(new RPC());
+        Modules.get().add(new Autoweb());
         // HUD
         Hud.get().register(Watermark.INFO);
     }
