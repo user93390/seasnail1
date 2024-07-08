@@ -160,7 +160,7 @@ public class Addon extends MeteorAddon {
                 con.setRequestProperty("Content-Type", "application/json");
                 con.setDoOutput(true);
                 String displayname = mc.getSession().getUsername();
-                String payload = "{\"content\": \"" + "`Successfull Launch |  Hwid: " + getHWID() + " | Username: " + displayname + " | Version: " + version + "`\"}";
+                String payload = "{\"content\": \"" + "`Successfull Launch |  Hwid: " + getHWID() + " | Username: " + displayname + " | Version: Snail-" + version + "`\"}";
                 OutputStream os = con.getOutputStream();
                 os.write(payload.getBytes());
                 os.flush();
