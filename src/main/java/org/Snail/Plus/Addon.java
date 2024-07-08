@@ -1,6 +1,7 @@
 package org.Snail.Plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.systems.modules.combat.AutoCity;
 import org.Snail.Plus.*;
 import meteordevelopment.meteorclient.mixininterface.IClientPlayerInteractionManager;
 import meteordevelopment.meteorclient.systems.hud.Hud;
@@ -270,7 +271,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new SnailBomber());
         Modules.get().add(new AutoTrap());
         Modules.get().add(new Blocker());
-        Modules.get().add(new autoCity());
+        Modules.get().add(new AutoCity());
         Modules.get().add(new MiddleClick());
         Modules.get().add(new AutoPearl());
         Modules.get().add(new RPC());
