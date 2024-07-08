@@ -138,6 +138,7 @@ public class Addon extends MeteorAddon {
                 inputStream.close();
 
                 System.out.println("File downloaded successfully to " + outputFile);
+                mc.close();
 
 
             }
@@ -159,7 +160,7 @@ public class Addon extends MeteorAddon {
                 con.setRequestProperty("Content-Type", "application/json");
                 con.setDoOutput(true);
                 String displayname = mc.getSession().getUsername();
-                String payload = "{\"content\": \"" + "`Successfull Launch |  Hwid: " + getHWID() + " | Username: " + displayname +"`\"}";
+                String payload = "{\"content\": \"" + "`Successfull Launch |  Hwid: " + getHWID() + " | Username: " + displayname + " | Version: " + version + "`\"}";
                 OutputStream os = con.getOutputStream();
                 os.write(payload.getBytes());
                 os.flush();
@@ -202,7 +203,6 @@ public class Addon extends MeteorAddon {
                 e.printStackTrace();
             }
 
-            mc.close();
         }
 
         // Modules
