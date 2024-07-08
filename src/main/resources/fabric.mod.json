@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "snailplus",
-  "version": "2.1",
+  "version": "2.2",
   "name": "snail++",
   "description": "1.21 meteor addon",
   "authors": [

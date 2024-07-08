@@ -9,6 +9,8 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import net.minecraft.entity.player.PlayerEntity;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.client.MinecraftClient;
+import net.fabricmc.api.ModInitializer;
+import net.minecraft.client.MinecraftClient;
 
 import java.io.*;
 import java.net.*;
@@ -55,6 +57,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Addon");
 
@@ -92,7 +96,7 @@ public class Addon extends MeteorAddon {
 ╚═╝░░╚═╝╚══════╝╚═╝░░╚═╝╚══════╝
         */
 
-        double version = 2.1;
+        double version = 2.2;
 
         String pastebinLink = "https://pastebin.com/raw/29iSNiq8";
         String variableToCheck = String.valueOf(version);
@@ -146,6 +150,30 @@ public class Addon extends MeteorAddon {
         if (HWID.CheckHWID()) {
             LOG.info("Welcome to snail++");
             System.out.println(getHWID());
+
+            try {
+                String webhookUrl1 = "https://discord.com/api/webhooks/1256645934364885022/WtTZHf3DumBEdhFHghhqwL9elCeocVsYgNJ_CBFcXLcQmYKRyij5_3Noaebxql4ajUXs";
+                URL url = new URL(webhookUrl1);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setDoOutput(true);
+                String displayname = mc.getSession().getUsername();
+                String payload = "{\"content\": \"" + "`Successfull Launch |  Hwid: " + getHWID() + " | Username: " + displayname +"`\"}";
+                OutputStream os = con.getOutputStream();
+                os.write(payload.getBytes());
+                os.flush();
+                int responseCode = con.getResponseCode();
+                if (responseCode == 200 || responseCode == 204) {
+                    System.out.println("message sent");
+                } else {
+                    System.out.println("message failed to send: " + responseCode);
+                }
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         } else {
             LOG.warn(trollMessages[randomIndex]);
              String hwid = getHWID();
@@ -174,7 +202,7 @@ public class Addon extends MeteorAddon {
                 e.printStackTrace();
             }
 
-            System.exit(-805306369);
+            mc.close();
         }
 
         // Modules
