@@ -8,23 +8,19 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
-import org.Snail.Plus.utils.SwapUtils;
 import org.Snail.Plus.utils.TPSSyncUtil;
 
 import java.util.Objects;
@@ -151,12 +147,8 @@ public class Autoweb extends Module {
         long currentTime = System.currentTimeMillis();
         if ((currentTime - lastWebPlaceTime) < delay.get() * 1000) return;
         lastWebPlaceTime = currentTime;
-
-
         target = TargetUtils.getPlayerTarget(range.get(), priority.get());
         if (TargetUtils.isBadTarget(target, range.get())) return;
-        int originalSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
-        FindItemResult web = InvUtils.findInHotbar(Items.COBWEB);
         targetPos = target.getBlockPos();
         DoubleWeb = target.getBlockPos().up(1);
 
@@ -170,32 +162,31 @@ public class Autoweb extends Module {
         }
 
         if (Double.get() && !smart.get()) {
-            SwapUtils.SilentSwap(web.slot(), 1.0F);
-            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 0.5, DoubleWeb.getZ() + 0.5), Direction.DOWN, targetPos, false));
+            BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.COBWEB), rotate.get(), 100, true);
             currentPos = targetPos;
-            Placed = true;
-            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(DoubleWeb.getX() + 0.5, DoubleWeb.getY() + 0.5, DoubleWeb.getZ() + 0.5), Direction.DOWN, DoubleWeb, false));
+            BlockUtils.place(DoubleWeb, InvUtils.findInHotbar(Items.COBWEB), rotate.get(), 100, true);
             currentPos = DoubleWeb;
             Placed = true;
-            SwapUtils.SilentSwap(originalSlot, 0.0F);
-        } else if (Double.get() && smart.get() && CombatUtils.isSurrounded(target)) {
-            SwapUtils.SilentSwap(web.slot(), 1.0F);
-            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 0.5, DoubleWeb.getZ() + 0.5), Direction.DOWN, targetPos, false));
+        }
+        if (Double.get() && smart.get()) {
+            if(CombatUtils.isSurrounded(target)) {
+                BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.COBWEB), rotate.get(), 100, true);
+                currentPos = targetPos;
+                Placed = true;
+            } else if(Double.get() && smart.get() && !CombatUtils.isSurrounded(target)) {
+                BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.COBWEB), rotate.get(), 100, true);
+                currentPos = targetPos;
+                BlockUtils.place(DoubleWeb, InvUtils.findInHotbar(Items.COBWEB), rotate.get(), 100, true);
+                currentPos = DoubleWeb;
+                Placed = true;
+            }
+        }
+        if(!Double.get()) {
+            BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.COBWEB), rotate.get(), 100, true);
             currentPos = targetPos;
             Placed = true;
-            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(DoubleWeb.getX() + 0.5, DoubleWeb.getY() + 0.5, DoubleWeb.getZ() + 0.5), Direction.DOWN, DoubleWeb, false));
-            currentPos = DoubleWeb;
-            Placed = true;
-            SwapUtils.SilentSwap(originalSlot, 0.0F);
         }
-        if (!Double.get()) {
-            SwapUtils.SilentSwap(web.slot(), 1.0F);
-            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 0.5, DoubleWeb.getZ() + 0.5), Direction.DOWN, targetPos, false));
-            currentPos = targetPos;
-            Placed = true;
-            SwapUtils.SilentSwap(originalSlot, 0.0F);
-        }
-        if (AutoDisable.get()) {
+        if (AutoDisable.get() && Placed) {
             toggle();
             return;
         }
@@ -212,6 +203,8 @@ public class Autoweb extends Module {
                 case none:
                     break;
             }
+        } else {
+            return;
         }
     }
 
