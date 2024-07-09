@@ -265,11 +265,6 @@ public class AutoTrap extends Module {
         face,
     }
 
-    public enum Shape {
-        side,
-        line,
-    }
-
     public enum RenderMode {
         fading,
         normal,

@@ -193,10 +193,10 @@ public class Autoweb extends Module {
         if (Placed) {
             switch (swingMode.get()) {
                 case mainhand:
-                    mc.player.swingHand(Hand.MAIN_HAND);
+                    Objects.requireNonNull(mc.player).swingHand(Hand.MAIN_HAND);
                     break;
                 case offhand:
-                    mc.player.swingHand(Hand.OFF_HAND);
+                    Objects.requireNonNull(mc.player).swingHand(Hand.OFF_HAND);
                     break;
                 case packet:
                     Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);

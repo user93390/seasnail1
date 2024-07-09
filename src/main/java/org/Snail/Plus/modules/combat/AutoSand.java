@@ -14,12 +14,16 @@ import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
 
 import java.util.Objects;
+
+import static net.minecraft.item.Items.BLUE_CONCRETE_POWDER;
+import static net.minecraft.item.Items.RED_SAND;
 
 public class AutoSand extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -96,9 +100,11 @@ public class AutoSand extends Module {
 
     private long lastPlaceTime = 0;
     private boolean sandPlaced;
+
     public AutoSand() {
         super(Addon.Snail, "auto-sand", "Places sand two blocks above players' heads");
     }
+
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         long time = System.currentTimeMillis();
@@ -106,9 +112,26 @@ public class AutoSand extends Module {
         lastPlaceTime = time;
 
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if(TargetUtils.isBadTarget(target, range.get())) return;
+        if (TargetUtils.isBadTarget(target, range.get())) return;
 
         FindItemResult Support = InvUtils.findInHotbar(Items.OBSIDIAN);
+        FindItemResult Blocks = InvUtils.findInHotbar(
+                Items.SAND,
+                Items.RED_SAND,
+                Items.GRAVEL,
+                Items.CYAN_CONCRETE_POWDER,
+                Items.RED_CONCRETE_POWDER,
+                Items.BLUE_CONCRETE_POWDER,
+                Items.GRAY_CONCRETE_POWDER,
+                Items.PURPLE_CONCRETE_POWDER,
+                Items.PINK_CONCRETE_POWDER,
+                Items.MAGENTA_CONCRETE_POWDER,
+                Items.BLACK_CONCRETE_POWDER,
+                Items.LIGHT_BLUE_CONCRETE_POWDER,
+                Items.LIGHT_GRAY_CONCRETE_POWDER,
+                Items.WHITE_CONCRETE_POWDER
+
+        );
         BlockPos targetPos = target.getBlockPos().up(height.get());
 
         if (onlySurrounded.get() && CombatUtils.isSurrounded(target) && Objects.requireNonNull(mc.world).getBlockState(targetPos).isAir()) {
@@ -121,14 +144,13 @@ public class AutoSand extends Module {
 
             if (this.support.get()) {
                 BlockPos supportPosNorth = target.getBlockPos().north(1);
-                BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
-                BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
+                BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(height.get());
 
-                BlockUtils.place(supportPosNorth, Support, rotate.get(), 0, false);
-                BlockUtils.place(supportPosNorthUpOne, Support, rotate.get(), 0, true);
-                BlockUtils.place(supportPosNorthUpTwo, Support, rotate.get(), 0, true);
+                BlockUtils.place(supportPosNorth, Support, rotate.get(), 100, true);
+                BlockUtils.place(supportPosNorthUpOne, Support, rotate.get(), 100, true);
             }
-            BlockUtils.place(targetPos, InvUtils.findInHotbar(Items.SAND, Items.RED_SAND, Items.GRAVEL), rotate.get(), 0, false);
+
+            BlockUtils.place(targetPos, Blocks, rotate.get(), 0, false);
             sandPlaced = true;
             if (this.autoDisable.get() && sandPlaced) {
                 this.toggle();
@@ -139,7 +161,7 @@ public class AutoSand extends Module {
     @EventHandler
     private void onRender(Render3DEvent event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if(onlySurrounded.get() && !CombatUtils.isSurrounded(target)) return;
+        if (onlySurrounded.get() && !CombatUtils.isSurrounded(target)) return;
         BlockPos supportPosNorth = Objects.requireNonNull(target).getBlockPos().north(1);
         BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
         BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);

@@ -3,7 +3,6 @@ package org.Snail.Plus.modules.misc;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.friends.Friend;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
@@ -20,6 +19,8 @@ import org.Snail.Plus.utils.FriendUtils;
 import java.text.MessageFormat;
 import java.util.*;
 
+import static net.minecraft.text.Text.*;
+
 public class ChatControl extends Module {
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
     private final SettingGroup sgChat = settings.createGroup("Chat");
@@ -29,12 +30,23 @@ public class ChatControl extends Module {
             .description("Toggle visual range notification.")
             .defaultValue(true)
             .build());
+    private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
+            .name("check-uuid")
+            .description("Toggle checking player UUIDs.")
+            .defaultValue(true)
+            .visible(visual::get)
+            .build());
+    private final Setting<Integer> maxAmount = sgVisualRange.add(new IntSetting.Builder()
+            .name("max-amount")
+            .description("The cap of how many players the visual range notifies.")
+            .defaultValue(3)
+            .visible(visual::get)
+            .build());
     private final Setting<Boolean> Alert = sgVisualRange.add(new BoolSetting.Builder()
             .name("friend alert")
             .description("messages you're friend when they have low armor durability")
             .defaultValue(true)
             .build());
-
     private final Setting<Double> Durability = sgChat.add(new DoubleSetting.Builder()
             .name("durability ")
             .description("the durability to notify you're friend")
@@ -42,22 +54,9 @@ public class ChatControl extends Module {
             .sliderMax(100)
             .sliderMin(1.0)
             .build());
-    private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
-            .name("check-uuid")
-            .description("Toggle checking player UUIDs.")
-            .defaultValue(true)
-            .visible(visual::get)
-            .build());
     private final Setting<List<SoundEvent>> sounds = sgVisualRange.add(new SoundEventListSetting.Builder()
             .name("sounds")
             .description("Sounds to play when a player is spotted")
-            .build());
-
-    private final Setting<Integer> maxAmount = sgVisualRange.add(new IntSetting.Builder()
-            .name("max-amount")
-            .description("The cap of how many players the visual range notifies.")
-            .defaultValue(3)
-            .visible(visual::get)
             .build());
     private final Setting<Boolean> coordsProtection = sgChat.add(new BoolSetting.Builder()
             .name("coords protection")
@@ -124,7 +123,7 @@ public class ChatControl extends Module {
                         double targetY = Math.round(player.getY());
                         double targetZ = Math.round(player.getZ());
 
-                        ChatUtils.sendMsg(Text.of(Formatting.GREEN + player.getName().getString() + " is within render distance. (" + targetX + ", " + targetY + ", " + targetZ + ")"));
+                        ChatUtils.sendMsg(of(Formatting.GREEN + player.getName().getString() + " is within render distance. (" + targetX + ", " + targetY + ", " + targetZ + ")"));
                         List<SoundEvent> soundEvents = sounds.get();
                         if (!soundEvents.isEmpty()) {
                             mc.getSoundManager().play(PositionedSoundInstance.master(soundEvents.get(0), 1.0F));
@@ -136,21 +135,22 @@ public class ChatControl extends Module {
 
             for (UUID playerUuid : playersInRange) {
                 if (!currentPlayersInRange.contains(playerUuid)) {
-                    ChatUtils.sendMsg(Text.of(MessageFormat.format("{0}A player has left render distance.", Formatting.RED)));
+                    ChatUtils.sendMsg(of(MessageFormat.format("{0}A player has left render distance.", Formatting.RED)));
                 }
             }
 
             playersInRange.clear();
             playersInRange.addAll(currentPlayersInRange);
 
-            if(Alert.get()) {
+            if (Alert.get()) {
 
-                if(FriendUtils.HasLowArmor(Friends.get(), Durability.get())) {
-                    ChatUtils.sendPlayerMsg(String.valueOf(Text.of( "/msg" +" Hey! You're armor has " + Durability.get() + "% left. Watch out!")));
+                if (FriendUtils.HasLowArmor(Friends.get(), Durability.get())) {
+
+                    ChatUtils.sendPlayerMsg(new StringBuilder().append("/msg ").append(Friends.get().getName().toString()).append(" you're armor has").append(Durability.get()).append("% left. Watch out!").toString());
                 }
             }
         } catch (Exception e) {
-            ChatUtils.sendMsg(Text.of(Formatting.RED + "Error in onTick: " + e.getMessage()));
+            ChatUtils.sendMsg(of(Formatting.RED + "Error in onTick: " + e.getMessage()));
         }
     }
 
@@ -162,7 +162,7 @@ public class ChatControl extends Module {
 
             if (coordsProtection.get() && containsCoords(event.message)) {
                 event.cancel();
-                ChatUtils.sendMsg(Text.of(Formatting.RED + "Your message contains coordinates and was not sent."));
+                ChatUtils.sendMsg(of(Formatting.RED + "Your message contains coordinates and was not sent."));
                 return;
             }
 
@@ -174,7 +174,7 @@ public class ChatControl extends Module {
                 event.message = ">" + event.message;
             }
         } catch (Exception e) {
-            ChatUtils.sendMsg(Text.of(Formatting.RED + "Error in onMessageSend: " + e.getMessage()));
+            ChatUtils.sendMsg(of(Formatting.RED + "Error in onMessageSend: " + e.getMessage()));
         }
     }
 

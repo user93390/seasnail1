@@ -36,17 +36,17 @@ public class AutoKit extends Module {
     }
 
     @EventHandler
-    public void onTick(TickEvent post) {
+    public void onTick(TickEvent.Pre event) {
         assert mc.player != null;
-        long time = System.currentTimeMillis();
-        if ((time - lastPlaceTime) < Delay.get() * 1000) return;
-        lastPlaceTime = time;
         float health = mc.player.getHealth();
         ItemStack Offhand = mc.player.getOffHandStack();
         boolean MainHand = mc.player.isHolding(Items.TOTEM_OF_UNDYING);
         if (mc.player == null) return;
         if (!MainHand && health < 0.1 && Offhand.getItem() != Items.TOTEM_OF_UNDYING) {
-            ChatUtils.sendMsg(Text.of("/kit " + Name));
+            long time = System.currentTimeMillis();
+            if ((time - lastPlaceTime) < Delay.get() * 1000) return;
+            lastPlaceTime = time;
+            ChatUtils.sendPlayerMsg("/kit " + Name);
         }
     }
 }
