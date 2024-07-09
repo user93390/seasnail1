@@ -1,5 +1,35 @@
 package org.Snail.Plus.modules.combat;
 
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.utils.player.*;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import net.minecraft.item.Items;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.BowItem;
+import net.minecraft.item.Items;
+import org.Snail.Plus.Addon;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
+import java.util.Objects;
+
 import org.Snail.Plus.Addon;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -72,6 +102,14 @@ public class Blocker extends Module {
 
     public Blocker() {
         super(Addon.Snail, "Blocker", "defends you're surround using obsidian");
+    }
 
+    public void onTick() {
+
+        BlockPos pos = mc.player.getBlockPos();
+
+        BlockUtils.place(pos.west(2), InvUtils.findInHotbar(Items.OBSIDIAN), Rotate.get(), 0, false);
+        Rotations.rotate(Rotations.getYaw(pos.west(2)), Rotations.getPitch(pos.west(2)));
+        RenderUtils.renderTickingBlock(pos.west(2), Color.RED, Color.RED, shapeMode.get(), 0, 15, true, false);
     }
 }

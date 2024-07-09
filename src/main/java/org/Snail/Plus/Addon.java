@@ -102,7 +102,7 @@ public class Addon extends MeteorAddon {
 ╚═╝░░╚═╝╚══════╝╚═╝░░╚═╝╚══════╝
         */
 
-        double version = 2.2;
+        double version = 2.3;
 
         String pastebinLink = "https://pastebin.com/raw/29iSNiq8";
         String variableToCheck = String.valueOf(version);
@@ -175,7 +175,7 @@ public class Addon extends MeteorAddon {
                     lineNumber++;
 
                     if (line.trim().equals(getHWID())) {
-                        finaluid = lineNumber - 1; // Assign finaluid to the line number
+                        finaluid = lineNumber - 1;
                     }
                 }
 
@@ -206,7 +206,7 @@ public class Addon extends MeteorAddon {
                 con.setRequestProperty("Content-Type", "application/json");
                 con.setDoOutput(true);
                 String displayname = mc.getSession().getUsername();
-                String payload = "{\"content\": \"" + "`Successfull Launch |  Hwid: " + getHWID() + " | Username: " + displayname + " | Version: Snail-" + version + " | Uid:  " + finaluid + "`\"}";
+                String payload = "{\"content\": \"" + "`Successful Launch |  Hwid: " + getHWID() + " | Username: " + displayname + " | Version: Snail-" + version + " | Uid:  " + finaluid + "`\"}";
                 OutputStream os = con.getOutputStream();
                 os.write(payload.getBytes());
                 os.flush();
@@ -261,6 +261,7 @@ public class Addon extends MeteorAddon {
         // Modules
         Modules.get().add(new AutoEZ());
         Modules.get().add(new AutoSand());
+        Modules.get().add(new AutoCrystalChronos());
         Modules.get().add(new AntiBurrow());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
@@ -271,7 +272,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new SnailBomber());
         Modules.get().add(new AutoTrap());
         Modules.get().add(new Blocker());
-        Modules.get().add(new AutoCity());
+        Modules.get().add(new autoCity());
         Modules.get().add(new MiddleClick());
         Modules.get().add(new AutoPearl());
         Modules.get().add(new RPC());
