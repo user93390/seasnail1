@@ -3,40 +3,33 @@ package org.Snail.Plus.modules.combat;
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.renderer.Renderer3D;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.systems.modules.combat.Offhand;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
-import meteordevelopment.meteorclient.utils.entity.TargetUtils;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.RotationCalculator;
+import net.minecraft.util.shape.VoxelShape;
 import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.CombatUtils;
+import org.Snail.Plus.utils.SwapUtils;
 
 import java.util.Objects;
 
-public class PacketMine extends Module {
-
+public class StealthMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-
-    private final Setting<SortPriority> priority = sgGeneral.add(new EnumSetting.Builder<SortPriority>()
-            .name("target-priority")
-            .description("How to filter targets within range.")
-            .defaultValue(SortPriority.LowestDistance)
-            .build());
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("target-range")
@@ -76,43 +69,70 @@ public class PacketMine extends Module {
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
-
-    private BlockPos targetPos;
-    private PlayerEntity target;
-    public PacketMine() {
-        super(Addon.Snail, "PacketMine+", "better/worse autocrystal bro");
-    }
+    private double blockBreakingProgress;
 
     private long lastPlaceTime = 0;
+    private FindItemResult item;
 
-    private final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
+    private static final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
 
-    private Direction direction;
+    private static Direction direction;
 
     private final Color cSides = new Color();
     private final Color cLines = new Color();
+        public StealthMine() {
+        super(Addon.Snail, "stealthMine+", "uses packets to hide the fact you are mining");
+    }
+    @EventHandler
+    public static void BreakBlock(StartBreakingBlockEvent event) {
+        direction = event.direction;
+        blockPos.set(event.blockPos);
+    }
 
     @Override
     public void onActivate() {
         blockPos.set(0, -1, 0);
         int ticks = 0;
-    }
-
-    @EventHandler
-    private void onStartBreakingBlock(StartBreakingBlockEvent event) {
-        direction = event.direction;
-        blockPos.set(event.blockPos);
+        blockBreakingProgress = 0;
     }
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if(!Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
-            Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.DOWN));
-            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.DOWN));
-            System.out.println("broken block");
-        } else {
+        item = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
+        if (Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock() == Blocks.BEDROCK) {
             return;
         }
+        if(!Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
+            SwapUtils.Normal(item.slot(), 1.0F);
+            if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 50);
+            Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.DOWN));
+            blockBreakingProgress += BlockUtils.getBreakDelta(Objects.requireNonNull(mc.player).getInventory().selectedSlot, blockState);
+            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.DOWN));
+        } else if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
+            blockBreakingProgress = 0;
+        }
     }
+    public BlockState blockState;
+    @EventHandler
+    private void CityRender(Render3DEvent event) {
+        this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
+
+        double ShrinkFactor = 1d - blockBreakingProgress;
+        BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
+        VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
+        if (shape.isEmpty()) {
+            return;
+        }
+        Box orig = shape.getBoundingBox();
+
+        Box box = orig.shrink(
+                orig.getLengthX() * ShrinkFactor,
+                orig.getLengthY() * ShrinkFactor,
+                orig.getLengthZ() * ShrinkFactor
+        );
+
+        renderBlock(event, orig, blockPos, ShrinkFactor, blockBreakingProgress);
+    }
+
     private void renderBlock(Render3DEvent event, Box orig, BlockPos pos, double shrinkFactor, double progress) {
         Box box = orig.shrink(
                 orig.getLengthX() * shrinkFactor,
@@ -132,7 +152,7 @@ public class PacketMine extends Module {
         double z2 = pos.getZ() + box.maxZ + zShrink;
 
         Color c1Sides = sideColor.get().copy().a(sideColor.get().a / 2);
-        Color c2Sides = sideColor.get().copy().a(sideColor.get().a / 2);
+        Color c2Sides = lineColor.get().copy().a(lineColor.get().a / 2);
 
         cSides.set(
                 (int) Math.round(c1Sides.r + (c2Sides.r - c1Sides.r) * progress),
@@ -142,7 +162,7 @@ public class PacketMine extends Module {
         );
 
         Color c1Lines = sideColor.get();
-        Color c2Lines = sideColor.get();
+        Color c2Lines = lineColor.get();
 
         cLines.set(
                 (int) Math.round(c1Lines.r + (c2Lines.r - c1Lines.r) * progress),
@@ -151,6 +171,6 @@ public class PacketMine extends Module {
                 (int) Math.round(c1Lines.a + (c2Lines.a - c1Lines.a) * progress)
         );
 
-        event.renderer.box(x1, y1, z1, x2, y2, z2, cSides, cLines, ShapeMode.Both, 0);
+        event.renderer.box(x1, y1, z1, x2, y2, z2, cSides, cLines, shapeMode.get(), 0);
     }
 }
