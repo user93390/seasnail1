@@ -57,8 +57,25 @@ public class AutoCrystalChronos extends Module {
             .sliderMax(5)
             .build());
 
+        private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
+            .name("side color")
+            .description("Side color")
+            .defaultValue(new SettingColor(255, 0, 0, 75))
+            .build());
+    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+            .name("line color")
+            .description("Line color")
+            .defaultValue(new SettingColor(255, 0, 0, 255))
+            .build());
 
+        private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
+            .name("shape-mode")
+            .description("How the shapes are rendered.")
+            .defaultValue(ShapeMode.Both)
+            .build());
 
+private BlockPos targetPos;
+private PlayerEntity target;
     public AutoCrystalChronos() {
         super(Addon.Snail, "AutoCrystalChronos", "better/worse autocrystal bro");
     }
@@ -67,26 +84,24 @@ public class AutoCrystalChronos extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+        target = targetUtils.getPlayerTarget(range.get(), priority.get());
 
-        BlockPos targetPos = target.getBlockPos();
+        BlockPos = target.getBlockPos();
 
         long time = System.currentTimeMillis();
         if ((time - lastPlaceTime) < delay.get() * 1000) return;
         lastPlaceTime = time;
 
-        if (CombatUtils.isSurrounded(target) == false & BlockUtils.canPlace(targetPos.north(1)))
-        {
+        if (!CombatUtils.isSurrounded(target) && BlockUtils.canPlace(targetPos.north(1))) {
             BlockUtils.place(targetPos.north(1),InvUtils.findInHotbar(Items.END_CRYSTAL),rotate.get(),0,false);
             BlockUtils.breakBlock(targetPos.north(1), true);
             Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, targetPos.north(2), Direction.DOWN));
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, targetPos.north(1), Direction.DOWN));
-            RenderUtils.renderTickingBlock(targetPos.north(1).down(1), Color.RED, Color.RED, ShapeMode.Both, 0, 10, true, false);
         }
     }
 
     @EventHandler
     private  void render(Renderer3D event) {
-
+        event.renderer.box(BlockPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
     }
 }
