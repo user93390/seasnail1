@@ -81,7 +81,7 @@ public class StealthMine extends Module {
     private final Color cSides = new Color();
     private final Color cLines = new Color();
         public StealthMine() {
-        super(Addon.Snail, "stealthMine+", "uses packets to hide the fact you are mining");
+        super(Addon.Snail, "stealth mine+", "uses packets to mine blocks");
     }
     @EventHandler
     public static void BreakBlock(StartBreakingBlockEvent event) {
@@ -92,7 +92,6 @@ public class StealthMine extends Module {
     @Override
     public void onActivate() {
         blockPos.set(0, -1, 0);
-        int ticks = 0;
         blockBreakingProgress = 0;
     }
     @EventHandler
@@ -103,9 +102,9 @@ public class StealthMine extends Module {
         }
         if(!Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
             SwapUtils.Normal(item.slot(), 1.0F);
-            if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 50);
+            if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
             Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.DOWN));
-            blockBreakingProgress += BlockUtils.getBreakDelta(Objects.requireNonNull(mc.player).getInventory().selectedSlot, blockState);
+            blockBreakingProgress += BlockUtils.getBreakDelta(Objects.requireNonNull(mc.player).getInventory().selectedSlot, blockState) * 2;
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.DOWN));
         } else if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
             blockBreakingProgress = 0;
@@ -115,7 +114,6 @@ public class StealthMine extends Module {
     @EventHandler
     private void CityRender(Render3DEvent event) {
         this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
-
         double ShrinkFactor = 1d - blockBreakingProgress;
         BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
         VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
@@ -151,26 +149,6 @@ public class StealthMine extends Module {
         double y2 = pos.getY() + box.maxY + yShrink;
         double z2 = pos.getZ() + box.maxZ + zShrink;
 
-        Color c1Sides = sideColor.get().copy().a(sideColor.get().a / 2);
-        Color c2Sides = lineColor.get().copy().a(lineColor.get().a / 2);
-
-        cSides.set(
-                (int) Math.round(c1Sides.r + (c2Sides.r - c1Sides.r) * progress),
-                (int) Math.round(c1Sides.g + (c2Sides.g - c1Sides.g) * progress),
-                (int) Math.round(c1Sides.b + (c2Sides.b - c1Sides.b) * progress),
-                (int) Math.round(c1Sides.a + (c2Sides.a - c1Sides.a) * progress)
-        );
-
-        Color c1Lines = sideColor.get();
-        Color c2Lines = lineColor.get();
-
-        cLines.set(
-                (int) Math.round(c1Lines.r + (c2Lines.r - c1Lines.r) * progress),
-                (int) Math.round(c1Lines.g + (c2Lines.g - c1Lines.g) * progress),
-                (int) Math.round(c1Lines.b + (c2Lines.b - c1Lines.b) * progress),
-                (int) Math.round(c1Lines.a + (c2Lines.a - c1Lines.a) * progress)
-        );
-
-        event.renderer.box(x1, y1, z1, x2, y2, z2, cSides, cLines, shapeMode.get(), 0);
+        event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
     }
 }
