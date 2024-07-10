@@ -1,45 +1,69 @@
 {
   "minecraft:recipes/tools/flint_and_steel": {
     "criteria": {
-      "has_obsidian": "2024-06-21 20:16:17 -0400"
+      "has_obsidian": "2024-06-21 19:16:17 -0500"
     },
     "done": true
   },
   "minecraft:story/form_obsidian": {
     "criteria": {
-      "obsidian": "2024-06-21 20:16:17 -0400"
+      "obsidian": "2024-06-21 19:16:17 -0500"
     },
     "done": true
   },
   "minecraft:recipes/decorations/crafting_table": {
     "criteria": {
-      "unlock_right_away": "2024-06-21 20:16:17 -0400"
+      "unlock_right_away": "2024-06-21 19:16:17 -0500"
     },
     "done": true
   },
-  "minecraft:adventure/adventuring_time": {
-    "criteria": {
-      "minecraft:plains": "2024-06-21 20:16:18 -0400"
-    },
-    "done": false
-  },
   "minecraft:recipes/redstone/redstone": {
     "criteria": {
-      "has_redstone_block": "2024-06-21 20:16:17 -0400"
+      "has_redstone_block": "2024-06-21 19:16:17 -0500"
     },
     "done": true
   },
   "minecraft:recipes/decorations/enchanting_table": {
     "criteria": {
-      "has_obsidian": "2024-06-21 20:16:17 -0400"
+      "has_obsidian": "2024-06-21 19:16:17 -0500"
     },
     "done": true
   },
   "minecraft:recipes/redstone/repeater": {
     "criteria": {
-      "has_redstone_torch": "2024-06-21 20:16:17 -0400"
+      "has_redstone_torch": "2024-06-21 19:16:17 -0500"
     },
     "done": true
   },
-  "DataVersion": 3839
+  "minecraft:adventure/adventuring_time": {
+    "criteria": {
+      "minecraft:plains": "2024-06-21 19:16:18 -0500"
+    },
+    "done": false
+  },
+  "minecraft:recipes/decorations/chest": {
+    "criteria": {
+      "has_lots_of_items": "2024-07-10 01:07:13 -0500"
+    },
+    "done": true
+  },
+  "minecraft:recipes/redstone/redstone_lamp": {
+    "criteria": {
+      "has_glowstone": "2024-07-10 01:07:13 -0500"
+    },
+    "done": true
+  },
+  "minecraft:nether/netherite_armor": {
+    "criteria": {
+      "netherite_armor": "2024-07-10 01:07:13 -0500"
+    },
+    "done": true
+  },
+  "minecraft:recipes/misc/mojang_banner_pattern": {
+    "criteria": {
+      "has_enchanted_golden_apple": "2024-07-10 01:07:13 -0500"
+    },
+    "done": true
+  },
+  "DataVersion": 3953
 }

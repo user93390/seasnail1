@@ -1,17 +1,51 @@
 package org.Snail.Plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.systems.modules.combat.AutoCity;
+import org.Snail.Plus.*;
+import meteordevelopment.meteorclient.mixininterface.IClientPlayerInteractionManager;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
+import net.minecraft.entity.player.PlayerEntity;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.minecraft.client.MinecraftClient;
+import net.fabricmc.api.ModInitializer;
+import net.minecraft.client.MinecraftClient;
 
 import java.io.*;
 
+import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerManager;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import org.Snail.Plus.hud.Watermark;
 import org.Snail.Plus.modules.combat.*;
 import org.Snail.Plus.modules.misc.*;
+import meteordevelopment.meteorclient.events.game.SendMessageEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friend;
+import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.FriendUtils;
 
+import java.nio.file.StandardCopyOption;
+import java.text.MessageFormat;
+import java.util.*;
 import org.Snail.Plus.utils.HWID;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
@@ -19,10 +53,12 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.*;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -229,6 +265,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AntiBurrow());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
+        Modules.get().add(new StealthMine());
         Modules.get().add(new PistonPush());
         Modules.get().add(new SelfAnvil());
         Modules.get().add(new AutoKit());

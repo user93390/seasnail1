@@ -1,11 +1,3 @@
-/give Player392 minecraft:obsidian 64
-/give Player373 minecraft:diamond_pickaxe 1
-/give Player454 minecraft:respawn_anchor 64
-/give Player454 minecraft:glowstone 64
-/gamemode creative
-/gamemode survival
-/give Player575 minecraft:item_frame
-/give Player575 minecraft:end_crystal 64
 /gamemode creative
 /gamemode survival
 /give Player333 minecraft:netherite_pickaxe 1
@@ -33,3 +25,26 @@
 /gamemode creative
 /give @s piston
 /give @s minecraft:redstone_block
+/warp scaffold
+/give obsidian 64
+/give end_crystal 64
+/god
+/anticheat NoCheatPlus
+/warp scaffold
+/give obsidian 64
+/give end_crystal 64
+/god
+/give enchanted_golden_apple 64
+/gamemode survival
+/give @s minecraft:end_crystal 64
+/give @s minecraft:totem_of_undying
+/gamemode creative
+/gamemode survival
+/gamemode creative
+/gamemode survival
+/give @s end_crystal 6400
+/gamemode creative
+/gamemode survival
+/gamerule keepInventory true
+/gamemode creative
+/gamemode survival
