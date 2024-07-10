@@ -62,6 +62,8 @@ public class StealthMine extends Module {
     private FindItemResult item;
     private static final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
     private static Direction direction;
+    private static long lastTimeoutCheck = 0;
+
 
     private final Color cSides = new Color();
     private final Color cLines = new Color();
@@ -81,6 +83,8 @@ public class StealthMine extends Module {
     public StealthMine() {
         super(Addon.Snail, "stealth mine+", "Mines blocks using pakets");
     }
+
+
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
@@ -116,7 +120,7 @@ public class StealthMine extends Module {
                 InvUtils.swapBack();
             }
 
-            if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
+            //if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
             blockBreakingProgress += BlockUtils.getBreakDelta(mc.player.getInventory().selectedSlot, blockState) * 2;
 
             mc.player.getInventory().selectedSlot = originalSlot;
@@ -125,7 +129,15 @@ public class StealthMine extends Module {
             if (blockBreakingProgress >= 2.0)
             {
                 InvUtils.swap(pickaxe.slot(), false);
+
+                double delay = 0.1;
+
+                long currentTime = System.currentTimeMillis();
+                if ((currentTime - lastTimeoutCheck) < delay * 1000) return;
+                lastTimeoutCheck = currentTime;
+
                 blockBreakingProgress = 0;
+
             }
 
 
