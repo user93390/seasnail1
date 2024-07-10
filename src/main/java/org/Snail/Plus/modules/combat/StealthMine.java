@@ -105,7 +105,6 @@ public class StealthMine extends Module {
             Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.DOWN));
             blockBreakingProgress += BlockUtils.getBreakDelta(Objects.requireNonNull(mc.player).getInventory().selectedSlot, blockState) * 2;
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.DOWN));
-            InvUtils.swap(item.slot(), true);
         } else if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
             blockBreakingProgress = 0;
         }
