@@ -81,7 +81,7 @@ public class StealthMine extends Module {
     private final Color cSides = new Color();
     private final Color cLines = new Color();
         public StealthMine() {
-        super(Addon.Snail, "stealth mine+", "uses packets to mine blocks");
+        super(Addon.Snail, "StealthMine", "uses packets to mine blocks");
     }
     @EventHandler
     public static void BreakBlock(StartBreakingBlockEvent event) {
@@ -101,11 +101,11 @@ public class StealthMine extends Module {
             return;
         }
         if(!Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
-            SwapUtils.Normal(item.slot(), 1.0F);
             if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
             Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.DOWN));
             blockBreakingProgress += BlockUtils.getBreakDelta(Objects.requireNonNull(mc.player).getInventory().selectedSlot, blockState) * 2;
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.DOWN));
+            InvUtils.swap(item.slot(), true);
         } else if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
             blockBreakingProgress = 0;
         }

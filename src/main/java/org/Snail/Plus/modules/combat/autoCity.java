@@ -62,7 +62,7 @@ public class autoCity extends Module {
             .build());
     private BlockPos currentPos;
     public autoCity() {
-        super(Addon.Snail, "Auto City+", "Uses StealthMine+ to auto city blocks");
+        super(Addon.Snail, "AutoMine", "Uses StealthMine+ to auto city blocks");
     }
 
     @EventHandler

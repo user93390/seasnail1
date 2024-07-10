@@ -1,9 +1,5 @@
 /gamemode creative
 /gamemode survival
-/give Player575 minecraft:item_frame
-/give Player575 minecraft:end_crystal 64
-/gamemode creative
-/gamemode survival
 /give Player333 minecraft:netherite_pickaxe 1
 /enchant @a minecraft:efficiency 5
 /gamemode creative
@@ -48,3 +44,7 @@
 /gamemode survival
 /give @s end_crystal 6400
 /gamemode creative
+/gamemode survival
+/gamerule keepInventory true
+/gamemode creative
+/gamemode survival

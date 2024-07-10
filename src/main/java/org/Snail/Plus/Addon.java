@@ -265,6 +265,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AntiBurrow());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
+        Modules.get().add(new StealthMine());
         Modules.get().add(new PistonPush());
         Modules.get().add(new SelfAnvil());
         Modules.get().add(new AutoKit());
