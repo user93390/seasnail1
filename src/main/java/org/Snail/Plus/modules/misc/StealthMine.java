@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.Snail.Plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -6,7 +6,6 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -16,7 +15,6 @@ import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
@@ -24,35 +22,22 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.SwapUtils;
 
 import java.util.Objects;
 
 public class StealthMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-
-    private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
-            .name("target-range")
-            .description("The radius in which players get targeted.")
-            .defaultValue(4)
-            .min(0)
-            .sliderMax(10)
-            .build());
-
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotate")
             .description("Automatically rotates towards the position where the block is being broken.")
             .defaultValue(true)
             .build());
 
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
-            .name("delay")
-            .description("Delay in seconds between each block placement.")
-            .defaultValue(1.0)
-            .min(0)
-            .sliderMax(5)
+    private final Setting<Boolean> instantMine = sgGeneral.add(new BoolSetting.Builder()
+            .name("instant remine")
+            .description("instantly remines the broken block")
+            .defaultValue(true)
             .build());
-
     private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
             .name("side color")
             .description("Side color")
@@ -63,26 +48,20 @@ public class StealthMine extends Module {
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
-
     private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape-mode")
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
     private double blockBreakingProgress;
-
     private long lastPlaceTime = 0;
     private FindItemResult item;
-
     private static final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
-
     private static Direction direction;
 
     private final Color cSides = new Color();
     private final Color cLines = new Color();
-        public StealthMine() {
-        super(Addon.Snail, "StealthMine", "uses packets to mine blocks");
-    }
+    BlockState blockState;
     @EventHandler
     public static void BreakBlock(StartBreakingBlockEvent event) {
         direction = event.direction;
@@ -94,6 +73,10 @@ public class StealthMine extends Module {
         blockPos.set(0, -1, 0);
         blockBreakingProgress = 0;
     }
+        public StealthMine() {
+            super(Addon.Snail, "stealth mine+", "Mines blocks using pakets");
+    }
+
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         item = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
@@ -101,23 +84,33 @@ public class StealthMine extends Module {
             return;
         }
         if(!Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
+            int slot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
+            InvUtils.move().fromId(slot).toId(item.slot());
             if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
-            Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.DOWN));
             blockBreakingProgress += BlockUtils.getBreakDelta(Objects.requireNonNull(mc.player).getInventory().selectedSlot, blockState) * 2;
-            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.DOWN));
+            if(instantMine.get()) {
+                Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
+            } else if(!instantMine.get()) {
+                Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction));
+                Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
+            }
         } else if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
             blockBreakingProgress = 0;
         }
     }
-    public BlockState blockState;
+
     @EventHandler
     private void CityRender(Render3DEvent event) {
+        if (blockBreakingProgress > 2) {
+            blockBreakingProgress = 0;
+        }
         this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
         double ShrinkFactor = 1d - blockBreakingProgress;
         BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
         VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
         if (shape.isEmpty()) {
             return;
+
         }
         Box orig = shape.getBoundingBox();
 
