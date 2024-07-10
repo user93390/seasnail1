@@ -88,7 +88,7 @@ telemetryOptInExtra:false
 onboardAccessibility:false
 menuBackgroundBlurriness:5
 key_key.attack:key.mouse.left
-key_key.use:key.mouse.right
+key_key.use:key.keyboard.g
 key_key.forward:key.keyboard.w
 key_key.left:key.keyboard.a
 key_key.back:key.keyboard.s
