@@ -1,3 +1,4 @@
+
 package org.Snail.Plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
@@ -15,13 +16,16 @@ import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.PickaxeItem;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.SwapUtils;
 
 import java.util.Objects;
 
@@ -73,27 +77,58 @@ public class StealthMine extends Module {
         blockPos.set(0, -1, 0);
         blockBreakingProgress = 0;
     }
-        public StealthMine() {
-            super(Addon.Snail, "stealth mine+", "Mines blocks using pakets");
+
+    public StealthMine() {
+        super(Addon.Snail, "stealth mine+", "Mines blocks using pakets");
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        item = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
+        FindItemResult pickaxe = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
         if (Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock() == Blocks.BEDROCK) {
             return;
         }
         if(!Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
             int slot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
-            InvUtils.move().fromId(slot).toId(item.slot());
             if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
             blockBreakingProgress += BlockUtils.getBreakDelta(Objects.requireNonNull(mc.player).getInventory().selectedSlot, blockState) * 2;
+
+
+
             if(instantMine.get()) {
                 Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
             } else if(!instantMine.get()) {
                 Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction));
                 Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
             }
+
+            int originalSlot = mc.player.getInventory().selectedSlot;
+            int pickaxeSlot = -1;
+            for(int i = 0; i < mc.player.getInventory().size(); i++) {
+                ItemStack stack = mc.player.getInventory().getStack(i);
+                if(stack.getItem() instanceof PickaxeItem) {
+                    pickaxeSlot = i;
+                    break;
+                }
+            }
+            if(pickaxeSlot != -1) {
+                mc.player.getInventory().selectedSlot = pickaxeSlot;
+                InvUtils.swapBack();
+            }
+
+            if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
+            blockBreakingProgress += BlockUtils.getBreakDelta(mc.player.getInventory().selectedSlot, blockState) * 2;
+
+            mc.player.getInventory().selectedSlot = originalSlot;
+            InvUtils.swapBack();
+
+            if (blockBreakingProgress >= 2.0)
+            {
+                InvUtils.swap(pickaxe.slot(), false);
+                blockBreakingProgress = 0;
+            }
+
+
         } else if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
             blockBreakingProgress = 0;
         }
