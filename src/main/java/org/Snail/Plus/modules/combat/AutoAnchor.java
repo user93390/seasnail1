@@ -202,7 +202,7 @@ public class AutoAnchor extends Module {
         super(Addon.Snail, "Auto Anchor+", "Anchor aura but better");
 
     }
-
+    private Vec3d targetPos;
     @Override
     public void onActivate() {
         target = null;
@@ -216,6 +216,7 @@ public class AutoAnchor extends Module {
                 return;
             }
             target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+
             if (TargetUtils.isBadTarget(target, range.get())) return;
             if (target != null) {
                 double SyncAnchor = TpsSync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : AnchorDelay.get();
@@ -228,7 +229,6 @@ public class AutoAnchor extends Module {
                 if ((currentTime - lastGlowstonePlaceTime) < GlowstoneDelay.get() * 1000) return;
                 lastGlowstonePlaceTime = currentTime;
 
-                Vec3d targetPos = predictMovement.get() ? predictTargetPosition(target) : target.getPos();
 
                 ClientPlayerEntity player = mc.player;
 
@@ -251,7 +251,22 @@ public class AutoAnchor extends Module {
                 Swapped = false;
 
 
-
+                if (predictMovement.get()) {
+                    targetPos = Vec3d.of(target.getBlockPos());
+                    targetPos.add(
+                            target.getX() - target.prevX,
+                            target.getY() - target.prevY,
+                            target.getZ() - target.prevZ
+                    );
+                    anchorNorth = BlockPos.ofFloored(targetPos).north(1);
+                    anchorWest =  BlockPos.ofFloored(targetPos).west(1);
+                    anchorSouth = BlockPos.ofFloored(targetPos).south(1);
+                    anchorEast = BlockPos.ofFloored(targetPos).east(1);
+                    TargetFeetPos = BlockPos.ofFloored(targetPos).down(1);
+                    targetHeadPos = BlockPos.ofFloored(targetPos).up(2);
+                    anchorPlaced = false;
+                    Swapped = false;
+                }
                 if (CombatUtils.isBurrowed(target)) return;
 
                 float targetDamage = DamageUtils.anchorDamage(target, target.getBlockPos().toCenterPos());
@@ -289,6 +304,8 @@ public class AutoAnchor extends Module {
                     anchorPlaced = true;
                 }
 
+
+
                 if (obsidianFound) {
 
                 } else {
@@ -298,6 +315,7 @@ public class AutoAnchor extends Module {
                 int iterationCount = 0;
 
                 while (!respawnAnchorFound && (!eastChecked || !northChecked || !southChecked || !westChecked) && iterationCount < maxIterations) {
+
                     iterationCount++;
                     if (safety.get() == SafetyMode.safe && selfDamage > this.maxSelfDamage.get()) continue;
                     if (safety.get() == SafetyMode.balance && selfDamage <= this.maxSelfDamage.get()) continue;
@@ -395,12 +413,13 @@ public class AutoAnchor extends Module {
         }
     }
 
-    private Vec3d predictTargetPosition(PlayerEntity target) {
-        return target.getPos().add(target.getVelocity());
-    }
+
+
+
 
     @EventHandler
     public void AnchorRender(Render3DEvent event) {
+
         RenderMode mode = renderMode.get();
         boolean ShrinkNow = shrink.get() && TargetUtils.isBadTarget(target, range.get()) || AnchorPos == null;
         if (TargetUtils.isBadTarget(target, range.get())) return;
@@ -515,7 +534,9 @@ public class AutoAnchor extends Module {
                 glowstone = InvUtils.findInHotbar(Items.GLOWSTONE);
 
                 if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(AnchorPos).getBlock() == Blocks.FIRE || mc.world.getBlockState(AnchorPos).isAir()) {
-                    BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
+                    if(BlockUtils.canPlace(AnchorPos)) {
+                        BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
+                    }
                 }
                 if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
                     SwapUtils.Normal(glowstone.slot(), 1.0F);
@@ -531,7 +552,9 @@ public class AutoAnchor extends Module {
                 glowstone = InvUtils.findInHotbar(Items.GLOWSTONE);
 
                 if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(AnchorPos).getBlock() == Blocks.FIRE || mc.world.getBlockState(AnchorPos).isAir()) {
-                    BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
+                    if(BlockUtils.canPlace(AnchorPos)) {
+                        BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
+                    }
                 }
                 if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
                     SwapUtils.SilentSwap(glowstone.slot(), 1.0F);
@@ -547,7 +570,10 @@ public class AutoAnchor extends Module {
                 glowstone = InvUtils.find(Items.GLOWSTONE);
 
                 if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(AnchorPos).getBlock() == Blocks.FIRE || mc.world.getBlockState(AnchorPos).isAir())
-                    BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
+
+                    if(BlockUtils.canPlace(AnchorPos)) {
+                        BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
+                    }
 
                 if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
                     SwapUtils.invSwitch(originalSlot, anchor.slot(), true, 0.0F);
