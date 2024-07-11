@@ -123,7 +123,7 @@ key_key.hotbar.8:key.keyboard.8
 key_key.hotbar.9:key.keyboard.9
 key_key.meteor-client.open-gui:key.keyboard.right.shift
 key_key.meteor-client.open-commands:key.keyboard.period
-soundCategory_master:0.0
+soundCategory_master:0.20750551876379697
 soundCategory_music:1.0
 soundCategory_record:1.0
 soundCategory_weather:1.0
