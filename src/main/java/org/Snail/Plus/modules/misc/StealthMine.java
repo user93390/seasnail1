@@ -1,4 +1,3 @@
-
 package org.Snail.Plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
@@ -32,6 +31,14 @@ import java.util.Objects;
 
 public class StealthMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
+    private final Setting<Double> Range = sgGeneral.add(new DoubleSetting.Builder()
+            .name("packetmine range")
+            .description("the range")
+            .defaultValue(4.5)
+            .sliderMin(1)
+            .sliderMax(10)
+            .build());
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotate")
             .description("Automatically rotates towards the position where the block is being broken.")
@@ -59,15 +66,8 @@ public class StealthMine extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
     private double blockBreakingProgress;
-    private long lastPlaceTime = 0;
-    private FindItemResult item;
     private static final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
     private static Direction direction;
-    private static long lastTimeoutCheck = 0;
-
-
-    private final Color cSides = new Color();
-    private final Color cLines = new Color();
     BlockState blockState;
     @EventHandler
     public static void BreakBlock(StartBreakingBlockEvent event) {
@@ -80,55 +80,55 @@ public class StealthMine extends Module {
         blockPos.set(0, -1, 0);
         blockBreakingProgress = 0;
     }
-
+    @Override
+    public void onDeactivate() {
+        blockPos.set(0, -1, 0);
+        blockBreakingProgress = 0;
+        if(mc.player != null) {
+            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(this.mc.player.getInventory().selectedSlot));
+        }
+    }
     public StealthMine() {
         super(Addon.Snail, "stealth mine+", "Mines blocks using pakets");
     }
-
-
-
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         FindItemResult pickaxe = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
-        if (Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock() == Blocks.BEDROCK) {
+        if (Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock() == Blocks.BEDROCK || Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
+            blockBreakingProgress = 0;
             return;
-        }
-        if(!Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
+        } else if(!(Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock() == Blocks.BEDROCK) || !Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
+            if (!blockPos.isWithinDistance(Objects.requireNonNull(mc.player).getBlockPos(), Range.get())) return;
+
             int pickaxeSlot = -1;
-            for(int i = 0; i < mc.player.getInventory().size(); i++) {
+            for (int i = 0; i < mc.player.getInventory().size(); i++) {
                 ItemStack stack = mc.player.getInventory().getStack(i);
-                if(stack.getItem() instanceof PickaxeItem) {
+                if (stack.getItem() instanceof PickaxeItem) {
                     pickaxeSlot = i;
                     break;
                 }
             }
             if (pickaxeSlot != -1) {
-                this.mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(pickaxeSlot));
+                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(pickaxeSlot));
             }
             int slot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
             if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
             blockBreakingProgress += BlockUtils.getBreakDelta(pickaxeSlot, blockState) * 1.5;
 
-            if(instantMine.get()) {
+            if (instantMine.get()) {
                 Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
-            } else if(!instantMine.get()) {
+            } else if (!instantMine.get()) {
                 Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction));
                 Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
             }
 
             int originalSlot = mc.player.getInventory().selectedSlot;
-
-
-            if(pickaxeSlot != -1) {
+            if (pickaxeSlot != -1) {
                 mc.player.getInventory().selectedSlot = pickaxeSlot;
-                this.mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(this.mc.player.getInventory().selectedSlot));
+                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
             }
             blockBreakingProgress += BlockUtils.getBreakDelta(pickaxeSlot, blockState) * 1.5;
-
             mc.player.getInventory().selectedSlot = originalSlot;
-
-        } else if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
-            blockBreakingProgress = 0;
         }
     }
 
