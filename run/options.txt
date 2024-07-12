@@ -48,7 +48,7 @@ mouseSensitivity:0.5
 damageTiltStrength:1.0
 highContrast:false
 narratorHotkey:true
-resourcePacks:["vanilla","fabric"]
+resourcePacks:["vanilla","fabric","programmer_art"]
 incompatibleResourcePacks:[]
 lastServer:
 lang:en_us
