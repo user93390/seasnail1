@@ -1,5 +1,6 @@
 package org.Snail.Plus.modules.misc;
 
+import meteordevelopment.meteorclient.events.game.OpenScreenEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -8,6 +9,7 @@ import meteordevelopment.meteorclient.settings.StringSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
@@ -34,20 +36,13 @@ public class AutoKit extends Module {
     public AutoKit() {
         super(Addon.Snail, "Auto-kit", "Rekits when you die.");
     }
-
-    @EventHandler
-    public void onTick(TickEvent.Pre event) {
-        assert mc.player != null;
-        float health = mc.player.getHealth();
-        ItemStack Offhand = mc.player.getOffHandStack();
-        boolean MainHand = mc.player.isHolding(Items.TOTEM_OF_UNDYING);
-        if (mc.player == null) return;
-        if (!MainHand && health < 0.1 && Offhand.getItem() != Items.TOTEM_OF_UNDYING) {
-            long time = System.currentTimeMillis();
-            if ((time - lastPlaceTime) < Delay.get() * 1000) return;
-            lastPlaceTime = time;
-            ChatUtils.sendPlayerMsg("/kit " + Name);
+@EventHandler
+    private void onDeath(OpenScreenEvent event) {
+    long time = System.currentTimeMillis();
+    if ((time - lastPlaceTime) < Delay.get() * 1000) return;
+    lastPlaceTime = time;
+    if (event.screen instanceof DeathScreen) {
+        ChatUtils.sendPlayerMsg("/kit " + Name);
         }
     }
 }
-/*<----------- TODO: needs a rewrite -----------> */
