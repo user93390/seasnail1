@@ -9,16 +9,15 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.SlabBlock;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
@@ -31,7 +30,6 @@ import net.minecraft.util.math.Vec3d;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
 import org.Snail.Plus.utils.SwapUtils;
-import org.Snail.Plus.utils.TPSSyncUtil;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -69,7 +67,6 @@ public class AutoAnchor extends Module {
             .description("swap mode. Silent is most consistent, but invswitch is more convenient")
             .defaultValue(SwapMode.silent)
             .build());
-
     private final Setting<Boolean>  TpsSync = sgGeneral.add(new BoolSetting.Builder()
             .name("TPS sync")
             .description("syncs delay with current server tps")
@@ -89,23 +86,23 @@ public class AutoAnchor extends Module {
             .min(0)
             .sliderMax(5)
             .build());
-    private final Setting<Double> DisableHealth = sgGeneral.add(new DoubleSetting.Builder()
-            .name("Health disable")
-            .description("when you reach this amount of health, the module will pause (0 = no pause)")
-            .defaultValue(3.0)
-            .sliderMax(36.0)
-            .sliderMin(0.0)
-            .build());
     private final Setting<Double> maxSelfDamage = sgGeneral.add(new DoubleSetting.Builder()
-            .name("self damage")
+            .name("max self damage score")
             .description("the max amount to deal to you")
             .defaultValue(3.0)
             .sliderMax(36.0)
             .sliderMin(0.0)
             .build());
     private final Setting<Double> minDamage = sgGeneral.add(new DoubleSetting.Builder()
-            .name("min damage")
+            .name("min damage score")
             .description("the lowest amount of damage you should deal to the target (higher = less targets | lower = more targets)")
+            .defaultValue(3.0)
+            .sliderMax(36.0)
+            .sliderMin(0.0)
+            .build());
+    private final Setting<Double> DamageRatio = sgGeneral.add(new DoubleSetting.Builder()
+            .name("damage ratio")
+            .description("the ratio. min damage / maxself")
             .defaultValue(3.0)
             .sliderMax(36.0)
             .sliderMin(0.0)
@@ -125,9 +122,9 @@ public class AutoAnchor extends Module {
             .description("predicts the targets movement")
             .defaultValue(false)
             .build());
-    private final Setting<Boolean> AntiStuck = sgGeneral.add(new BoolSetting.Builder()
-            .name("anti stuck")
-            .description("breaks glowstone in the way")
+    private final Setting<Boolean> Breaker = sgGeneral.add(new BoolSetting.Builder()
+            .name("Breaker")
+            .description("Breaks string and glowstone to prevent the anchor placements")
             .defaultValue(true)
             .build());
     private final Setting<Boolean> Smart = sgGeneral.add(new BoolSetting.Builder()
@@ -141,7 +138,7 @@ public class AutoAnchor extends Module {
             .description("the radius for Z")
             .defaultValue(2)
             .sliderMax(5)
-            .sliderMin(1)
+            .sliderMin(0)
             .visible(Smart::get)
             .build());
     private final Setting<Integer> RadiusX = sgGeneral.add(new IntSetting.Builder()
@@ -149,7 +146,7 @@ public class AutoAnchor extends Module {
             .description("the radius for X")
             .defaultValue(2)
             .sliderMax(5)
-            .sliderMin(1)
+            .sliderMin(0)
             .visible(Smart::get)
             .build());
     private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
@@ -212,7 +209,7 @@ public class AutoAnchor extends Module {
     private boolean anchorPlaced = false;
     private BlockPos targetHeadPos;
     public AutoAnchor() {
-        super(Addon.Snail, "Auto Anchor+", "Anchor aura but better");
+        super(Addon.Snail, "Anchor Bomber+", "explodes anchors near targets");
 
     }
     private Vec3d targetPos;
@@ -220,6 +217,7 @@ public class AutoAnchor extends Module {
     public void onActivate() {
         target = null;
         AnchorPos = null;
+        pos = null;
     }
     @EventHandler
     private void onTick(TickEvent.Post event) {
@@ -231,8 +229,6 @@ public class AutoAnchor extends Module {
             target = TargetUtils.getPlayerTarget(range.get(), priority.get());
 
             if (TargetUtils.isBadTarget(target, range.get())) return;
-            double SyncAnchor = TpsSync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : AnchorDelay.get();
-            double SyncGlowstone =  TpsSync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : GlowstoneDelay.get();
             long currentTime = System.currentTimeMillis();
             if ((currentTime - lastAnchorPlaceTime) < AnchorDelay.get() * 1000) return;
             lastAnchorPlaceTime = currentTime;
@@ -251,34 +247,27 @@ public class AutoAnchor extends Module {
                     anchorPlaced = false;
                     Swapped = false;
                 }
-                if (CombatUtils.isBurrowed(target)) return;
-            if(!CombatUtils.isSurrounded(target)) {
+            for (CardinalDirection dir : CardinalDirection.values()) {
+                if (this.strictDirection.get()
+                        && dir.toDirection() != Objects.requireNonNull(mc.player).getHorizontalFacing()
+                        && dir.toDirection().getOpposite() != mc.player.getHorizontalFacing()) continue;
+            }
+            if (CombatUtils.isBurrowed(target)) return;
+            if (!CombatUtils.isSurrounded(target) && Smart.get()) {
                 FindPossiblePositions(RadiusX.get(), RadiusZ.get(), target);
                 SwapAndPlace();
+            } else {
+                if (!Smart.get() && mc.world.getBlockState(targetHeadPos).isAir() || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+                    AnchorPos = targetHeadPos;
+                    if (Breaker.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.GLOWSTONE || Breaker.get() && mc.world.getBlockState(targetHeadPos).getBlock() instanceof SlabBlock) {
+                        Objects.requireNonNull(mc.interactionManager).breakBlock(targetHeadPos);
+                    }
+                    SwapAndPlace();
+                }
             }
-                float targetDamage = DamageUtils.anchorDamage(target, target.getBlockPos().toCenterPos());
-                float selfDamage = DamageUtils.anchorDamage(player, target.getBlockPos().toCenterPos());
-
-                if (selfDamage == DisableHealth.get()) return;
-
-                if (targetDamage < minDamage.get()) {
-                    return;
-                }
-
-                for (CardinalDirection dir : CardinalDirection.values()) {
-                    if (this.strictDirection.get()
-                            && dir.toDirection() != Objects.requireNonNull(mc.player).getHorizontalFacing()
-                            && dir.toDirection().getOpposite() != mc.player.getHorizontalFacing()) continue;
-                }
-
-                if (AntiStuck.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.GLOWSTONE) {
-                    BlockUtils.breakBlock(targetHeadPos, false);
-                }
-
                 if (placeSupport.get() && CombatUtils.isSurrounded(target)) {
                     placeSupportBlocks(target);
                 }
-
             if (anchorPlaced) {
                 switch (swingMode.get()) {
                     case none:
@@ -294,11 +283,55 @@ public class AutoAnchor extends Module {
                 }
             }
         } catch (Exception e) {
-            System.out.println(Arrays.toString(e.getStackTrace()));
+            System.out.println("Exception caught -> " + e.getCause() + ". Message -> " + e.getMessage());
         }
     }
 
+    private float DamageScore(PlayerEntity target, BlockPos pos) {
+        return DamageUtils.anchorDamage(target, pos.toCenterPos());
+    }
 
+    private void SafetyChecks(BlockPos pos) {
+        float bestSelfScore = DamageScore(mc.player, pos);
+        float bestDamageScore = DamageScore(target, pos);
+        int maxInteractions = 10;
+        int interactions = 1;
+        while (maxInteractions > interactions) {
+            interactions++;
+            switch (safety.get()) {
+                case safe -> {
+                    if (bestSelfScore >= maxSelfDamage.get() || Objects.requireNonNull(mc.player).getHealth() < maxSelfDamage.get()) {
+                        info("over max self damage -> " + maxSelfDamage.get());
+                        continue;
+                    }
+                    if (bestDamageScore < minDamage.get()) {
+                        info("under min damage -> " + minDamage.get());
+                        continue;
+                    }
+
+                    float damageRatio = bestDamageScore / bestSelfScore;
+                    if (damageRatio < this.DamageRatio.get() || damageRatio > this.DamageRatio.get()) {
+                        info("under damage ratio");
+                        continue;
+                    }
+                }
+                case balance -> {
+                    if (Objects.requireNonNull(mc.player).getHealth() < maxSelfDamage.get()) {
+                        info("over max self damage -> " + maxSelfDamage.get());
+                        continue;
+                    }
+                    if (bestDamageScore < minDamage.get()) {
+                        info("under min damage -> " + minDamage.get());
+                        continue;
+                    }
+                }
+                case off -> {
+                    break;
+                }
+            }
+        }
+    }
+    private BlockPos pos;
     //calc positions
     public void FindPossiblePositions(double radiusX, double radiusZ, PlayerEntity target) {
         double CurrentX = target.getX() - radiusX;
@@ -308,10 +341,10 @@ public class AutoAnchor extends Module {
     private BlockPos findAirPosition(double startX, double startY, double startZ, double radiusX, double radiusZ) {
         for (double x = startX - radiusX; x <= startX + radiusX; x++) {
             for (double z = startZ - radiusZ; z <= startZ + radiusZ; z++) {
-                BlockPos pos = new BlockPos((int) x, (int) startY, (int) z);
-                AnchorPos = pos;
-                if (Objects.requireNonNull(mc.world).getBlockState(pos).isAir() || Objects.requireNonNull(mc.world).getBlockState(pos).getBlock() == Blocks.FIRE) {
-                    return pos;
+                pos = new BlockPos((int) x, (int) startY, (int) z);
+                SafetyChecks(pos);
+                if (Objects.requireNonNull(mc.world).getBlockState(pos).isAir() || Objects.requireNonNull(mc.world).getBlockState(pos).getBlock() == Blocks.FIRE || (Objects.requireNonNull(mc.world).getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
+                    return AnchorPos = pos;
                 }
             }
         }
@@ -331,8 +364,8 @@ public class AutoAnchor extends Module {
                         lineColor.get(), shapeMode.get(),
                         0, rendertime.get(), true, ShrinkNow
                 );
-
-            } else if (mode == RenderMode.smooth) {
+            }
+            if (mode == RenderMode.smooth) {
                 if (renderBoxOne == null) renderBoxOne = new Box(AnchorPos);
                 if (renderBoxTwo == null) renderBoxTwo = new Box(AnchorPos);
 
@@ -380,6 +413,7 @@ public class AutoAnchor extends Module {
     public void onDeactivate() {
         target = null;
         AnchorPos = null;
+        pos = null;
     }
     private void SwapAndPlace() {
         ClientPlayerEntity player = mc.player;
@@ -387,7 +421,6 @@ public class AutoAnchor extends Module {
             case normal:
                 anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
                 glowstone = InvUtils.findInHotbar(Items.GLOWSTONE);
-
 
                 if (Objects.requireNonNull(mc.world).getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(AnchorPos).getBlock() == Blocks.FIRE || mc.world.getBlockState(AnchorPos).isAir()) {
                     if(BlockUtils.canPlace(AnchorPos)) {
