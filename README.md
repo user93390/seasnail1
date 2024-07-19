@@ -1,6 +1,11 @@
 snail++
 
-Meteor addon developed by: @Seasnail1 and @ChronosUser
+Meteor addon developed by: Seasnail1 and ChronosUser
+
+I know development has been slow, I am going to work more on snail++
+
+
+
 
 Modules list:
 
@@ -22,3 +27,4 @@ misc:
 4. AutoEZ
 5. XPautomation
 6. StealthMine+ (packet mine)
+7. BurrowEsp
