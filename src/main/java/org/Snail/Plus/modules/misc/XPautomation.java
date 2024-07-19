@@ -22,13 +22,11 @@ public class XPautomation extends Module {
         Silent,
         Normal
     }
-
     public enum RotateMode {
         Packet,
         Pitch,
         None,
     }
-
     public enum HandMode {
         Offhand,
         MainHand,

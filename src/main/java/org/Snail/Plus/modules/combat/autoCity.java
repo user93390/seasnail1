@@ -1,6 +1,5 @@
 package org.Snail.Plus.modules.combat;
 
-import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -14,9 +13,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import org.Snail.Plus.Addon;
-import org.Snail.Plus.modules.misc.StealthMine;
 import org.Snail.Plus.utils.CombatUtils;
 
 import java.util.Objects;
@@ -34,7 +31,6 @@ public class autoCity extends Module {
             .min(0)
             .sliderMax(10)
             .build());
-
     private final Setting<Boolean> AntiBurrow = sgGeneral.add(new BoolSetting.Builder()
             .name("burrow")
             .description("mines players burrows")
@@ -62,7 +58,7 @@ public class autoCity extends Module {
             .build());
     private BlockPos currentPos;
     public autoCity() {
-        super(Addon.Snail, "AutoMine", "Uses StealthMine+ to auto city blocks");
+        super(Addon.Snail, "Auto city+", "Uses StealthMine+ to auto city blocks");
     }
 
     @EventHandler
@@ -84,30 +80,30 @@ public class autoCity extends Module {
                 if (onlyInHoles.get() && !CombatUtils.isSurrounded(target)) return;
 
                 if (Objects.requireNonNull(mc.world).getBlockState(East).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(East).isAir()) {
-                    StealthMine.BreakBlock(StartBreakingBlockEvent.get(East, Direction.DOWN));
                     currentPos = East;
                     if (support.get() && mc.world.getBlockState(SupportPosEast).isAir()) {
                         SupportPlace(target, SupportPosEast);
                     }
+
                 } else {
                     if (mc.world.getBlockState(West).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(West).isAir()) {
-                        StealthMine.BreakBlock(StartBreakingBlockEvent.get(West, Direction.DOWN));
                         currentPos = West;
                         if (support.get() && mc.world.getBlockState(SupportPosWest).isAir()) {
                             SupportPlace(target, SupportPosWest);
                         }
 
+
                     } else {
                         if (mc.world.getBlockState(North).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(North).isAir()) {
-                            StealthMine.BreakBlock(StartBreakingBlockEvent.get(North, Direction.DOWN));
                             currentPos = North;
                             if (support.get() && mc.world.getBlockState(SupportPosNorth).isAir()) {
                                 SupportPlace(target, SupportPosNorth);
                             }
 
+
                         } else {
                             if (mc.world.getBlockState(South).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(South).isAir()) {
-                                StealthMine.BreakBlock(StartBreakingBlockEvent.get(South, Direction.DOWN));
+
                                 currentPos = South;
                                 if (support.get() && mc.world.getBlockState(SupportPosSouth).isAir()) {
                                     SupportPlace(target, SupportPosSouth);
@@ -117,7 +113,8 @@ public class autoCity extends Module {
                     }
                 }
                 if (AntiBurrow.get() && CombatUtils.isBurrowed(target) && mc.world.getBlockState(BurrowPos).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(BurrowPos).isAir()) {
-                    StealthMine.BreakBlock(StartBreakingBlockEvent.get(BurrowPos, Direction.DOWN));
+                    currentPos = BurrowPos;
+
                 }
             } catch (Exception e) {
                 System.out.println("unknown error... Please config auto-city correctly ");
@@ -126,6 +123,6 @@ public class autoCity extends Module {
     }
     private void SupportPlace(PlayerEntity target, BlockPos pos) {
         FindItemResult Block = InvUtils.findInHotbar(Items.OBSIDIAN);
-        BlockUtils.place(pos, Block, rotate.get(), 0, true);
+        BlockUtils.place(pos, Block, rotate.get(), 100, true);
     }
 }

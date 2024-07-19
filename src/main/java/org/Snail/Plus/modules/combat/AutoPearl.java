@@ -100,7 +100,7 @@ public class AutoPearl extends Module {
     private void Bypass() {
         FindItemResult BypassTools = InvUtils.find(Items.FLINT_AND_STEEL, Items.COBWEB);
         Rotations.rotate(Objects.requireNonNull(mc.player).getYaw(), Pitch.get());
-        InvUtils.swap(BypassTools.slot(), true);
+        InvUtils.swap(BypassTools.slot(), false);
         Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
         InvUtils.swapBack();
     }

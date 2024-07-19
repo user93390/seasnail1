@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.meteorclient.utils.world.CardinalDirection;
@@ -21,9 +22,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.CombatUtils;
 
 import java.util.Objects;
+
+import static net.minecraft.network.encryption.NetworkEncryptionUtils.SignatureData.write;
 
 public class PistonPush extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -143,63 +145,52 @@ public class PistonPush extends Module {
     }
 
     @EventHandler
-    public void onTick(TickEvent.Pre event) {
+    public void onTick(TickEvent.Post event) {
         try {
             PlayerEntity target = TargetUtils.getPlayerTarget(Range.get(), priority.get());
-            if (target != null) {
-                BlockPos Piston = target.getBlockPos().north(1).up(2);
+            if(target == null) return;
+            BlockPos Piston = Objects.requireNonNull(target).getBlockPos().north(1).up(2);
                 BlockPos Redstone = target.getBlockPos().north(1).up(3);
                 FindItemResult Pickaxe = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
-
-                assert mc.world != null;
-                if (mc.world.getBlockState(Piston).isAir() && mc.world.getBlockState(Redstone).isAir() && CombatUtils.isSurrounded(target) && CombatUtils.isCentered(target)) {
-                    TryNorthPiston(target, true);
-
-
+            TryNorthPiston(target);
                     if (MinePiston.get()) {
                         InvUtils.swap(Pickaxe.slot(), true);
                         Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, Piston, Direction.DOWN));
                         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, Piston, Direction.DOWN));
-                        assert mc.player != null;
-                        mc.player.swingHand(Hand.MAIN_HAND);
+                        Objects.requireNonNull(mc.player).swingHand(Hand.MAIN_HAND);
                         InvUtils.swapBack();
 
-                    } else if (MineRedstone.get()) {
+                    }
+                    if (MineRedstone.get()) {
                         InvUtils.swap(Pickaxe.slot(), true);
                         Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, Redstone, Direction.DOWN));
                         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, Redstone, Direction.DOWN));
-                        assert mc.player != null;
-                        mc.player.swingHand(Hand.MAIN_HAND);
+                        Objects.requireNonNull(mc.player).swingHand(Hand.MAIN_HAND);
                         InvUtils.swapBack();
                     }
-                }
-            }
         } catch (Exception e) {
-            System.out.println("Exception caught");
+            System.out.println("Exception caught -> " + e.getCause() + ". Message -> " + e.getMessage());
         }
     }
 
-    private void TryNorthPiston(PlayerEntity target, Boolean crouch) {
+    private void TryNorthPiston(PlayerEntity target) {
+        double yaw = switch (direction) {
+
+            case East -> 90;
+            case South -> 180;
+            case West -> -90;
+            default -> 0;
+        };
+
         BlockPos Piston = target.getBlockPos().north(1).up(1);
         BlockPos Redstone = target.getBlockPos().north(1).up(2);
-        PlayerEntity player = mc.player;
 
         FindItemResult ItemPiston = InvUtils.findInHotbar(Items.PISTON);
         FindItemResult ItemRedstone = InvUtils.findInHotbar(Items.REDSTONE_BLOCK, Items.REDSTONE_TORCH);
 
-        Direction pistonFacing = Objects.requireNonNull(player).getHorizontalFacing().getOpposite();
-
-        InvUtils.swap(ItemPiston.slot(), true);
-        (mc.getNetworkHandler()).sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(Piston), pistonFacing, Piston, false), ItemPiston.slot()));
-        InvUtils.swapBack();
-
-        InvUtils.swap(ItemRedstone.slot(), true);
-        (mc.getNetworkHandler()).sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(Redstone), Direction.DOWN, Redstone, false), ItemRedstone.slot()));
-        InvUtils.swapBack();
-
-        if (crouch.equals(true)) {
-            mc.player.setSneaking(true);
-        }
+        Rotations.rotate(yaw, Rotations.getPitch(Piston), () -> BlockUtils.place(Piston, Hand.MAIN_HAND, ItemPiston.slot(), false, 0, false, true, false));
+        BlockUtils.place(Redstone, Hand.MAIN_HAND, ItemRedstone.slot(), false, 0, false, true, false);
+        System.out.println("placed both redstone and piston");
     }
 
     private void TrySouthPiston(PlayerEntity target, Boolean crouch) {
@@ -212,7 +203,7 @@ public class PistonPush extends Module {
         Direction pistonFacing = target.getHorizontalFacing().getOpposite();
 
         InvUtils.swap(ItemPiston.slot(), true);
-        (mc.getNetworkHandler()).sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(Piston), pistonFacing, Piston, false), ItemPiston.slot()));
+        (Objects.requireNonNull(mc.getNetworkHandler())).sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(Piston), pistonFacing, Piston, false), ItemPiston.slot()));
         InvUtils.swapBack();
 
         InvUtils.swap(ItemRedstone.slot(), true);
@@ -223,8 +214,6 @@ public class PistonPush extends Module {
             mc.player.setSneaking(true);
         }
     }
-
-
     private void TryEastPiston(PlayerEntity target, Boolean crouch) {
         BlockPos Piston = target.getBlockPos().east(1).up(1);
         BlockPos Redstone = target.getBlockPos().east(1).up(2);

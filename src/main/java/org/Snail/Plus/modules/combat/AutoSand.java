@@ -166,11 +166,8 @@ public class AutoSand extends Module {
         BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
         BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
 
-
         BlockPos targetPos = target.getBlockPos().up(height.get());
         event.renderer.box(targetPos, sideColor.get(), lineColor.get(), ShapeMode.Both, (int) 1.0f);
-
-
         if (support.get()) {
             event.renderer.box(supportPosNorth, sideColor.get(), lineColor.get(), ShapeMode.Both, 5);
             event.renderer.box(supportPosNorthUpOne, sideColor.get(), lineColor.get(), ShapeMode.Both, 5);

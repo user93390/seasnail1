@@ -37,9 +37,9 @@ public class MiddleClick extends Module {
     public enum SwapMethod {
         silent,
         normal,
+        invswitch
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-
     private final Setting<SwapMethod> swapMethod = sgGeneral.add(new EnumSetting.Builder<SwapMethod>()
             .name("swap method")
             .description("Method used to swap items")
@@ -130,6 +130,7 @@ public class MiddleClick extends Module {
     }
 
     private void swapAndInteract(FindItemResult item) {
+        int selectedSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
         switch (swapMethod.get()) {
 
             case silent:
@@ -141,6 +142,11 @@ public class MiddleClick extends Module {
                 SwapUtils.Normal(item.slot(), 1.0F);
                 Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
                 break;
+            case invswitch:
+                SwapUtils.invSwitch(selectedSlot, item.slot(), true, 0.0f);
+                Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+                SwapUtils.invSwitch(item.slot(), selectedSlot, true, 0.0f);
+                Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
         }
     }
 }

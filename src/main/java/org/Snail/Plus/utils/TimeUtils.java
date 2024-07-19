@@ -2,12 +2,10 @@ package org.Snail.Plus.utils;
 
 public class TimeUtils {
 
+    //best time conversion fr
     private static float GetTPS() {
         float tpsSupplier;
-        tpsSupplier = (float)
-                TPSSyncUtil.getCurrentTPS();
-
-        return tpsSupplier;
+        tpsSupplier = (float) TPSSyncUtil.getCurrentTPS(); return tpsSupplier;
     }
 
     public static float TicksPerSecond(double Time) {
@@ -15,9 +13,7 @@ public class TimeUtils {
         currentTPS = (float) TPSSyncUtil.getCurrentTPS();
 
         float TicksPerSecond = currentTPS;
-        float seconds = (float) (Time
-                / TicksPerSecond);
-        return seconds;
+        return (float) (Time / TicksPerSecond);
     }
 
     public static float TicksPerMiliseconds(float Time) {
@@ -25,18 +21,15 @@ public class TimeUtils {
         currentTPS = (float) TPSSyncUtil.getCurrentTPS();
 
         float TicksPerMilisecond = currentTPS * 1000;
-        float miliseconds = Time / TicksPerMilisecond;
-        return miliseconds;
+        return Time / TicksPerMilisecond;
     }
 
     public static float SecondsPerTick(float time) {
         float currentTPS;
         currentTPS = (float) TPSSyncUtil.getCurrentTPS();
 
-        float secondsPerTick =
-                1.0f / currentTPS;
-        float seconds = time / secondsPerTick;
-        return seconds;
+        float secondsPerTick = 1.0f / currentTPS;
+        return time / secondsPerTick;
     }
 
     public static double SyncTime(float time) {
@@ -48,10 +41,8 @@ public class TimeUtils {
         float currentTPS;
         currentTPS = (float) TPSSyncUtil.getCurrentTPS();
 
-        float millisecondsPerTick =
-                1000.0f / currentTPS;
-        float milliseconds = time / millisecondsPerTick;
-        return milliseconds;
+        float millisecondsPerTick = 1000.0f / currentTPS;
+        return time / millisecondsPerTick;
     }
 
 }

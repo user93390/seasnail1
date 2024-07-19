@@ -41,11 +41,4 @@ public class RPC extends Module{
     public void onDeactivate() {
         DiscordIPC.stop();
     }
-
-
-
-
-
-
-
 }

@@ -80,11 +80,6 @@ public class AutoTrap extends Module {
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
-    private final Setting<RenderMode> renderMode = sgGeneral.add(new EnumSetting.Builder<RenderMode>()
-            .name("render mode")
-            .description("render mode")
-            .defaultValue(RenderMode.normal)
-            .build());
     private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape-mode")
             .description("How the shapes are rendered.")
@@ -93,7 +88,7 @@ public class AutoTrap extends Module {
     private long lastPlaceTime = 0;
 
     public AutoTrap() {
-        super(Addon.Snail, "Auto Trap+", "Traps players using blocks");
+        super(Addon.Snail, "Auto trap+", "Traps players using blocks");
     }
 
     @EventHandler

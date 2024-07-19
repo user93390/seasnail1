@@ -24,7 +24,7 @@ public class SnailBomber extends Module {
     private final SettingGroup sgSwitch = settings.createGroup("Swap");
     private final SettingGroup sgSync = settings.createGroup("Sync");
     private final SettingGroup sgRotate = settings.createGroup("Rotate");
-    private final SettingGroup sgDebugg = settings.createGroup("Debugg");
+    private final SettingGroup sgDebugg = settings.createGroup("Debug");
     private final SettingGroup sgPause = settings.createGroup("Pause");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
