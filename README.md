@@ -1,11 +1,9 @@
-snail++, A Meteor addon developed by: Seasnail1 and ChronosUser.
+snail++, A Meteor addon developed by Seasnail1 and ChronosUser.
 
 
 
 ### credits:
 Credits to the fabric development team, and the meteordevelopment api.
-
-
 
 ### Modules list:
 
@@ -29,4 +27,4 @@ misc:
 6. StealthMine+ (packet mine)
 7. BurrowEsp
 
-once a skid, now a masterpiece - seasnail1
+once a skid, finally after 6 months, a masterpiece  -seasnail1.
