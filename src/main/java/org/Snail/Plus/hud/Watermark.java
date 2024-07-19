@@ -7,8 +7,6 @@ import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 
-import static org.Snail.Plus.Addon.finaluid;
-
 public class Watermark extends HudElement {
     public static final HudElementInfo<Watermark> INFO = new HudElementInfo<>(Addon.HUD_GROUP, "Watermark", "Cool Watermark", Watermark::new);
 
@@ -48,15 +46,12 @@ public class Watermark extends HudElement {
     public void render(HudRenderer renderer) {
         /* don't ask why... */
         double version = 2.0;
-        String text = name.get().replace("{version}", version + " - UID: " + finaluid);
         double textSize = size.get();
 
         // Adjust the size based on text size
-        double width = renderer.textWidth(text, shadow.get()) * textSize;
         double height = renderer.textHeight(true) * textSize;
-        setSize(width, height);
 
         // Render the text
-        renderer.text(text, getX(), getY(), color.get(), shadow.get(), textSize);
+        renderer.text(String.valueOf(name), getX(), getY(), color.get(), shadow.get(), textSize);
     }
 }
