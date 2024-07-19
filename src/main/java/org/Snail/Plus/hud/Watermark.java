@@ -31,11 +31,12 @@ public class Watermark extends HudElement {
             .min(0.0)
             .sliderMax(100.0)
             .build());
-
+    /* don't ask why... */
+    double version = 2.0;
     private final Setting<String> name = sgGeneral.add(new StringSetting.Builder()
             .name("name")
             .description("Name of the element")
-            .defaultValue("snail++ {version}")
+            .defaultValue("snail++ " + version)
             .build());
 
     public Watermark() {
@@ -44,8 +45,7 @@ public class Watermark extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        /* don't ask why... */
-        double version = 2.0;
+
         double textSize = size.get();
 
         // Adjust the size based on text size
