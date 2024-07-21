@@ -1,8 +1,11 @@
-snail++
+snail++, A Meteor addon developed by Seasnail1 and ChronosUser.
 
-Meteor addon developed by: @Seasnail1 and @ChronosUser
+`1.20.4-1.21`
 
-Modules list:
+### credits:
+Credits to the fabric development team, and the meteordevelopment api.
+
+### Modules list:
 
 combat:
 1. AntiBurrow
@@ -22,3 +25,6 @@ misc:
 4. AutoEZ
 5. XPautomation
 6. StealthMine+ (packet mine)
+7. BurrowEsp
+
+once a skid, finally after 6 months, a masterpiece  -seasnail1.
