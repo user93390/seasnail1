@@ -27,7 +27,7 @@ public class AutoKit extends Module {
 
     private final Setting<Double> Delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
-            .description("delay to place blocks")
+            .description("delay to  block")
             .defaultValue(3.0)
             .sliderMax(10.0)
             .sliderMin(0.0)

@@ -6,6 +6,8 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
@@ -14,15 +16,17 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.PickaxeItem;
+import net.minecraft.network.message.SentMessage;
+import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import org.Snail.Plus.Addon;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 public class StealthMine extends Module {
@@ -81,6 +85,14 @@ public class StealthMine extends Module {
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
+
+    private final Setting<Double> Speed = sgGeneral.add(new DoubleSetting.Builder()
+            .name("render speed")
+            .description("how much speed to add (multiply)")
+            .defaultValue(1.5)
+            .sliderMin(0)
+            .sliderMax(10)
+            .build());
     private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape-mode")
             .description("How the shapes are rendered.")
@@ -89,8 +101,6 @@ public class StealthMine extends Module {
     private double blockBreakingProgress;
     private static final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
     private static Direction direction;
-    private int InstantMinedTimes;
-    private int NormalMinedTimes;
     private int InstantMax = MaxInstant.get();
     private int NormalMax;
     BlockState blockState;
@@ -107,35 +117,29 @@ public class StealthMine extends Module {
 
     @Override
     public void onActivate() {
-        reset();
+        blockPos.set(0, -1, 0);
+        blockBreakingProgress = 0;
     }
 
     @Override
     public void onDeactivate() {
-        reset();
-    }
-
-    private void reset() {
         blockPos.set(0, -1, 0);
         blockBreakingProgress = 0;
-        InstantMinedTimes = 0;
-        NormalMinedTimes = 0;
     }
-
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         try {
+            boolean sent = false;
+            int selectedSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
             NormalMax = MaxNormal.get();
             InstantMax = MaxInstant.get();
 
-            // Check if block at blockPos is air and deactivate the module if true
             if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
-                reset();
                 return;
             }
-
             if (BlockUtils.canBreak(blockPos) && blockPos.isWithinDistance(Objects.requireNonNull(mc.player).getBlockPos(), Range.get())) {
                 if (PauseOnUse.get() && (Objects.requireNonNull(mc.interactionManager).isBreakingBlock() || mc.player.isUsingItem())) {
+                    blockBreakingProgress = 0;
                     return;
                 }
 
@@ -147,70 +151,41 @@ public class StealthMine extends Module {
                         break;
                     }
                 }
-
                 if (rotate.get()) {
                     Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
                 }
-
                 BlockState blockState = mc.world.getBlockState(blockPos);
 
                 // Check if the block is valid
                 if (blockState.isAir() || blockState.getBlock() == Blocks.BEDROCK) {
+                    blockBreakingProgress = 0;
                     return;
                 }
-
+                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(pickaxeSlot));
+                //insta mine
                 if (instantMine.get()) {
-                    if (InstantMinedTimes < InstantMax && isMiningBlock(blockPos)) {
-                        if (pickaxeSlot != -1) {
-                            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(pickaxeSlot));
-                            System.out.println("Swapping to pickaxe slot: " + pickaxeSlot);
-                        }
-                        Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
-                        System.out.println("Sending STOP_DESTROY_BLOCK packet for instant mine");
-                        handleBlockBroken();
-                    }
-                } else {
-                    if (NormalMinedTimes < NormalMax && isMiningBlock(blockPos)) {
-                        if (pickaxeSlot != -1) {
-                            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(pickaxeSlot));
-                            System.out.println("Swapping to pickaxe slot: " + pickaxeSlot);
-                        }
-                        Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction));
-                        System.out.println("Sending START_DESTROY_BLOCK packet");
-                        Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
-                        System.out.println("Sending STOP_DESTROY_BLOCK packet for normal mine");
-                        handleBlockBroken();
-                    }
+                    Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
+                    sent = true;
                 }
 
-                blockBreakingProgress += BlockUtils.getBreakDelta(pickaxeSlot, blockState) * 1.5;
+                //normal mine.
+                if (!instantMine.get()) {
+                    Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction));
+                    Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
+                    sent = true;
+                }
+                if(sent) {
+                    mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(selectedSlot));
+                }
+                blockBreakingProgress += BlockUtils.getBreakDelta(pickaxeSlot, blockState) * Speed.get();
             }
         } catch (Exception e) {
-            System.out.println(Arrays.toString(e.getStackTrace()) + " in StealthMine.java");
+            System.out.println("Exception caught -> " + e.getCause() + ". Message -> " + e.getMessage());
         }
-    }
-
-    private void handleBlockBroken() {
-        if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
-            if (instantMine.get()) {
-                InstantMinedTimes++;
-                System.out.println("Block broken using instant mine, total attempts: " + InstantMinedTimes);
-            } else {
-                NormalMinedTimes++;
-                System.out.println("Block broken using normal mine, total attempts: " + NormalMinedTimes);
-            }
-            reset(); // Reset the module after a block is broken
-        }
-    }
-
-    public boolean isMiningBlock(BlockPos pos) {
-        return blockPos.equals(pos);
     }
     @EventHandler
     private void CityRender(Render3DEvent event) {
-        if (blockBreakingProgress > 2) {
-            blockBreakingProgress = 0;
-        }
+        if(blockBreakingProgress > 2) blockBreakingProgress = 0;
         this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
         double ShrinkFactor = 1d - blockBreakingProgress;
         BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);

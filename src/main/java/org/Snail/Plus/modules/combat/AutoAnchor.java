@@ -1,10 +1,12 @@
 package org.Snail.Plus.modules.combat;
 
+
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IBox;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
@@ -27,11 +29,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
 import org.Snail.Plus.utils.SwapUtils;
+import org.Snail.Plus.utils.WorldUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+
 
 
 public class AutoAnchor extends Module {
@@ -158,11 +165,7 @@ public class AutoAnchor extends Module {
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
-    private final Setting<Boolean> shrink = sgGeneral.add(new BoolSetting.Builder()
-            .name("shrink")
-            .description("shrinks the render")
-            .defaultValue(true)
-            .build());
+
     private final Setting<RenderMode> renderMode = sgGeneral.add(new EnumSetting.Builder<RenderMode>()
             .name("render mode")
             .description("render mode. Smooth is cool")
@@ -176,7 +179,12 @@ public class AutoAnchor extends Module {
             .sliderMin(1)
             .visible(() -> renderMode.get() == RenderMode.fading)
             .build());
-
+    private final Setting<Boolean> shrink = sgGeneral.add(new BoolSetting.Builder()
+            .name("fade shrink")
+            .description("shrink fading render")
+            .defaultValue(true)
+            .visible(() -> renderMode.get() == RenderMode.fading)
+            .build());
     private final Setting<Integer> Smoothness = sgGeneral.add(new IntSetting.Builder()
             .name("smoothness")
             .description("the smoothness")
@@ -223,9 +231,8 @@ public class AutoAnchor extends Module {
             if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
                 toggle();
                 return;
-            }
-            target = TargetUtils.getPlayerTarget(range.get(), priority.get());
 
+            }
             if (TargetUtils.isBadTarget(target, range.get())) return;
             long currentTime = System.currentTimeMillis();
             if ((currentTime - lastAnchorPlaceTime) < AnchorDelay.get() * 1000) return;
@@ -251,18 +258,17 @@ public class AutoAnchor extends Module {
             }
             if (CombatUtils.isBurrowed(target)) return;
 
-
             if (!CombatUtils.isSurrounded(target) && Smart.get()) {
                 FindPossiblePositions(RadiusX.get(), RadiusZ.get(), target);
                 SwapAndPlace();
             } else {
-                if (Smart.get() && CombatUtils.isSurrounded(target) && mc.world.getBlockState(targetHeadPos).isAir() || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+                if (Smart.get() && CombatUtils.isSurrounded(target) && WorldUtils.isAir(targetHeadPos)  || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
                     TargetHeadPos(target);
                     AnchorPos = targetHeadPos;
                     SwapAndPlace();
                 }
             }
-            if (!Smart.get() && mc.world.getBlockState(targetHeadPos).isAir() || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+            if (!Smart.get() && WorldUtils.isAir(targetHeadPos) || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
                 TargetHeadPos(target);
                 AnchorPos = targetHeadPos;
                 SwapAndPlace();
@@ -342,7 +348,7 @@ public class AutoAnchor extends Module {
     public void FindPossiblePositions(double radiusX, double radiusZ, PlayerEntity target) {
         double CurrentX = target.getX() - radiusX;
         double CurrentZ = target.getZ() - radiusZ;
-        BlockPos newPosition = findAirPosition(CurrentX, target.getY(), CurrentZ, radiusX, radiusZ);
+        AnchorPos = findAirPosition(CurrentX, target.getY(), CurrentZ, radiusX, radiusZ);
     }
     private BlockPos findAirPosition(double startX, double startY, double startZ, double radiusX, double radiusZ) {
         for (double x = startX - radiusX; x <= startX + radiusX; x++) {

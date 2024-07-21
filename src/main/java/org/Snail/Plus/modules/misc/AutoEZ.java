@@ -21,6 +21,7 @@ import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import org.Snail.Plus.Addon;
 
 import java.time.Instant;
+import java.util.Objects;
 
 public class AutoEZ extends Module {
     private Thread thread;
@@ -80,8 +81,7 @@ public class AutoEZ extends Module {
                 Instant instant = Instant.now();
                 long l = NetworkEncryptionUtils.SecureRandomUtil.nextLong();
                 ClientPlayNetworkHandler handler = MinecraftClient.getInstance().getNetworkHandler();
-                assert handler != null;
-                LastSeenMessagesCollector.LastSeenMessages lastSeenMessages = ((ClientPlayNetworkHandlerAccessor) handler).getLastSeenMessagesCollector().collect();
+                LastSeenMessagesCollector.LastSeenMessages lastSeenMessages = ((ClientPlayNetworkHandlerAccessor) Objects.requireNonNull(handler)).getLastSeenMessagesCollector().collect();
                 MessageSignatureData messageSignatureData = ((ClientPlayNetworkHandlerAccessor) handler).getMessagePacker().pack(new MessageBody(msg, instant, l, lastSeenMessages.lastSeen()));
                 handler.sendPacket(new ChatMessageC2SPacket(msg, instant, l, messageSignatureData, lastSeenMessages.update()));
             }

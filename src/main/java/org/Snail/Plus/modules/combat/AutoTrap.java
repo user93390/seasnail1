@@ -17,6 +17,8 @@ import net.minecraft.util.math.BlockPos;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.CombatUtils;
 
+import java.util.Objects;
+
 
 public class AutoTrap extends Module {
 
@@ -86,7 +88,6 @@ public class AutoTrap extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
     private long lastPlaceTime = 0;
-
     public AutoTrap() {
         super(Addon.Snail, "Auto trap+", "Traps players using blocks");
     }
@@ -100,13 +101,13 @@ public class AutoTrap extends Module {
 
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
         if (SupportPlace.get() && OnlySurrounded.get()) {
-            if (CombatUtils.isSurrounded(target)) {
+            if (CombatUtils.isSurrounded(Objects.requireNonNull(target))) {
                 PlaceSupportBlocks(target);
             }
         } else if (SupportPlace.get()) {
             PlaceSupportBlocks(target);
         }
-        if (CombatUtils.isCentered(target)) {
+        if (CombatUtils.isCentered(Objects.requireNonNull(target))) {
             switch (Mode.get()) {
                 case head:
                     placeTopBlocks(target);
@@ -135,35 +136,32 @@ public class AutoTrap extends Module {
     @EventHandler
     private void TrapRender(Render3DEvent event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        assert target != null;
-        if(target != null) {
-            BlockPos FullPosSouth = target.getBlockPos().south(1).up(1);
-            BlockPos FullPosNorth = target.getBlockPos().north(1).up(1);
-            BlockPos FullPosWest = target.getBlockPos().west(1).up(1);
-            BlockPos FullPosEast = target.getBlockPos().east(1).up(1);
-            BlockPos FullPosSouth1 = target.getBlockPos().south(1).up(2);
-            BlockPos FullPosNorth1 = target.getBlockPos().north(1).up(2);
-            BlockPos FullPosWest1 = target.getBlockPos().west(1).up(2);
-            BlockPos FullPosEast1 = target.getBlockPos().east(1).up(2);
-            BlockPos HeadPos = target.getBlockPos().up(2);
+        BlockPos FullPosSouth = Objects.requireNonNull(target).getBlockPos().south(1).up(1);
+        BlockPos FullPosNorth = target.getBlockPos().north(1).up(1);
+        BlockPos FullPosWest = target.getBlockPos().west(1).up(1);
+        BlockPos FullPosEast = target.getBlockPos().east(1).up(1);
+        BlockPos FullPosSouth1 = target.getBlockPos().south(1).up(2);
+        BlockPos FullPosNorth1 = target.getBlockPos().north(1).up(2);
+        BlockPos FullPosWest1 = target.getBlockPos().west(1).up(2);
+        BlockPos FullPosEast1 = target.getBlockPos().east(1).up(2);
+        BlockPos HeadPos = target.getBlockPos().up(2);
 
-            if (Mode.get() == TrapMode.head) {
-                event.renderer.box(HeadPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+        if (Mode.get() == TrapMode.head) {
+            event.renderer.box(HeadPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
 
-            } else if (Mode.get() == TrapMode.full) {
-                event.renderer.box(FullPosSouth, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
-                event.renderer.box(FullPosEast, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
-                event.renderer.box(FullPosNorth, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
-                event.renderer.box(FullPosWest, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+        } else if (Mode.get() == TrapMode.full) {
+            event.renderer.box(FullPosSouth, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+            event.renderer.box(FullPosEast, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+            event.renderer.box(FullPosNorth, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+            event.renderer.box(FullPosWest, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
 
-                if (AntiStep.get()) {
-                    event.renderer.box(FullPosSouth1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
-                    event.renderer.box(FullPosEast1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
-                    event.renderer.box(FullPosNorth1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
-                    event.renderer.box(FullPosWest1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
-                }
-                event.renderer.box(HeadPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+            if (AntiStep.get()) {
+                event.renderer.box(FullPosSouth1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                event.renderer.box(FullPosEast1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                event.renderer.box(FullPosNorth1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+                event.renderer.box(FullPosWest1, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
             }
+            event.renderer.box(HeadPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
         }
     }
     @EventHandler
