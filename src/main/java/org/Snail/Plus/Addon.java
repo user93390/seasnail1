@@ -5,11 +5,14 @@ import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.minecraft.client.tutorial.TutorialStep;
 import org.Snail.Plus.hud.Watermark;
 import org.Snail.Plus.modules.combat.*;
 import org.Snail.Plus.modules.misc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Addon");
@@ -18,7 +21,8 @@ public class Addon extends MeteorAddon {
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     @Override
     public void onInitialize() {
-
+        //fuck the tutorials
+        mc.getTutorialManager().setStep(TutorialStep.NONE);
 
         // Modules
         Modules.get().add(new AutoEZ());

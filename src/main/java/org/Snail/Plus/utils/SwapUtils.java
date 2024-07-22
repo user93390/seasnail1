@@ -1,6 +1,15 @@
 package org.Snail.Plus.utils;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import meteordevelopment.meteorclient.mixininterface.IClientPlayerInteractionManager;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.slot.SlotActionType;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 
 public class SwapUtils {

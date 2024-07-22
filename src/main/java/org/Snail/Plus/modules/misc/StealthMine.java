@@ -6,7 +6,6 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -16,11 +15,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.PickaxeItem;
-import net.minecraft.network.message.SentMessage;
-import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
@@ -37,6 +33,14 @@ public class StealthMine extends Module {
             .description("the range")
             .defaultValue(4.5)
             .sliderMin(1)
+            .sliderMax(10)
+            .build());
+
+    private final Setting<Double> Delay = sgGeneral.add(new DoubleSetting.Builder()
+            .name("delay")
+            .description("da deeel lay")
+            .defaultValue(1.5)
+            .sliderMin(0)
             .sliderMax(10)
             .build());
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
@@ -104,7 +108,7 @@ public class StealthMine extends Module {
     private int InstantMax = MaxInstant.get();
     private int NormalMax;
     BlockState blockState;
-
+    private final long lastTimeoutCheck = 0;
     public StealthMine() {
         super(Addon.Snail, "stealth mine+", "Mines blocks using packets");
     }
@@ -155,29 +159,37 @@ public class StealthMine extends Module {
                     Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
                 }
                 BlockState blockState = mc.world.getBlockState(blockPos);
-
+                blockBreakingProgress += BlockUtils.getBreakDelta(pickaxeSlot, blockState);
                 // Check if the block is valid
                 if (blockState.isAir() || blockState.getBlock() == Blocks.BEDROCK) {
                     blockBreakingProgress = 0;
                     return;
                 }
-                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(pickaxeSlot));
+                //here
+                mc.player.getInventory().selectedSlot = pickaxeSlot;
                 //insta mine
                 if (instantMine.get()) {
                     Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
-                    sent = true;
+                    mc.player.swingHand(Hand.MAIN_HAND);
+                    if (blockBreakingProgress > 0.8) {
+                        sent = true;
+                        System.out.println("swapped under " + blockBreakingProgress);
+                    }
                 }
 
                 //normal mine.
                 if (!instantMine.get()) {
                     Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction));
+                    mc.player.swingHand(Hand.MAIN_HAND);
                     Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
-                    sent = true;
+                    if (blockBreakingProgress > 1.9 && blockBreakingProgress < 2) {
+                        sent = true;
+                        System.out.println("swapped under " + blockBreakingProgress);
+                    }
                 }
                 if(sent) {
-                    mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(selectedSlot));
+                    InvUtils.swapBack();
                 }
-                blockBreakingProgress += BlockUtils.getBreakDelta(pickaxeSlot, blockState) * Speed.get();
             }
         } catch (Exception e) {
             System.out.println("Exception caught -> " + e.getCause() + ". Message -> " + e.getMessage());
@@ -187,7 +199,7 @@ public class StealthMine extends Module {
     private void CityRender(Render3DEvent event) {
         if(blockBreakingProgress > 2) blockBreakingProgress = 0;
         this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
-        double ShrinkFactor = 1d - blockBreakingProgress;
+        double ShrinkFactor = 1d - blockBreakingProgress * Speed.get();
         BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
         VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
         if (shape.isEmpty()) {

@@ -226,20 +226,17 @@ public class AutoTrap extends Module {
         BlockPos FullPosNorth1 = target.getBlockPos().north(1).up(2);
         BlockPos FullPosWest1 = target.getBlockPos().west(1).up(2);
         BlockPos FullPosEast1 = target.getBlockPos().east(1).up(2);
-        if (target != null) {
-            BlockUtils.place(FullPosSouth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosWest, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            BlockUtils.place(FullPosEast, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+        BlockUtils.place(FullPosSouth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+        BlockUtils.place(FullPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+        BlockUtils.place(FullPosWest, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+        BlockUtils.place(FullPosEast, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
 
-            if (AntiStep.get()) {
-
-                BlockUtils.place(FullPosSouth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-                BlockUtils.place(FullPosNorth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-                BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-                BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-                BlockUtils.place(FullPosEast1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
-            }
+        if (AntiStep.get()) {
+            BlockUtils.place(FullPosSouth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosNorth1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosWest1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
+            BlockUtils.place(FullPosEast1, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, true);
         }
     }
     private void PlaceSupportBlocks(PlayerEntity target) {

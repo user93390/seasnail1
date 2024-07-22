@@ -134,8 +134,7 @@ public class XPautomation extends Module {
             return;
         }
 
-        assert mc.player != null;
-        if (mc.player.getHealth() <= health.get()) {
+        if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) {
             return;
         }
 
