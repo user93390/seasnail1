@@ -28,3 +28,5 @@ misc:
 7. BurrowEsp
 
 once a skid, finally after 6 months, a masterpiece  -seasnail1.
+
+discord: https://discord.gg/nh9pjVhsVb
