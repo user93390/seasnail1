@@ -1,8 +1,6 @@
 package org.Snail.Plus.utils;
 
 public class TimeUtils {
-
-    //best time conversion fr
     private static float GetTPS() {
         float tpsSupplier;
         tpsSupplier = (float) TPSSyncUtil.getCurrentTPS(); return tpsSupplier;
@@ -44,5 +42,4 @@ public class TimeUtils {
         float millisecondsPerTick = 1000.0f / currentTPS;
         return time / millisecondsPerTick;
     }
-
 }

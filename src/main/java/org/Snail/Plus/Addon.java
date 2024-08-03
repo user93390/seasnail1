@@ -17,6 +17,8 @@ import org.Snail.Plus.modules.misc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Supplier;
+
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Addon extends MeteorAddon {
@@ -26,9 +28,8 @@ public class Addon extends MeteorAddon {
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     @Override
     public void onInitialize() {
-        //fuck the tutorials
         mc.getTutorialManager().setStep(TutorialStep.NONE);
-
+        Config.get().save();
         // Modules
         Modules.get().add(new AutoEZ());
         Modules.get().add(new AutoSand());
@@ -50,8 +51,10 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new FOV());
         Modules.get().add(new BurrowEsp());
         Modules.get().add(new PvpInfo());
+        Modules.get().add(new BedBomb());
         // HUD
         Hud.get().register(Watermark.INFO);
+
     }
     @Override
     public void onRegisterCategories() {

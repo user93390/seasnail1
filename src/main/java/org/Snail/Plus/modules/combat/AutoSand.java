@@ -155,7 +155,7 @@ public class AutoSand extends Module {
     @EventHandler
     private void onRender(Render3DEvent event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if (onlySurrounded.get() && !CombatUtils.isSurrounded(target)) return;
+        if (onlySurrounded.get() && !CombatUtils.isSurrounded(Objects.requireNonNull(target))) return;
         BlockPos supportPosNorth = Objects.requireNonNull(target).getBlockPos().north(1);
         BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
         BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);

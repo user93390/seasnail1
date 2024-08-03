@@ -4,6 +4,7 @@ import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEve
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
@@ -65,6 +66,14 @@ public class autoCity extends Module {
     public autoCity() {
         super(Addon.Snail, "Auto city+", "Uses StealthMine+ to auto city blocks");
     }
+
+    @Override
+    public void onActivate() {
+        if(!Modules.get().get(StealthMine.class).isActive()) {
+            Modules.get().get(StealthMine.class).toggle(); //auto activate if using autocity
+        }
+        currentPos = null;
+    }
     @EventHandler
     private void onTick(TickEvent.Post event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
@@ -85,21 +94,22 @@ public class autoCity extends Module {
 
                 if (Objects.requireNonNull(mc.world).getBlockState(East).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(East).isAir()) {
                     currentPos = East;
-                    StealthMine.BreakBlock(StartBreakingBlockEvent.get(currentPos,  Direction.DOWN));
+                    StealthMine.blockPos.set(currentPos);
                     if (support.get() && mc.world.getBlockState(SupportPosEast).isAir()) {
                         SupportPlace(SupportPosEast);
                     }
                 } else {
                     if (mc.world.getBlockState(West).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(West).isAir()) {
                         currentPos = West;
-                        StealthMine.BreakBlock(StartBreakingBlockEvent.get(currentPos, Direction.DOWN));
+                        StealthMine.blockPos.set(currentPos);
                         if (support.get() && mc.world.getBlockState(SupportPosWest).isAir()) {
                             SupportPlace(SupportPosWest);
                         }
                     } else {
                         if (mc.world.getBlockState(North).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(North).isAir()) {
                             currentPos = North;
-                            StealthMine.BreakBlock(StartBreakingBlockEvent.get(currentPos, Direction.DOWN));
+                            //used to break blocks
+                            StealthMine.blockPos.set(currentPos);
                             if (support.get() && mc.world.getBlockState(SupportPosNorth).isAir()) {
                                 SupportPlace(SupportPosNorth);
                             }
@@ -107,6 +117,7 @@ public class autoCity extends Module {
                             if (mc.world.getBlockState(South).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(South).isAir()) {
 
                                 currentPos = South;
+                                StealthMine.blockPos.set(currentPos);
                                 if (support.get() && mc.world.getBlockState(SupportPosSouth).isAir()) {
                                     SupportPlace(SupportPosSouth);
                                 }
@@ -116,7 +127,7 @@ public class autoCity extends Module {
                 }
                 if (AntiBurrow.get() && CombatUtils.isBurrowed(target) && WorldUtils.isAir(BurrowPos) && WorldUtils.isBreakable(BurrowPos)) {
                     currentPos = BurrowPos;
-                    StealthMine.BreakBlock(StartBreakingBlockEvent.get(currentPos, Direction.DOWN));
+                    StealthMine.blockPos.set(currentPos);
                 }
             } catch (Exception e) {
                 System.out.println("Exception caught -> " + e.getCause() + ". Message -> " + e.getMessage());
@@ -126,5 +137,9 @@ public class autoCity extends Module {
     private void SupportPlace(BlockPos pos) {
         FindItemResult Block = InvUtils.findInHotbar(Items.OBSIDIAN);
         BlockUtils.place(pos, Block, rotate.get(), 100, true);
+    }
+    @Override
+    public void onDeactivate() {
+        currentPos = null;
     }
 }

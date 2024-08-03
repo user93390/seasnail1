@@ -72,6 +72,7 @@ public class StealthMine extends Module {
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
+    
     private final Setting<Double> Speed = sgGeneral.add(new DoubleSetting.Builder()
             .name("render speed")
             .description("how much speed to multiply to the render")
@@ -85,7 +86,7 @@ public class StealthMine extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
     private double blockBreakingProgress;
-    private static final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
+   public static final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
     private static Direction direction;
     BlockState blockState;
     public StealthMine() {
@@ -157,14 +158,13 @@ public class StealthMine extends Module {
         }
     }
     @EventHandler
-    private void CityRender(Render3DEvent event) {
+    private void Render(Render3DEvent event) {
         this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
         double ShrinkFactor = 1d - blockBreakingProgress * Speed.get();
         BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
         VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
         if (shape.isEmpty()) {
             return;
-
         }
         Box orig = shape.getBoundingBox();
 
@@ -174,10 +174,10 @@ public class StealthMine extends Module {
                 orig.getLengthZ() * ShrinkFactor
         );
 
-        renderBlock(event, orig, blockPos, ShrinkFactor, blockBreakingProgress);
+        renderBlock(event, orig, ShrinkFactor, blockBreakingProgress);
     }
 
-    private void renderBlock(Render3DEvent event, Box orig, BlockPos pos, double shrinkFactor, double progress) {
+    private void renderBlock(Render3DEvent event, Box orig, double shrinkFactor, double progress) {
         Box box = orig.shrink(
                 orig.getLengthX() * shrinkFactor,
                 orig.getLengthY() * shrinkFactor,
@@ -188,12 +188,12 @@ public class StealthMine extends Module {
         double yShrink = (orig.getLengthY() * shrinkFactor) / 2;
         double zShrink = (orig.getLengthZ() * shrinkFactor) / 2;
 
-        double x1 = pos.getX() + box.minX + xShrink;
-        double y1 = pos.getY() + box.minY + yShrink;
-        double z1 = pos.getZ() + box.minZ + zShrink;
-        double x2 = pos.getX() + box.maxX + xShrink;
-        double y2 = pos.getY() + box.maxY + yShrink;
-        double z2 = pos.getZ() + box.maxZ + zShrink;
+        double x1 = StealthMine.blockPos.getX() + box.minX + xShrink;
+        double y1 = StealthMine.blockPos.getY() + box.minY + yShrink;
+        double z1 = StealthMine.blockPos.getZ() + box.minZ + zShrink;
+        double x2 = StealthMine.blockPos.getX() + box.maxX + xShrink;
+        double y2 = StealthMine.blockPos.getY() + box.maxY + yShrink;
+        double z2 = StealthMine.blockPos.getZ() + box.maxZ + zShrink;
 
         event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
     }

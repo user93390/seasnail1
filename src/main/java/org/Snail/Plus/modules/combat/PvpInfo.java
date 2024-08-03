@@ -7,14 +7,8 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.Sound;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.Snail.Plus.Addon;
 import org.Snail.Plus.utils.WorldUtils;
@@ -22,7 +16,6 @@ import org.Snail.Plus.utils.WorldUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public class PvpInfo extends Module {
 
@@ -82,6 +75,7 @@ public class PvpInfo extends Module {
             .visible(playSound::get)
             .build());
     private final List<AbstractClientPlayerEntity> target = new ArrayList<>();
+    private boolean sentMessage;
 
     public PvpInfo() {
         super(Addon.Snail, "PVP info", "useful info for crystal pvp");
@@ -99,7 +93,6 @@ public class PvpInfo extends Module {
         target.clear();
     }
 
-    private boolean sentMessage;
     @EventHandler
     private void ontick(TickEvent.Post event) {
         if (sentMessage) {
@@ -117,7 +110,7 @@ public class PvpInfo extends Module {
                     ChatUtils.sendMsg(Formatting.GREEN, WorldUtils.getName(player) + " has ran away...");
                     List<SoundEvent> soundEvents = Sounds.get();
                     if (playSound.get() && !Sounds.get().isEmpty()) {
-                       WorldUtils.playSound(soundEvents.getFirst(), 1.0f);
+                        WorldUtils.playSound(soundEvents.getFirst(), 1.0f);
                     }
                     sentMessage = true;
                 }

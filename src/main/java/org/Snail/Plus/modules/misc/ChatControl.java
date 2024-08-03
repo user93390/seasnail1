@@ -138,7 +138,7 @@ public class ChatControl extends Module {
                         ChatUtils.sendMsg(of(Formatting.GREEN + player.getName().getString() + " is within render distance. (" + targetX + ", " + targetY + ", " + targetZ + ")"));
                         List<SoundEvent> soundEvents = sounds.get();
                         if (!soundEvents.isEmpty()) {
-                            mc.getSoundManager().play(PositionedSoundInstance.master(soundEvents.get(0), 1.0F));
+                            mc.getSoundManager().play(PositionedSoundInstance.master(soundEvents.getFirst(), 1.0F));
                         }
                         alertedPlayers.add(player.getUuid());
                     }
