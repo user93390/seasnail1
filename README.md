@@ -1,32 +1,40 @@
-snail++, A Meteor addon developed by Seasnail1 and ChronosUser.
+# Snail++
+
+### Snail++ is a [Meteor Client](https://meteorclient.com/) addon developed by Seasnail1 and ChronosUser.
+
+**THIS IS MY FIRST ADDON! DO NOT EXPECT GOOD CODE!**
 
 `1.20.4-1.21`
 
 ### credits:
-Credits to the fabric development team, and the meteordevelopment api.
+- > The Fabric development team for making the [Fabric Mod Loader](https://fabricmc.net/) & [api](https://modrinth.com/mod/fabric-api)
+- > The Meteor Development team for making both the Meteor Client and the Addon API/Template
 
 ### Modules list:
 
-combat:
-1. AntiBurrow
-2. SelfAnvil+
-3. AutoAnchor+
-4. AutoSand
-5. EchestFarmer+
-6. PistonPush+
-7. SnailBomber (autocrystal)
-8. AutoTrap+
-9. AutoWeb+
+**Combat Modules:**
+- AntiBurrow
+- SelfAnvil+
+- AutoAnchor+
+- AutoSand
+- EchestFarmer+
+- PistonPush+
+- SnailBomber (Better CrystalAura)
+- AutoTrap+
+- AutoWeb+
 
-misc:
-1. Chatcontrol
-2. PacketMine+
-3. quiverPlus
-4. AutoEZ
-5. XPautomation
-6. StealthMine+ (packet mine)
-7. BurrowEsp
+**Miscellaneous Modules:**
+- Chatcontrol
+- PacketMine+
+- QuiverPlus
+- AutoEZ
+- XP-Automation
+- StealthMine+ (Better Packet Mine)
+- BurrowEsp
 
-once a skid, finally after 6 months, a masterpiece  -seasnail1.
+#### "*once a skid, finally after 6 months, a slightly better skid*"  - seasnail1.
 
-discord: https://discord.gg/nh9pjVhsVb
+**Join the [Discord](https://discord.gg/nh9pjVhsVb
+)!**
+
+Wizard edited this, aside from that he didnt do shit as usual.
