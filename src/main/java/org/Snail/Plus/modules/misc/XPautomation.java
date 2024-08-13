@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.misc;
+package org.snail.plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -10,8 +10,8 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.TPSSyncUtil;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.TPSSyncUtil;
 
 import java.util.Objects;
 import java.util.stream.StreamSupport;

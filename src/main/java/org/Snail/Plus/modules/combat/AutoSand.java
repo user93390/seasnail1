@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -9,16 +9,24 @@ import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.ConcretePowderBlock;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BedItem;
 import net.minecraft.item.Items;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.CombatUtils;
-import org.Snail.Plus.utils.WorldUtils;
+import net.minecraft.util.math.Vec3d;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.WorldUtils;
 
 import java.util.Objects;
 
@@ -33,13 +41,6 @@ public class AutoSand extends Module {
             .sliderMax(5)
             .build());
 
-    private final Setting<Integer> height = sgGeneral.add(new IntSetting.Builder()
-            .name("height")
-            .description("height to place sand blocks")
-            .defaultValue(2)
-            .min(1)
-            .sliderMax(5)
-            .build());
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotate")
@@ -96,11 +97,12 @@ public class AutoSand extends Module {
 
 
     private long lastPlaceTime = 0;
-    private boolean sandPlaced;
 
     public AutoSand() {
         super(Addon.Snail, "auto-sand", "Places sand two blocks above players' heads");
     }
+    private  BlockPos pos;
+    private boolean effected;
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
@@ -108,10 +110,10 @@ public class AutoSand extends Module {
         if ((time - lastPlaceTime) < delay.get() * 1000) return;
         lastPlaceTime = time;
 
+
         PlayerEntity target = TargetUtils.getPlayerTarget(range.get(), priority.get());
         if (TargetUtils.isBadTarget(target, range.get())) return;
-
-        FindItemResult Support = InvUtils.findInHotbar(Items.OBSIDIAN);
+        pos = target.getBlockPos().up(2);
         FindItemResult Blocks = InvUtils.findInHotbar(
                 Items.SAND,
                 Items.RED_SAND,
@@ -127,29 +129,44 @@ public class AutoSand extends Module {
                 Items.LIGHT_BLUE_CONCRETE_POWDER,
                 Items.LIGHT_GRAY_CONCRETE_POWDER,
                 Items.WHITE_CONCRETE_POWDER
-
         );
-        BlockPos targetPos = target.getBlockPos().up(height.get());
-
-        if (onlySurrounded.get() && CombatUtils.isSurrounded(target) && Objects.requireNonNull(mc.world).getBlockState(targetPos).isAir()) {
-
-            for (Direction dir : Direction.values()) {
-                if (strictDirection.get() && WorldUtils.strictDirection(targetPos.offset(dir), dir.getOpposite())) continue;
-            }
-            if (this.support.get()) {
-                BlockPos supportPosNorth = target.getBlockPos().north(1);
-                BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(height.get());
-
-                BlockUtils.place(supportPosNorth, Support, rotate.get(), 100, true);
-                BlockUtils.place(supportPosNorthUpOne, Support, rotate.get(), 100, true);
-            }
-
-            BlockUtils.place(targetPos, Blocks, rotate.get(), 0, false);
-            sandPlaced = true;
-            if (this.autoDisable.get() && sandPlaced) {
-                this.toggle();
+        if(effected) {
+        if(autoDisable.get()) {
+            toggle();
+            return;
             }
         }
+
+        if (Objects.requireNonNull(mc.world).getBlockState(pos).isAir()) {
+            InvUtils.swap(Blocks.slot(), true);
+            if(strictDirection.get()) {
+                for (Direction dir : Direction.values()) {
+                    if (strictDirection.get() && WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite())) continue;
+                }
+            }
+            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.UP, pos, false));
+            InvUtils.swapBack();
+            if(mc.world.getBlockState(target.getBlockPos()).getBlock() != net.minecraft.block.Blocks.AIR) {
+            effected = true;
+            }
+            if(support.get()) {
+                PlaceSupportBlocks();
+            }
+        }
+    }
+
+    public void PlaceSupportBlocks() {
+
+        BlockPos supportPosNorth = Objects.requireNonNull(mc.player).getBlockPos().north(1);
+        BlockPos supportPosNorthUpOne = mc.player.getBlockPos().north(1).up(1);
+        BlockPos supportPosNorthUpTwo = mc.player.getBlockPos().north(1).up(2);
+        InvUtils.swap(InvUtils.findInHotbar(Items.OBSIDIAN).slot(), true);
+        Rotations.rotate(Rotations.getYaw(supportPosNorthUpOne), Rotations.getPitch(supportPosNorthUpOne) ,100, false, () -> {
+            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(supportPosNorth.getX(), supportPosNorth.getY(), supportPosNorth.getZ()), Direction.UP, supportPosNorth, false));
+            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(supportPosNorthUpOne.getX(), supportPosNorthUpOne.getY(), supportPosNorthUpOne.getZ()), Direction.UP, supportPosNorthUpOne, false));
+            Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(supportPosNorthUpTwo.getX(), supportPosNorthUpTwo.getY(), supportPosNorthUpTwo.getZ()), Direction.UP, supportPosNorthUpTwo, false));
+            InvUtils.swapBack();
+        });
     }
 
     @EventHandler
@@ -160,7 +177,7 @@ public class AutoSand extends Module {
         BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
         BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
 
-        BlockPos targetPos = target.getBlockPos().up(height.get());
+        BlockPos targetPos = target.getBlockPos().up(2);
         event.renderer.box(targetPos, sideColor.get(), lineColor.get(), ShapeMode.Both, (int) 1.0f);
         if (support.get()) {
             event.renderer.box(supportPosNorth, sideColor.get(), lineColor.get(), ShapeMode.Both, 5);

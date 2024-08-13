@@ -1,4 +1,4 @@
-package org.Snail.Plus.utils;
+package org.snail.plus.utils;
 
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import net.minecraft.entity.player.PlayerEntity;

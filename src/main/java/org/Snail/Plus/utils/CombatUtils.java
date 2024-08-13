@@ -1,20 +1,16 @@
-package org.Snail.Plus.utils;
+package org.snail.plus.utils;
 
-import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class CombatUtils {
-        private static boolean block;
         public static boolean isSurrounded (PlayerEntity target){
         BlockPos north = target.getBlockPos().north();
         BlockPos east = target.getBlockPos().east();
@@ -31,7 +27,7 @@ public class CombatUtils {
         Block block = Objects.requireNonNull(mc.world).getBlockState(pos).getBlock();
         return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK;
     }
-        public static boolean isCentered (PlayerEntity target) {
+        public static boolean isCentered(PlayerEntity target) {
         BlockPos blockPos = target.getBlockPos();
         double centerX = blockPos.getX() + 0.5;
         double centerZ = blockPos.getZ() + 0.5;
@@ -42,13 +38,10 @@ public class CombatUtils {
         double threshold = 0.2;
         return distanceX < threshold && distanceZ < threshold;
     }
-        public static boolean isBurrowed (PlayerEntity target) {
-        if (target == null) return false;
-        BlockPos blockPos = target.getBlockPos();
+        public static boolean isBurrowed (PlayerEntity targetEntity) {
+        if (targetEntity == null || mc.world == null) return false;
+        BlockPos blockPos = BlockPos.ofFloored(new Vec3d(targetEntity.getX(), targetEntity.getY() + 0.4, targetEntity.getZ()));
         Block block = Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock();
         return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK || block == Blocks.COBWEB;
-    }
-    public static PlayerEntity findBestTarget(double range, SortPriority priority) {
-            return null;
-    }
+        }
 }

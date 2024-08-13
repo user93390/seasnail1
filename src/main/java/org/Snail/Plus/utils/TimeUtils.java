@@ -1,9 +1,10 @@
-package org.Snail.Plus.utils;
+package org.snail.plus.utils;
 
 public class TimeUtils {
     private static float GetTPS() {
         float tpsSupplier;
-        tpsSupplier = (float) TPSSyncUtil.getCurrentTPS(); return tpsSupplier;
+        tpsSupplier = (float) TPSSyncUtil.getCurrentTPS();
+        return tpsSupplier;
     }
 
     public static float TicksPerSecond(double Time) {
@@ -31,8 +32,7 @@ public class TimeUtils {
     }
 
     public static double SyncTime(float time) {
-        float currentDelay = 1.0F;
-        return currentDelay / TPSSyncUtil.getCurrentTPS();
+        return time / TPSSyncUtil.getCurrentTPS();
     }
 
     public static float MillisecondsPerTick(float time) {

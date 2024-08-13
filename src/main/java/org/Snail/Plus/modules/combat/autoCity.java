@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -15,12 +15,10 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.modules.misc.StealthMine;
-import org.Snail.Plus.utils.CombatUtils;
-import org.Snail.Plus.utils.WorldUtils;
+import org.snail.plus.Addon;
+import org.snail.plus.modules.misc.StealthMine;
+import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.WorldUtils;
 
 import java.util.Objects;
 
@@ -94,7 +92,6 @@ public class autoCity extends Module {
 
                 if (Objects.requireNonNull(mc.world).getBlockState(East).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(East).isAir()) {
                     currentPos = East;
-                    StealthMine.blockPos.set(currentPos);
                     if (support.get() && mc.world.getBlockState(SupportPosEast).isAir()) {
                         SupportPlace(SupportPosEast);
                     }
