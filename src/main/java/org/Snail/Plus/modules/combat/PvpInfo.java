@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -10,8 +10,8 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Formatting;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.WorldUtils;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.WorldUtils;
 
 import java.util.ArrayList;
 import java.util.List;

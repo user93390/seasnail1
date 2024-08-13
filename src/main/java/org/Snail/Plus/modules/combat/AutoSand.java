@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -16,9 +16,9 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.CombatUtils;
-import org.Snail.Plus.utils.WorldUtils;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.WorldUtils;
 
 import java.util.Objects;
 

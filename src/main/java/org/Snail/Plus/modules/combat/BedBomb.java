@@ -1,13 +1,10 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.Utils;
-import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
@@ -28,7 +25,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-import org.Snail.Plus.Addon;
+import org.snail.plus.Addon;
 
 import java.util.Objects;
 
@@ -235,7 +232,6 @@ public class BedBomb extends Module {
     PlayerEntity target;
     BlockPos BedPos;
     CardinalDirection direction;
-    AutoTrap trap = Modules.get().get(AutoTrap.class);
     private int layTimer;
     private int placeTimer;
     private int breakTimer;
@@ -332,9 +328,6 @@ public class BedBomb extends Module {
 
 
     public void trap() {
-        if (AutoTrap.get()) {
-            trap.toggle();
-        }
     }
 
     public void breakBed(BlockPos BedPos) {

@@ -52,6 +52,6 @@ public class Addon extends MeteorAddon {
 
     @Override
     public String getPackage() {
-        return "org.Snail.Plus";
+        return "org.snail.plus";
     }
 }

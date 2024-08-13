@@ -5,7 +5,7 @@ import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import org.Snail.Plus.Addon;
+import org.snail.plus.Addon;
 
 public class Watermark extends HudElement {
     private final SettingGroup sgGeneral = this.settings.getDefaultGroup();    public static final HudElementInfo<Watermark> INFO = new HudElementInfo<>(Addon.HUD_GROUP, "Watermark", "Cool Watermark", Watermark::new);

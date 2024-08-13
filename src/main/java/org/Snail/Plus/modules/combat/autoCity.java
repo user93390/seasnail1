@@ -17,10 +17,10 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.modules.misc.StealthMine;
-import org.Snail.Plus.utils.CombatUtils;
-import org.Snail.Plus.utils.WorldUtils;
+import org.snail.plus.Addon;
+import org.snail.plus.modules.misc.StealthMine;
+import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.WorldUtils;
 
 import java.util.Objects;
 

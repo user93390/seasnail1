@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -21,7 +21,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import org.Snail.Plus.Addon;
+import org.snail.plus.Addon;
 
 import java.util.Objects;
 

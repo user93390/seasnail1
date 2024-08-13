@@ -14,7 +14,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
-import org.Snail.Plus.Addon;
+import org.snail.plus.Addon;
 
 import java.util.Objects;
 
