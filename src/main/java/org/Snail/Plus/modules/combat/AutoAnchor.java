@@ -141,17 +141,17 @@ public class AutoAnchor extends Module {
     private final Setting<Integer> RadiusZ = sgGeneral.add(new IntSetting.Builder()
             .name("Radius Z")
             .description("the radius for Z")
-            .defaultValue(2)
+            .defaultValue(1)
             .sliderMax(5)
-            .sliderMin(-5)
+            .sliderMin(1)
             .visible(Smart::get)
             .build());
     private final Setting<Integer> RadiusX = sgGeneral.add(new IntSetting.Builder()
             .name("Radius X")
             .description("the radius for X")
-            .defaultValue(2)
+            .defaultValue(1)
             .sliderMax(5)
-            .sliderMin(-5)
+            .sliderMin(1)
             .visible(Smart::get)
             .build());
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
@@ -217,35 +217,28 @@ public class AutoAnchor extends Module {
     private long lastGlowstonePlaceTime = 0;
     private PlayerEntity target;
     private boolean Swapped;
-    private BlockPos AnchorPos = BlockPos.ORIGIN;;
+    private BlockPos AnchorPos;
     private Box renderBoxOne, renderBoxTwo;
     private boolean anchorPlaced = false;
-    private BlockPos pos = BlockPos.ORIGIN;;
 
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Bomb+", "explodes anchors near targets");
-
     }
 
     @Override
     public void onActivate() {
         target = null;
         AnchorPos = null;
-        pos = null;
     }
 
     @Override
     public void onDeactivate() {
         target = null;
         AnchorPos = null;
-        pos = null;
     }
 
     private float DamageScore(PlayerEntity target, BlockPos pos) {
         return DamageUtils.anchorDamage(target, pos.toCenterPos());
-    }
-    protected void FindPossiblePositions(double radiusX, double radiusZ, PlayerEntity target) {
-        AnchorPos = findAirPosition(target.getX() - radiusX, target.getY(), target.getZ() - radiusZ, radiusX, radiusZ);
     }
     @EventHandler
     private void onTick(TickEvent.Post event) {
@@ -292,7 +285,7 @@ public class AutoAnchor extends Module {
         if (CombatUtils.isBurrowed(target)) return;
 
         if (!CombatUtils.isSurrounded(target) && Smart.get()) {
-            FindPossiblePositions(RadiusX.get(), RadiusZ.get(),target);
+        AnchorPos = findAirPosition(target.getX(), target.getY(), target.getZ(), RadiusX.get(), RadiusZ.get());
         } else {
             if (Smart.get() && CombatUtils.isSurrounded(target) && WorldUtils.isAir(targetHeadPos) || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
                 AnchorPos = targetHeadPos;
@@ -333,7 +326,7 @@ public class AutoAnchor extends Module {
         boolean isSafe = true;
         int attempts = 0;
         int maxattempts = 10;
-        while (potentialPos != null && isSafe && WorldUtils.isAir(potentialPos) && attempts < maxattempts) {
+        while (potentialPos != null && isSafe && attempts < maxattempts) {
             attempts++;
             SafetyChecks(potentialPos);
 
@@ -350,24 +343,26 @@ public class AutoAnchor extends Module {
                 }
             }
 
-            potentialPos = potentialPos.offset(Direction.getFacing(Vec3d.of(potentialPos)));
-
-            if (potentialPos.getX() - startX > radiusX) {
-                potentialPos = potentialPos.offset(Direction.getFacing(Vec3d.of(potentialPos)));
-            }
-
-            if (potentialPos.getZ() - startZ > radiusZ) {
-                potentialPos = potentialPos.offset(Direction.getFacing(Vec3d.of(potentialPos)));
+            if (potentialPos.getX() - startX < radiusX) {
+                potentialPos = potentialPos.offset(Direction.EAST);
+            } else if (potentialPos.getZ() - startZ < radiusZ) {
+                potentialPos = potentialPos.offset(Direction.SOUTH);
+            } else {
+                // If we've reached the edge of the radius in both X and Z, reset to the starting point
+                potentialPos = new BlockPos((int) startX, (int) startY, (int) startZ);
             }
         }
 
         if (isSafe && potentialPos != null) {
-            SwapAndPlace();
-            return AnchorPos = potentialPos;
+            // Only place if the position is safe and valid
+            if (BlockUtils.canPlace(potentialPos)) {
+                SwapAndPlace();
+                return AnchorPos = potentialPos;
+            }
         } else {
-            // Handle the case when no safe position is found within the radius
+            return null;
         }
-    return AnchorPos = potentialPos;
+        return potentialPos;
     }
 
     private void findDamagePosition(BlockPos position, double Damage, double SelfDamage) {
@@ -436,7 +431,6 @@ public class AutoAnchor extends Module {
                     }
                 }
                 case off -> {
-                    break;
                 }
             }
         }

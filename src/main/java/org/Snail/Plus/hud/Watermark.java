@@ -1,4 +1,4 @@
-package org.Snail.Plus.hud;
+package org.snail.plus.hud;
 
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
@@ -26,12 +26,10 @@ public class Watermark extends HudElement {
             .min(0.0)
             .sliderMax(100.0)
             .build());
-    /* don't ask why... */
-    double version = 2.0;
     private final Setting<String> name = sgGeneral.add(new StringSetting.Builder()
             .name("name")
             .description("Name of the element")
-            .defaultValue("snail++ " + version)
+            .defaultValue("snail++")
             .build());
     public Watermark() {
         super(INFO);

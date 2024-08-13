@@ -350,7 +350,7 @@ public class BedBomb extends Module {
         return BedPos = new BlockPos(new Vec3i((int) X, (int) Y, (int) Z));
     }
 
-    public boolean breakString() {
+    public void breakString() {
         Boolean webbed = false;
         Boolean doubled = false;
         BlockState blockState = Objects.requireNonNull(mc.world).getBlockState(target.getBlockPos());
@@ -369,7 +369,6 @@ public class BedBomb extends Module {
             InvUtils.swap(bestSlot.slot(), true);
             BlockUtils.breakBlock(target.getBlockPos(), true);
         }
-        return true;
     }
 
     @EventHandler

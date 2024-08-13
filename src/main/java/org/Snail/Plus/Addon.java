@@ -11,7 +11,7 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.client.tutorial.TutorialStep;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import org.Snail.Plus.hud.Watermark;
+import org.snail.plus.hud.*;
 import org.snail.plus.modules.combat.*;
 import org.snail.plus.modules.misc.*;
 import org.slf4j.Logger;
