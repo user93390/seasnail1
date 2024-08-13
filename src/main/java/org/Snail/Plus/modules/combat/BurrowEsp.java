@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -10,8 +10,8 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.CombatUtils;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.CombatUtils;
 
 import java.util.Objects;
 

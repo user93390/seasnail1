@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.misc;
+package org.snail.plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -20,8 +20,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.SwapUtils;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.SwapUtils;
 
 import java.util.Objects;
 

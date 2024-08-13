@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.misc;
+package org.snail.plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.game.OpenScreenEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -13,7 +13,7 @@ import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
-import org.Snail.Plus.Addon;
+import org.snail.plus.Addon;
 
 public class AutoKit extends Module {
     private long lastPlaceTime = 0;

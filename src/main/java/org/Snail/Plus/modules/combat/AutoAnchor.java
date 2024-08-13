@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -27,11 +27,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import org.Snail.Plus.Addon;
-import org.Snail.Plus.utils.CombatUtils;
-import org.Snail.Plus.utils.SwapUtils;
-import org.Snail.Plus.utils.TPSSyncUtil;
-import org.Snail.Plus.utils.WorldUtils;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.*;
 
 import java.util.Objects;
 
@@ -332,21 +329,45 @@ public class AutoAnchor extends Module {
     }
     //calc positions
     private BlockPos findAirPosition(double startX, double startY, double startZ, double radiusX, double radiusZ) {
-        for (double x = startX - radiusX; x <= startX + radiusX; x++) {
-            for (double z = startZ - radiusZ; z <= startZ + radiusZ; z++) {
-                BlockPos potentialPos = new BlockPos((int) x, (int) startY, (int) z);
-                SafetyChecks(potentialPos);
-                if (Objects.requireNonNull(mc.world).getBlockState(potentialPos).isAir() || mc.world.getBlockState(potentialPos).getBlock() == Blocks.FIRE || mc.world.getBlockState(potentialPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
-                    AnchorPos = potentialPos;
-                    for (Direction dir : Direction.values()) {
-                        if (strictDirection.get() && WorldUtils.strictDirection(AnchorPos.offset(dir), dir.getOpposite())) continue;
+        BlockPos potentialPos = new BlockPos((int) startX, (int) startY, (int) startZ);
+        boolean isSafe = true;
+        int attempts = 0;
+        int maxattempts = 10;
+        while (potentialPos != null && isSafe && WorldUtils.isAir(potentialPos) && attempts < maxattempts) {
+            attempts++;
+            SafetyChecks(potentialPos);
+
+            if (!Objects.requireNonNull(mc.world).getBlockState(potentialPos).isAir() &&
+                    mc.world.getBlockState(potentialPos).getBlock() != Blocks.FIRE &&
+                    mc.world.getBlockState(potentialPos).getBlock() != Blocks.RESPAWN_ANCHOR) {
+                isSafe = false;
+            } else {
+                for (Direction dir : Direction.values()) {
+                    if (strictDirection.get() && WorldUtils.strictDirection(AnchorPos.offset(dir), dir.getOpposite())) {
+                        isSafe = false;
+                        break;
                     }
-                    SwapAndPlace();
-                    return AnchorPos;
                 }
             }
+
+            potentialPos = potentialPos.offset(Direction.getFacing(Vec3d.of(potentialPos)));
+
+            if (potentialPos.getX() - startX > radiusX) {
+                potentialPos = potentialPos.offset(Direction.getFacing(Vec3d.of(potentialPos)));
+            }
+
+            if (potentialPos.getZ() - startZ > radiusZ) {
+                potentialPos = potentialPos.offset(Direction.getFacing(Vec3d.of(potentialPos)));
+            }
         }
-        return null; // No air position found within the radius
+
+        if (isSafe && potentialPos != null) {
+            SwapAndPlace();
+            return AnchorPos = potentialPos;
+        } else {
+            // Handle the case when no safe position is found within the radius
+        }
+    return AnchorPos = potentialPos;
     }
 
     private void findDamagePosition(BlockPos position, double Damage, double SelfDamage) {
@@ -524,24 +545,6 @@ public class AutoAnchor extends Module {
                     Swapped = true;
                 }
                 break;
-            case invSwitch:
-                int originalSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
-                anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
-                glowstone = InvUtils.find(Items.GLOWSTONE);
-
-                if (Objects.requireNonNull(mc.world).getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(AnchorPos).getBlock() == Blocks.FIRE || mc.world.getBlockState(AnchorPos).isAir())
-
-                    if (BlockUtils.canPlace(AnchorPos)) {
-                        BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
-                    }
-
-                if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
-                    SwapUtils.invSwitch(originalSlot, anchor.slot(), true, 0.0F);
-                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
-                    SwapUtils.SilentSwap(anchor.slot(), 0.0);
-                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
-                    Swapped = true;
-                }
         }
     }
 
@@ -554,7 +557,6 @@ public class AutoAnchor extends Module {
     public enum SwapMode {
         silent,
         normal,
-        invSwitch,
     }
 
     public enum RenderMode {

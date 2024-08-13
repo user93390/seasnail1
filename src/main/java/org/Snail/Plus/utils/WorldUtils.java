@@ -1,4 +1,4 @@
-package org.Snail.Plus.utils;
+package org.snail.plus.utils;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.sound.PositionedSoundInstance;

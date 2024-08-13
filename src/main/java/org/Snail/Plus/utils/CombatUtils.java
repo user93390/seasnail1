@@ -1,4 +1,4 @@
-package org.Snail.Plus.utils;
+package org.snail.plus.utils;
 
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import net.minecraft.block.Block;

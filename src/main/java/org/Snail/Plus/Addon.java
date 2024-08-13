@@ -1,4 +1,4 @@
-package org.Snail.Plus;
+package org.snail.plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.mixininterface.IChatHud;
@@ -12,8 +12,8 @@ import net.minecraft.client.tutorial.TutorialStep;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.Snail.Plus.hud.Watermark;
-import org.Snail.Plus.modules.combat.*;
-import org.Snail.Plus.modules.misc.*;
+import org.snail.plus.modules.combat.*;
+import org.snail.plus.modules.misc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,22 +32,11 @@ public class Addon extends MeteorAddon {
         Config.get().save();
         // Modules
         Modules.get().add(new AutoEZ());
-        Modules.get().add(new AutoSand());
-        Modules.get().add(new AntiBurrow());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
         Modules.get().add(new StealthMine());
-        Modules.get().add(new PistonPush());
-        Modules.get().add(new SelfAnvil());
         Modules.get().add(new AutoKit());
         Modules.get().add(new AutoAnchor());
-        Modules.get().add(new SnailBomber());
-        Modules.get().add(new AutoTrap());
-        Modules.get().add(new autoCity());
-        Modules.get().add(new MiddleClick());
-        Modules.get().add(new AutoPearl());
-        Modules.get().add(new RPC());
-        Modules.get().add(new Autoweb());
         Modules.get().add(new FOV());
         Modules.get().add(new BurrowEsp());
         Modules.get().add(new PvpInfo());

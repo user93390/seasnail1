@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.misc;
+package org.snail.plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.entity.EntityRemovedEvent;
 import meteordevelopment.meteorclient.mixin.ClientPlayNetworkHandlerAccessor;
@@ -18,7 +18,7 @@ import net.minecraft.network.message.LastSeenMessagesCollector;
 import net.minecraft.network.message.MessageBody;
 import net.minecraft.network.message.MessageSignatureData;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
-import org.Snail.Plus.Addon;
+import org.snail.plus.Addon;
 
 import java.time.Instant;
 import java.util.Objects;
