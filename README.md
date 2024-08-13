@@ -1,6 +1,6 @@
 # Snail++
 
-### Snail++ is a [Meteor Client](https://meteorclient.com/) addon developed by Seasnail1 and ChronosUser.
+### Snail++ is a [Meteor Client](https://meteorclient.com/) addon developed by Seasnail1.
 
 **THIS IS MY FIRST ADDON! DO NOT EXPECT GOOD CODE!**
 
