@@ -1,15 +1,6 @@
-package org.snail.plus.utils;
+package org.Snail.Plus.utils;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
-import meteordevelopment.meteorclient.mixininterface.IClientPlayerInteractionManager;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 
 public class SwapUtils {
@@ -25,6 +16,19 @@ public class SwapUtils {
 
         InvUtils.swapBack();
 
+    }
+
+    public static void invSwitch(int From, int To, Boolean repeat, float Delay) {
+        long currentTime = System.currentTimeMillis();
+        if ((currentTime - lastTimeoutCheck) < Delay * 1000) return;
+        lastTimeoutCheck = currentTime;
+
+        if (repeat) {
+            InvUtils.quickSwap().from(From).toId(To);
+            InvUtils.quickSwap().from(To).to(From);
+        } else {
+            InvUtils.quickSwap().from(From).toId(To);
+        }
     }
 
     public static void Normal(int Slot, float Delay) {

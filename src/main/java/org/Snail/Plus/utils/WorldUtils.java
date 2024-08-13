@@ -1,10 +1,9 @@
-package org.snail.plus.utils;
+package org.Snail.Plus.utils;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
@@ -30,9 +29,6 @@ public class WorldUtils {
 
         return !(distanceX < threshold) || !(distanceZ < threshold);
     }
-    public static String getCoords(PlayerEntity playerEntity) {
-        return String.format("X: %.2f, Y: %.2f, Z: %.2f", playerEntity.getX(), playerEntity.getY(), playerEntity.getZ());
-    }
 
     public static boolean strictDirection(BlockPos position, Direction Direction) {
         return switch (Direction) {
@@ -49,21 +45,5 @@ public class WorldUtils {
 
     public static String getName(PlayerEntity player) {
         return player.getName().getString();
-    }
-
-    public static swingMode swing(swingMode hand) {
-        switch (hand) {
-            case offHand:
-                mc.player.swingHand(Hand.OFF_HAND);
-            case mainHand:
-                mc.player.swingHand(Hand.MAIN_HAND);
-            case null:
-                throw new NullPointerException();
-        }
-    }
-
-    public enum swingMode {
-        mainHand,
-        offHand,
     }
 }

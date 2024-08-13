@@ -1,4 +1,4 @@
-package org.snail.plus.modules.combat;
+package org.Snail.Plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -10,8 +10,8 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
+import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.CombatUtils;
 
 import java.util.Objects;
 
@@ -61,16 +61,5 @@ public class BurrowEsp extends Module {
         if (CombatUtils.isBurrowed(target)) {
             event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
         }
-    }
-    @Override
-    public String getInfoString() {
-        if(target == null) return null;
-        String text;
-        if(CombatUtils.isBurrowed(target)) {
-            text = "Burrowed";
-        } else {
-            text = "Not Burrowed";
-        }
-        return text;
     }
 }

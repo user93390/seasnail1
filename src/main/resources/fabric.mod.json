@@ -11,11 +11,11 @@
   "contact": {
     "repo": "https://discord.gg/mZrSMrNfMw"
   },
-  "icon": "assets/snail++/file.png",
+  "icon": "assets/snail++/icon.png",
   "environment": "client",
   "entrypoints": {
     "meteor": [
-      "org.snail.plus.Addon"
+      "org.Snail.Plus.Addon"
     ]
   },
   "mixins": [

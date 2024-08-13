@@ -1,5 +1,7 @@
-package org.snail.plus.modules.misc;
+package org.Snail.Plus.modules.misc;
 
+import meteordevelopment.meteorclient.events.game.OpenScreenEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -7,9 +9,11 @@ import meteordevelopment.meteorclient.settings.StringSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.player.PlayerEntity;
-import org.snail.plus.Addon;
-import org.snail.plus.utils.PlayerDeathEvent;
+import net.minecraft.client.gui.screen.DeathScreen;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.text.Text;
+import org.Snail.Plus.Addon;
 
 public class AutoKit extends Module {
     private long lastPlaceTime = 0;
@@ -33,12 +37,11 @@ public class AutoKit extends Module {
         super(Addon.Snail, "Auto-kit", "Rekits when you die.");
     }
 @EventHandler
-private void onDeath(PlayerDeathEvent event) {
-    PlayerEntity entity = event.getPlayer();
+    private void onDeath(OpenScreenEvent event) {
     long time = System.currentTimeMillis();
     if ((time - lastPlaceTime) < Delay.get() * 1000) return;
     lastPlaceTime = time;
-    if (entity == mc.player) {
+    if (event.screen instanceof DeathScreen) {
         ChatUtils.sendPlayerMsg("/kit " + Name);
         }
     }

@@ -1,4 +1,4 @@
-package org.snail.plus.utils;
+package org.Snail.Plus.utils;
 
 import java.util.function.Supplier;
 

@@ -1,6 +1,6 @@
-package org.snail.plus.modules.misc;
+package org.Snail.Plus.modules.misc;
 
-import org.snail.plus.Addon;
+import org.Snail.Plus.Addon;
 import meteordevelopment.meteorclient.events.render.GetFovEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;

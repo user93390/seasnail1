@@ -1,4 +1,4 @@
-package org.snail.plus.modules.misc;
+package org.Snail.Plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.meteor.MouseButtonEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -16,12 +16,12 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Direction;
-import org.snail.plus.Addon;
-import org.snail.plus.utils.SwapUtils;
+import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.SwapUtils;
 
 import java.util.Objects;
 
-import static org.snail.plus.modules.misc.MiddleClick.Mode.*;
+import static org.Snail.Plus.modules.misc.MiddleClick.Mode.*;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
 
 public class MiddleClick extends Module {
@@ -37,6 +37,7 @@ public class MiddleClick extends Module {
     public enum SwapMethod {
         silent,
         normal,
+        invswitch
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SwapMethod> swapMethod = sgGeneral.add(new EnumSetting.Builder<SwapMethod>()
@@ -141,6 +142,11 @@ public class MiddleClick extends Module {
                 SwapUtils.Normal(item.slot(), 1.0F);
                 Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
                 break;
+            case invswitch:
+                SwapUtils.invSwitch(selectedSlot, item.slot(), true, 0.0f);
+                Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+                SwapUtils.invSwitch(item.slot(), selectedSlot, true, 0.0f);
+                Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
         }
     }
 }

@@ -1,11 +1,11 @@
-package org.snail.plus.modules.combat;
+package org.Snail.Plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.mixin.MinecraftServerAccessor;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
@@ -28,9 +28,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.WorldUtils;
+import org.Snail.Plus.Addon;
 
 import java.util.Objects;
 
@@ -67,7 +65,6 @@ public class BedBomb extends Module {
             .defaultValue(false)
             .build());
     private final SettingGroup sgSmart = settings.createGroup("Smart");
-
     public final Setting<Boolean> AutoTrap = sgSmart.add(new BoolSetting.Builder()
             .name("Trap target")
             .description("enables auto-trap+ to prevent the target from running away")
@@ -198,7 +195,6 @@ public class BedBomb extends Module {
             .sliderMin(0.0)
             .visible(() -> safety.get() != SafetyMode.off)
             .build());
-
     private final Setting<Double> DamageRatio = sgDamage.add(new DoubleSetting.Builder()
             .name("damage ratio")
             .description("the ratio. min damage / maxself")
@@ -208,7 +204,6 @@ public class BedBomb extends Module {
             .visible(() -> safety.get() != SafetyMode.off)
             .visible(() -> safety.get() == SafetyMode.safe)
             .build());
-
     private final Setting<Boolean> MultiTask = sgMisc.add(new BoolSetting.Builder()
             .name("multi-task")
             .description("allows you to use different items when the module is interacting / placing")
@@ -236,15 +231,17 @@ public class BedBomb extends Module {
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
-
-    private final Setting<WorldUtils.swingMode> swingMode = sgDamage.add(new EnumSetting.Builder<WorldUtils.swingMode>()
-            .name("swing mode")
-            .defaultValue(WorldUtils.swingMode.mainHand)
-            .build());
-
+    private final long lastLaydown = 0;
     PlayerEntity target;
     BlockPos BedPos;
     CardinalDirection direction;
+    AutoTrap trap = Modules.get().get(AutoTrap.class);
+    private int layTimer;
+    private int placeTimer;
+    private int breakTimer;
+    private long lastLaydownTime = System.currentTimeMillis();
+    private long lastPlaceTime = System.currentTimeMillis();
+    private long lastBreakTime = System.currentTimeMillis();
 
 
     public BedBomb() {
@@ -256,26 +253,38 @@ public class BedBomb extends Module {
         target = null;
         BedPos = null;
         direction = CardinalDirection.North;
+        layTimer = layDelay.get();
+        placeTimer = placeDelay.get();
+        breakTimer = breakDelay.get();
+
     }
 
     @EventHandler
     public void onTick(TickEvent.Post event) {
         FindItemResult bed = InvUtils.find(itemStack -> itemStack.getItem() instanceof BedItem);
         target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if (target == null) return;
         if (TargetUtils.isBadTarget(target, range.get())) return;
-        if (pauseUse.get()) return;
-        if (CombatUtils.isBurrowed(target)) return;
-        BedPos = findPosition(target);
-        placeBed(bed, BedPos);
-
-        if (StringBreaker.get()) {
-            breakString();
+        placeBed(bed, findPosition(target));
+        if (canPlaceBed()) {
+            placeBed(bed, findPosition(target));
+            updatePlaceTime();
         }
+
+        if (BedPos != null && canBreakBed()) {
+            breakBed(findPosition(target));
+            updateBreakTime();
+        }
+
+        if (autoLay.get() && canLayDown()) {
+
+            updateLaydownTime();
+        }
+
         if (AutoTrap.get()) {
             trap();
         }
     }
+
 
     public void placeBed(FindItemResult bed, BlockPos BedPos) {
         double yaw = switch (direction) {
@@ -286,11 +295,45 @@ public class BedBomb extends Module {
         };
         if (BedPos != null) {
             Rotations.rotate(yaw, Rotations.getPitch(BedPos), () -> BlockUtils.place(BedPos, bed, rotate.get(), 100));
+            if (StringBreaker.get()) {
+            breakString();
+            }
         }
     }
+    /*
+    very bad way of making timers, I may improve it at some point in time.
+     */
+    private boolean canPlaceBed() {
+        long currentTime = System.currentTimeMillis();
+        return (currentTime - lastPlaceTime) >= placeDelay.get() * 50;
+    }
+
+    private void updatePlaceTime() {
+        lastPlaceTime = System.currentTimeMillis();
+    }
+
+    private boolean canBreakBed() {
+        long currentTime = System.currentTimeMillis();
+        return (currentTime - lastBreakTime) >= breakDelay.get() * 50;
+    }
+
+    private void updateBreakTime() {
+        lastBreakTime = System.currentTimeMillis();
+    }
+
+    private boolean canLayDown() {
+        long currentTime = System.currentTimeMillis();
+        return (currentTime - lastLaydownTime) >= layDelay.get() * 50;
+    }
+
+    private void updateLaydownTime() {
+        lastLaydownTime = System.currentTimeMillis();
+    }
+
 
     public void trap() {
         if (AutoTrap.get()) {
+            trap.toggle();
         }
     }
 
@@ -305,31 +348,16 @@ public class BedBomb extends Module {
         }
     }
     public BlockPos findPosition(PlayerEntity playerEntity) {
-        if (BedPos == null) return null;
-        float selfDmg = (DamageUtils.bedDamage(mc.player, Utils.vec3d(BedPos)));
-        float targetDmg = DamageUtils.bedDamage(target, Utils.vec3d(BedPos));
-        float dmgRatio = selfDmg / targetDmg;
         double X = playerEntity.getX() - RadiusX.get();
         double Y = playerEntity.getY();
         if (airPlace.get()) Y = playerEntity.getY() + 1;
         double Z = playerEntity.getZ() - RadiusZ.get();
-        BedPos = new BlockPos(new Vec3i((int) X, (int) Y, (int) Z));
-        for (int ind = 0; ind < 3; ind++) {
-            if (selfDmg <= maxSelfDamage.get() || targetDmg >= minDamage.get() || DamageRatio.get() >= dmgRatio || WorldUtils.isAir(BedPos)) {
-                return BedPos;
-            } else if (selfDmg <= maxSelfDamage.get() || targetDmg < minDamage.get() || DamageRatio.get() < dmgRatio || !WorldUtils.isAir(BedPos)) {
-                X++;
-                Z++;
-            }
-            if (CombatUtils.isSurrounded(playerEntity)) {
-                BedPos = playerEntity.getBlockPos().up(2);
-            }
-            BedPos = new BlockPos(new Vec3i((int) X, (int) Y, (int) Z));
-        }
-        return BedPos;
+
+        System.out.print(BedPos);
+        return BedPos = new BlockPos(new Vec3i((int) X, (int) Y, (int) Z));
     }
 
-    public void breakString() {
+    public boolean breakString() {
         Boolean webbed = false;
         Boolean doubled = false;
         BlockState blockState = Objects.requireNonNull(mc.world).getBlockState(target.getBlockPos());
@@ -348,6 +376,7 @@ public class BedBomb extends Module {
             InvUtils.swap(bestSlot.slot(), true);
             BlockUtils.breakBlock(target.getBlockPos(), true);
         }
+        return true;
     }
 
     @EventHandler

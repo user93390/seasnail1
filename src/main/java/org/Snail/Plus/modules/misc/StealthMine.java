@@ -1,4 +1,4 @@
-package org.snail.plus.modules.misc;
+package org.Snail.Plus.modules.misc;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -20,13 +20,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
-import org.snail.plus.Addon;
-import org.snail.plus.utils.SwapUtils;
-import org.snail.plus.utils.WorldUtils;
+import org.Snail.Plus.Addon;
+import org.Snail.Plus.utils.SwapUtils;
 
 import java.util.Objects;
-
-import static net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK;
 
 public class StealthMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -35,6 +32,13 @@ public class StealthMine extends Module {
             .description("the range")
             .defaultValue(4.5)
             .sliderMin(1)
+            .sliderMax(10)
+            .build());
+    private final Setting<Double> swapDelay = sgGeneral.add(new DoubleSetting.Builder()
+            .name("swap delay")
+            .description("swap delay")
+            .defaultValue(1.5)
+            .sliderMin(0)
             .sliderMax(10)
             .build());
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
@@ -85,7 +89,6 @@ public class StealthMine extends Module {
    public static final BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
     private static Direction direction;
     BlockState blockState;
-
     public StealthMine() {
         super(Addon.Snail, "stealth mine+", "Mines blocks using packets");
     }
@@ -100,69 +103,60 @@ public class StealthMine extends Module {
     public void onActivate() {
         blockPos.set(0, -1, 0);
         blockBreakingProgress = 0;
-        shouldSwap = false;
-        swapped = false;
     }
 
     @Override
     public void onDeactivate() {
         blockPos.set(0, -1, 0);
         blockBreakingProgress = 0;
-        shouldSwap = false;
-        swapped = false;
     }
-
-    private FindItemResult pickaxeSlot;
-    private  boolean shouldSwap;
-    private  boolean swapped;
-    int selectedSlot;
-    private long lastPlaceTime = 0;
+    private int selectedSlot;
     @EventHandler
-    public void onTick(TickEvent.Pre event) {
+    private void onTick(TickEvent.Pre event) {
         try {
-            pickaxeSlot = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
-            selectedSlot = Objects.requireNonNull(mc.player).getInventory().selectedSlot;
-            if(WorldUtils.isAir(blockPos)) {
-                blockBreakingProgress = 0;
-                return;
-            }
-            if(shouldSwap) {
-                SwapUtils.SilentSwap(pickaxeSlot.slot(), 0.1);
-            }
-            if(swapped) {
-                if(WorldUtils.isAir(blockPos)) {
-                    blockBreakingProgress = 0;
-                    return;
-                }
-                if(shouldSwap) {
-                    InvUtils.swapBack();
-                }
-            }
-            BlockState blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
-            if (blockState.isAir() || blockState.getBlock() == Blocks.BEDROCK || PauseOnUse.get() && (Objects.requireNonNull(mc.interactionManager).isBreakingBlock() || mc.player.isUsingItem())) {
+            FindItemResult pickaxeSlot = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
+            this.selectedSlot = pickaxeSlot.slot();
+            if (Objects.requireNonNull(mc.world).getBlockState(blockPos).isAir()) {
                 return;
             }
             if (BlockUtils.canBreak(blockPos) && blockPos.isWithinDistance(Objects.requireNonNull(mc.player).getBlockPos(), Range.get())) {
-                BreakAndSwitch(blockPos);
-                blockBreakingProgress += BlockUtils.getBreakDelta(pickaxeSlot.slot(), blockState);
-                if(blockBreakingProgress > 1) blockBreakingProgress = 0;
+                if (PauseOnUse.get() && (Objects.requireNonNull(mc.interactionManager).isBreakingBlock() || mc.player.isUsingItem())) {
+                    return;
+                }
+                    if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 100);
+
+                    BlockState blockState = mc.world.getBlockState(blockPos);
+                    blockBreakingProgress += BlockUtils.getBreakDelta(pickaxeSlot.slot(), blockState);
+                    if (blockState.isAir() || blockState.getBlock() == Blocks.BEDROCK) {
+                        return;
+                    }
+                    //instant mine.
+                    if (instantMine.get()) {
+                        if(blockBreakingProgress >= 0.9 && blockBreakingProgress <= 1) {
+                            if(selectedSlot != -1) {
+                                InvUtils.swap(selectedSlot, true);
+                            }
+                        }
+                        Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
+                        SwapUtils.SilentSwap(mc.player.getInventory().selectedSlot, swapDelay.get());
+                    }
+                    //normal mine.
+                    if (!instantMine.get()) {
+                        if(blockBreakingProgress >= 0.9 && blockBreakingProgress <= 1) {
+                            if(selectedSlot != -1) {
+                                InvUtils.swap(selectedSlot, true);
+                            }
+                        }
+                        Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction));
+                        Objects.requireNonNull(mc.getNetworkHandler()).sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction));
+                        SwapUtils.SilentSwap(mc.player.getInventory().selectedSlot, swapDelay.get());
+                    }
+                    if (blockBreakingProgress >= 1) blockBreakingProgress = 0;
             }
         } catch (Exception e) {
             System.out.println("Exception caught -> " + e.getCause() + ". Message -> " + e.getMessage());
         }
     }
-
-    public void BreakAndSwitch(BlockPos pos) {
-        pickaxeSlot = InvUtils.findInHotbar(Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE);
-        Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(StealthMine.blockPos), 100, () -> {
-            if(blockBreakingProgress > 0.9 && blockBreakingProgress < 1){
-                shouldSwap = true;
-                Objects.requireNonNull(this.mc.player).networkHandler.sendPacket(new PlayerActionC2SPacket(STOP_DESTROY_BLOCK, pos, direction));
-                swapped = true;
-            }
-        });
-    }
-
     @EventHandler
     private void Render(Render3DEvent event) {
         this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
@@ -174,16 +168,16 @@ public class StealthMine extends Module {
         }
         Box orig = shape.getBoundingBox();
 
-        orig.shrink(
+        Box box = orig.shrink(
                 orig.getLengthX() * ShrinkFactor,
                 orig.getLengthY() * ShrinkFactor,
                 orig.getLengthZ() * ShrinkFactor
         );
 
-        renderBlock(event, orig, ShrinkFactor);
+        renderBlock(event, orig, ShrinkFactor, blockBreakingProgress);
     }
 
-    private void renderBlock(Render3DEvent event, Box orig, double shrinkFactor) {
+    private void renderBlock(Render3DEvent event, Box orig, double shrinkFactor, double progress) {
         Box box = orig.shrink(
                 orig.getLengthX() * shrinkFactor,
                 orig.getLengthY() * shrinkFactor,
@@ -202,11 +196,5 @@ public class StealthMine extends Module {
         double z2 = StealthMine.blockPos.getZ() + box.maxZ + zShrink;
 
         event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-    }
-
-    @Override
-    public String getInfoString() {
-        if (blockPos.getY() == -1) return null;
-        return " %s".formatted(blockBreakingProgress);
     }
 }

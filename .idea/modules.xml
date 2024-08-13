@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/org.snail.plus.seasnail1.iml" filepath="$PROJECT_DIR$/.idea/modules/org.snail.plus.seasnail1.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/org.snail.plus.seasnail1.main.iml" filepath="$PROJECT_DIR$/.idea/modules/org.snail.plus.seasnail1.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/org.snail.plus.seasnail1.test.iml" filepath="$PROJECT_DIR$/.idea/modules/org.snail.plus.seasnail1.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.example.seasnail1.iml" filepath="$PROJECT_DIR$/.idea/modules/com.example.seasnail1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.example.seasnail1.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.example.seasnail1.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.example.seasnail1.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.example.seasnail1.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/seasnail1.iml" filepath="$PROJECT_DIR$/.idea/modules/seasnail1.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/seasnail1-main.iml" filepath="$PROJECT_DIR$/.idea/modules/seasnail1-main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/seasnail1-main.main.iml" filepath="$PROJECT_DIR$/.idea/modules/seasnail1-main.main.iml" />
