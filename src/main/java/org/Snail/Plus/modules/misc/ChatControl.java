@@ -7,13 +7,13 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Formatting;
 import org.snail.plus.Addon;
+import org.snail.plus.utils.WorldUtils;
 
-import java.text.MessageFormat;
 import java.util.*;
 
 import static net.minecraft.text.Text.of;
@@ -21,6 +21,7 @@ import static net.minecraft.text.Text.of;
 public class ChatControl extends Module {
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
     private final SettingGroup sgChat = settings.createGroup("Chat");
+    private final SettingGroup sgClient = settings.createGroup("Client");
 
     private final Setting<Boolean> visual = sgVisualRange.add(new BoolSetting.Builder()
             .name("visual-range")
@@ -65,7 +66,6 @@ public class ChatControl extends Module {
             .defaultValue(true)
             .build());
 
-
     private final Set<UUID> alertedPlayers = new HashSet<>();
     private final Set<UUID> playersInRange = new HashSet<>();
     private final String Prefix = Formatting.DARK_RED + "Snail++";
@@ -73,17 +73,20 @@ public class ChatControl extends Module {
     public ChatControl() {
         super(Addon.Snail, "Chat Control", "Custom prefix and visual range :)");
     }
-
-    @Override
-    public void onActivate() {
-        alertedPlayers.clear();
-        playersInRange.clear();
-    }
+    private final int viewDistance = mc.options.getClampedViewDistance();
 
     @Override
     public void onDeactivate() {
         alertedPlayers.clear();
         playersInRange.clear();
+    }
+    private final Set<UUID> currentPlayersInRange = new HashSet<>();
+
+    @Override
+    public void onActivate() {
+        alertedPlayers.clear();
+        playersInRange.clear();
+
     }
 
     @EventHandler
@@ -94,13 +97,10 @@ public class ChatControl extends Module {
             MinecraftClient mc = MinecraftClient.getInstance();
 
 
-            int viewDistance = mc.options.getClampedViewDistance();
-            Set<UUID> currentPlayersInRange = new HashSet<>();
 
             for (PlayerEntity player : Objects.requireNonNull(mc.world).getPlayers()) {
                 if (player == mc.player || alertedPlayers.contains(player.getUuid())) continue;
                 if (checkUuid.get() && player.getUuidAsString().isEmpty()) continue;
-
                 double distance = player.distanceTo(mc.player);
                 if (distance <= viewDistance * 16) {
                     currentPlayersInRange.add(player.getUuid());
@@ -112,24 +112,29 @@ public class ChatControl extends Module {
                         ChatUtils.sendMsg(of(Formatting.GREEN + player.getName().getString() + " is within render distance. (" + targetX + ", " + targetY + ", " + targetZ + ")"));
                         List<SoundEvent> soundEvents = sounds.get();
                         if (!soundEvents.isEmpty()) {
-                            mc.getSoundManager().play(PositionedSoundInstance.master(soundEvents.getFirst(), 1.0F));
+                            mc.getSoundManager().play(WorldUtils.playSound(soundEvents.get(0), 1.0f));
                         }
                         alertedPlayers.add(player.getUuid());
                     }
                 }
             }
-
-            for (UUID playerUuid : playersInRange) {
-                if (!currentPlayersInRange.contains(playerUuid)) {
-                    ChatUtils.sendMsg(of(MessageFormat.format("{0}A player has left render distance.", Formatting.RED)));
-                }
-            }
-
-            playersInRange.clear();
-            playersInRange.addAll(currentPlayersInRange);
-
         } catch (Exception e) {
             ChatUtils.sendMsg(of(Formatting.RED + "Error in onTick: " + e.getMessage()));
+        }
+    }
+
+    @EventHandler
+    private void onPlayerRemove(PlayerRemoveS2CPacket event) {
+        for (PlayerEntity player : Objects.requireNonNull(mc.world).getPlayers()) {
+            if (player == mc.player || alertedPlayers.contains(player.getUuid())) continue;
+            if (checkUuid.get() && player.getUuidAsString().isEmpty()) continue;
+            ChatUtils.sendMsg(of(Formatting.RED + player.getName().getString() + "Has left render distance"));
+            List<SoundEvent> soundEvents = sounds.get();
+            if (!soundEvents.isEmpty()) {
+                mc.getSoundManager().play(WorldUtils.playSound(soundEvents.get(0), 1.0f));
+            }
+            alertedPlayers.add(player.getUuid());
+            playersInRange.clear();
         }
     }
 

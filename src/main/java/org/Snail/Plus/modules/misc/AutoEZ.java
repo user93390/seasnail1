@@ -23,7 +23,7 @@ public class AutoEZ extends Module {
     private final Setting<List<String>> messageSetting = sgGeneral.add(new StringListSetting.Builder()
             .name("message")
             .description("Custom message to send.")
-            .defaultValue("LMAO {player} just died at {coords}! go get his shitty loot", "looks like {player} doesn't have snail++", "I play fortnite duos with your mom {player}")
+            .defaultValue("LMAO {victim} just died at {coords}! go get his shitty loot", "looks like {victim} doesn't have snail++", "I play fortnite duos with your mom {victim}")
             .build());
 
     private final Setting<Boolean> dm = sgGeneral.add(new BoolSetting.Builder()
@@ -32,11 +32,16 @@ public class AutoEZ extends Module {
             .defaultValue(true)
             .build());
 
+    private boolean messageSent = false;
+
     public AutoEZ() {
         super(Addon.Snail, "Auto EZ+", "Sends a custom message when a player dies");
     }
+
     @EventHandler
     private void onTick(TickEvent.Post event) {
+        if (messageSent) return;
+
         for (PlayerEntity player : Objects.requireNonNull(mc.world).getPlayers()) {
             if (player != mc.player && !Friends.get().isFriend(player) && player.getHealth() <= 0) {
                 List<String> messages = messageSetting.get();
@@ -44,6 +49,7 @@ public class AutoEZ extends Module {
                     warning("you have no messages set for autoEZ+");
                     return;
                 }
+
                 int randomIndex = (int) (Math.random() * messages.size());
                 String msg = messages.get(randomIndex)
                         .replace("{victim}", WorldUtils.getName(player))
@@ -54,6 +60,9 @@ public class AutoEZ extends Module {
                 } else {
                     ChatUtils.sendPlayerMsg(msg);
                 }
+
+                messageSent = true;
+                return;
             }
         }
     }

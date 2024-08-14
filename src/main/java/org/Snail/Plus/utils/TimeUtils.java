@@ -42,4 +42,7 @@ public class TimeUtils {
         float millisecondsPerTick = 1000.0f / currentTPS;
         return time / millisecondsPerTick;
     }
+    public static long setDelay(double delay) {
+        return (long) (delay * 1000);
+    }
 }

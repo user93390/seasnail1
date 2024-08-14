@@ -2,6 +2,7 @@ package org.snail.plus.utils;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -38,12 +39,15 @@ public class WorldUtils {
         };
     }
 
-    public static void playSound(SoundEvent sound, float Pitch) {
+    public static SoundInstance playSound(SoundEvent sound, float Pitch) {
         mc.getSoundManager().play(PositionedSoundInstance.master(sound, Pitch));
-        return;
+        return (SoundInstance) sound;
     }
 
-    public static String getName(PlayerEntity player) {
-        return player.getName().getString();
+    public static String getName(PlayerEntity entity) {
+        return entity.getName().getString();
+    }
+    public static String getCoords(PlayerEntity player) {
+        return "%s, %s, %s".formatted(player.getX(), player.getY(), player.getZ());
     }
 }
