@@ -1,4 +1,4 @@
-package org.snail.plus.modules.combat;
+package org.Snail.Plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
