@@ -153,50 +153,41 @@ public class StealthMine extends Module {
 
         BlockState blockState = mc.world.getBlockState(blockPos);
         bestSlot = InvUtils.findFastestTool(blockState);
+
         // Check if there's a block to break and if it's within range
         if (!BlockUtils.canBreak(blockPos, blockState) || !blockPos.isWithinDistance(blockPos, Range.get()) || WorldUtils.isAir(blockPos)) {
-            blockBreakingProgress = 0;
             // If no block to break, abort any previous breaking process
             mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
             return;
         }
 
+
         // Swap to the pickaxe slot
         switch (swapMode.get()) {
             case silent:
-                if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) return;
-                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
-                break;
+            if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) return;
+              mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
+             break;
             case normal:
                 // Use InvUtils.swap for normal swapping
                 InvUtils.swap(bestSlot.slot(), false);
                 break;
         }
+
+        // Sync slot if enabled
         if (syncSlot.get()) {
             syncSlot();
         }
         switch (mineMode.get()) {
             case normal:
-                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos));
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.UP));
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
-                break;
+
             case instant:
-                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos),(Rotations.getPitch(blockPos)));
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
-                break;
-            case bypass:
-                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos),(Rotations.getPitch(blockPos)));
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
-                break;
         }
 
-        // Reset blockBreakingProgress if the block is broken
         if (WorldUtils.isAir(blockPos)) {
-            blockBreakingProgress = 0;
             mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
         }
         blockBreakingProgress += BlockUtils.getBreakDelta(bestSlot.slot(), blockState);
@@ -251,7 +242,6 @@ public class StealthMine extends Module {
     public enum SwapMode {
         silent,
         normal,
-        invSwitch,
     }
     public enum breakMode {
         bypass,
