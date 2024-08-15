@@ -27,7 +27,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoEZ());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
-        Modules.get().add(new StealthMine());
+        Modules.get().add(new stealthMine());
         Modules.get().add(new AutoKit());
         Modules.get().add(new AutoAnchor());
         Modules.get().add(new FOV());
@@ -36,6 +36,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoSand());
         Modules.get().add(new SelfAnvil());
         Modules.get().add(new BedBomb());
+
         // HUD
         Hud.get().register(Watermark.INFO);
         LOG.info("Snail++ loaded! join the discord at https://discord.gg/nh9pjVhsVb");
