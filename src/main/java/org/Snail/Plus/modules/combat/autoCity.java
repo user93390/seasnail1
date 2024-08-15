@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -94,14 +94,14 @@ public class autoCity extends Module {
 
                 if (Objects.requireNonNull(mc.world).getBlockState(East).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(East).isAir()) {
                     currentPos = East;
-                    StealthMine.blockPos.set(currentPos);
+
                     if (support.get() && mc.world.getBlockState(SupportPosEast).isAir()) {
                         SupportPlace(SupportPosEast);
                     }
                 } else {
                     if (mc.world.getBlockState(West).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(West).isAir()) {
                         currentPos = West;
-                        StealthMine.blockPos.set(currentPos);
+
                         if (support.get() && mc.world.getBlockState(SupportPosWest).isAir()) {
                             SupportPlace(SupportPosWest);
                         }
@@ -109,7 +109,7 @@ public class autoCity extends Module {
                         if (mc.world.getBlockState(North).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(North).isAir()) {
                             currentPos = North;
                             //used to break blocks
-                            StealthMine.blockPos.set(currentPos);
+
                             if (support.get() && mc.world.getBlockState(SupportPosNorth).isAir()) {
                                 SupportPlace(SupportPosNorth);
                             }
@@ -117,7 +117,7 @@ public class autoCity extends Module {
                             if (mc.world.getBlockState(South).getBlock() != Blocks.BEDROCK && !mc.world.getBlockState(South).isAir()) {
 
                                 currentPos = South;
-                                StealthMine.blockPos.set(currentPos);
+
                                 if (support.get() && mc.world.getBlockState(SupportPosSouth).isAir()) {
                                     SupportPlace(SupportPosSouth);
                                 }
@@ -127,7 +127,7 @@ public class autoCity extends Module {
                 }
                 if (AntiBurrow.get() && CombatUtils.isBurrowed(target) && WorldUtils.isAir(BurrowPos) && WorldUtils.isBreakable(BurrowPos)) {
                     currentPos = BurrowPos;
-                    StealthMine.blockPos.set(currentPos);
+
                 }
             } catch (Exception e) {
                 System.out.println("Exception caught -> " + e.getCause() + ". Message -> " + e.getMessage());

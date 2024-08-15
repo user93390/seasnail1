@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -18,6 +19,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
@@ -146,7 +148,6 @@ public class StealthMine extends Module {
         blockBreakingProgress = 0;
         mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
     }
-
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (mc.world == null || mc.player == null) return;
@@ -156,50 +157,50 @@ public class StealthMine extends Module {
 
         // Check if there's a block to break and if it's within range
         if (!BlockUtils.canBreak(blockPos, blockState) || !blockPos.isWithinDistance(blockPos, Range.get()) || WorldUtils.isAir(blockPos)) {
-            // If no block to break, abort any previous breaking process
-            mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
-            return;
-        }
+            if (syncSlot.get()) {
+                syncSlot();
+            }
 
+            blockBreakingProgress = 0;
+            return; // Skip the rest of the logic if the pickaxe isn't found
+        }
 
         // Swap to the pickaxe slot
         switch (swapMode.get()) {
             case silent:
-            if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) return;
-              mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
-             break;
+                if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) {
+                    break;
+                }
+                if (blockBreakingProgress >= 0.64) {
+                    mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
+                }
+                breakBlock();
+                break;
             case normal:
                 // Use InvUtils.swap for normal swapping
                 InvUtils.swap(bestSlot.slot(), false);
+                breakBlock();
                 break;
         }
 
-        // Sync slot if enabled
-        if (syncSlot.get()) {
-            syncSlot();
-        }
-        switch (mineMode.get()) {
-            case normal:
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.UP));
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
-
-            case instant:
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
-        }
-
+        // Reset blockBreakingProgress if the block is broken
         if (WorldUtils.isAir(blockPos)) {
+            blockBreakingProgress = 0;
             mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
         }
-        blockBreakingProgress += BlockUtils.getBreakDelta(bestSlot.slot(), blockState);
-    }
 
+        // Update block breaking progress only if the pickaxe was found
+        if (bestSlot.found()) {
+            blockBreakingProgress += BlockUtils.getBreakDelta(bestSlot.slot(), blockState);
+        }
+    }
     public void syncSlot() {
         Objects.requireNonNull(mc.player).getInventory().selectedSlot = mc.player.getInventory().selectedSlot;
         mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
     }
-
     @EventHandler
     private void Render(Render3DEvent event) {
+
         this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
         double ShrinkFactor = 1d - blockBreakingProgress * Speed.get();
         BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
@@ -218,6 +219,26 @@ public class StealthMine extends Module {
         renderBlock(event, orig, ShrinkFactor);
     }
 
+    public void breakBlock() {
+        switch (mineMode.get()) {
+            case normal:
+                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos));
+                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.UP));
+                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
+                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
+                break;
+            case instant:
+                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos),(Rotations.getPitch(blockPos)));
+                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
+                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
+                break;
+            case bypass:
+                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos),(Rotations.getPitch(blockPos)));
+                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
+                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
+                break;
+        }
+    }
     private void renderBlock(Render3DEvent event, Box orig, double shrinkFactor) {
         Box box = orig.shrink(
                 orig.getLengthX() * shrinkFactor,

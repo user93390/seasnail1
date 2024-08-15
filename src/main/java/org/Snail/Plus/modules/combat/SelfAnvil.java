@@ -1,4 +1,4 @@
-package org.Snail.Plus.modules.combat;
+package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -79,7 +79,7 @@ public class SelfAnvil extends Module {
 
         if (mc.world.getBlockState(playerPos).getBlock().equals(Blocks.AIR)) {
             InvUtils.swap(AnvilSlot, true);
-            PlaceAnvil(mc.player);
+            PlaceAnvil();
         }
 
         if (support.get()) {
@@ -102,7 +102,7 @@ public class SelfAnvil extends Module {
         BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 0, false);
     }
 
-    public void PlaceAnvil(PlayerEntity player) {
+    public void PlaceAnvil() {
         assert mc.player != null;
         BlockPos playerPos = mc.player.getBlockPos().up(2);
 
