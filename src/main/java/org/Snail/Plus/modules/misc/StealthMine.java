@@ -105,6 +105,11 @@ public class stealthMine extends Module {
             .defaultValue(1.0)
             .visible(nametags::get)
             .build());
+    private final Setting<Boolean> shadow = sgRender.add(new BoolSetting.Builder()
+            .name("shadow")
+            .description("shows a shadow")
+            .defaultValue(true)
+            .build());
     private final Setting<SettingColor> nametagColor = sgRender.add(new ColorSetting.Builder()
             .name("nametag color")
             .description("nametag color")
@@ -264,27 +269,25 @@ public class stealthMine extends Module {
     private final Vector3d vec3 = new Vector3d();
     @EventHandler
     private void onRender2D(Render2DEvent event) {
-        vec3.set(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5);
-        if (NametagUtils.to2D(vec3, scale.get())) {
-            NametagUtils.begin(vec3);
-            TextRenderer.get().begin(1, false, true);
-            String text = String.format("%.1f", blockBreakingProgress);
-            double w = TextRenderer.get().getWidth(text) / 2;
-            TextRenderer.get().render(text, -w, 0, nametagColor.get(), true);
+        if(blockPos.getY() == -1) return;
+        if(nametags.get()){
+            vec3.set(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5);
+            if (NametagUtils.to2D(vec3, scale.get())) {
+                NametagUtils.begin(vec3);
+                TextRenderer.get().begin(1, false, true);
+                String text = String.format("%.1f", blockBreakingProgress * 1.5);
+                double w = TextRenderer.get().getWidth(text) / 2;
+                TextRenderer.get().render(text, -w, 0, nametagColor.get(), shadow.get());
 
-            TextRenderer.get().end();
-            NametagUtils.end();
-            if(WorldUtils.isAir(blockPos)) {
+                TextRenderer.get().end();
                 NametagUtils.end();
-                return;
             }
         }
     }
-
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         PlayerEntity target = TargetUtils.getPlayerTarget(cityRange.get(), priority.get());
-        if (mc.world == null || mc.player == null) return;
+        if (mc.world == null || mc.player == null || pauseUse.get() && mc.player.isUsingItem()) return;
         if(Autocity.get() && target != null && CityBind.get().isPressed()) {
                 blockPos = (BlockPos.Mutable) autoCity(target,InvUtils.findInHotbar(Items.OBSIDIAN));
         }
@@ -297,7 +300,6 @@ public class stealthMine extends Module {
                 break;
             }
         }
-        if (pauseUse.get() && mc.player.isUsingItem()) return;
         // Check if there's a block to break and if it's within range
         if (!BlockUtils.canBreak(blockPos, blockState) || !blockPos.isWithinDistance(blockPos, Range.get()) || WorldUtils.isAir(blockPos)) {
             if (syncSlot.get()) {
@@ -318,6 +320,7 @@ public class stealthMine extends Module {
                 // Update block breaking progress only if the pickaxe was found
                 if (bestSlot.found()) {
                     blockBreakingProgress += BlockUtils.getBreakDelta(bestSlot.slot(), blockState);
+                    if(blockBreakingProgress >= 1) blockBreakingProgress = 1;
                 }
             }
         }

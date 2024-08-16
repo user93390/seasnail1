@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import org.snail.plus.Addon;
@@ -47,6 +48,12 @@ public class XPautomation extends Module {
             .description("Rotation method")
             .defaultValue(RotateMode.Packet)
             .build());
+    private final Setting<Boolean> clientSide = sgGeneral.add(new BoolSetting.Builder()
+            .name("client side rotations")
+            .description("only rotates client side")
+            .defaultValue(false)
+            .visible(() -> rotate.get() == RotateMode.Packet)
+            .build());
 
     public final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
@@ -65,8 +72,19 @@ public class XPautomation extends Module {
 
     private final Setting<Boolean> smartMode = sgGeneral.add(new BoolSetting.Builder()
             .name("smart-mode")
-            .description("Disables the module when armor is at max HP.")
+            .description("Uses smart calculations")
             .defaultValue(false)
+            .build());
+
+    private final Setting<Integer> armorSlot = sgGeneral.add(new IntSetting.Builder()
+            .name("armor slot")
+            .description("the slot to put Armor in")
+            .defaultValue(1)
+            .min(1)
+            .max(9)
+            .sliderMin(1)
+            .sliderMax(9)
+            .visible(smartMode::get)
             .build());
 
     public final Setting<Double> health = sgGeneral.add(new DoubleSetting.Builder()
@@ -126,7 +144,8 @@ public class XPautomation extends Module {
         returnXPBottleToOriginalSlot();
 
     }
-
+    private  FindItemResult exp;
+    private ItemStack armorPiece;
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (isArmorFullDurability() && smartMode.get()) {
@@ -134,7 +153,24 @@ public class XPautomation extends Module {
             toggle();
             return;
         }
+        //slot 1 is leggings
+        //slot 2 is chest plate
+        //slot 3 is helmet
+        //slot 4 is boots
 
+        if(smartMode.get()) {
+            armorPiece = mc.player.getInventory().getArmorStack(3);
+            for(int i = 0; i < 9; i++) {
+                if (!armorPiece.isEmpty()) {
+                    InvUtils.move().fromArmor(3).toHotbar(armorSlot.get());
+                    moveXPBottleToHotbar();
+                    useXP();
+                    if(!armorPiece.isDamaged()) {
+                        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                    }
+                }
+            }
+        }
         if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) return;
 
         double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : delay.get();
@@ -142,8 +178,8 @@ public class XPautomation extends Module {
 
         if ((time - lastPlaceTime) < currentDelay * 1000) return;
         lastPlaceTime = time;
+        exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
 
-        FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if (!exp.found() || !exp.isHotbar()) {
             reFill();
             return;
@@ -152,23 +188,14 @@ public class XPautomation extends Module {
         switch (rotate.get()) {
             case Pitch:
                 mc.player.setPitch(pitch.get());
+                useXP();
                 break;
             case Packet:
-                Rotations.rotate(mc.player.getYaw(), 90);
+                Rotations.rotate(mc.player.getYaw(), 90, -100, clientSide.get(), null);
+                useXP();
                 break;
             default:
                 break;
-        }
-
-        if (autoSwitch.get() == AutoSwitchMode.Normal) {
-            InvUtils.swap(exp.slot(), false);
-            Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-            swingHand();
-        } else if (autoSwitch.get() == AutoSwitchMode.Silent) {
-            InvUtils.swap(exp.slot(), true);
-            Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-            swingHand();
-            InvUtils.swapBack();
         }
     }
 
@@ -192,11 +219,25 @@ public class XPautomation extends Module {
         }
     }
 
+    public void useXP() {
+        exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
+        if(!exp.found()) return;
+        if (autoSwitch.get() == AutoSwitchMode.Normal) {
+            InvUtils.swap(exp.slot(), false);
+            Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+            swingHand();
+        } else if (autoSwitch.get() == AutoSwitchMode.Silent) {
+            InvUtils.swap(exp.slot(), true);
+            Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+            swingHand();
+            InvUtils.swapBack();
+        }
+    }
     private void moveXPBottleToHotbar() {
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if (exp.found() && !exp.isHotbar() && !exp.isOffhand()) {
             originalSlot = exp.slot();
-            InvUtils.move().from(exp.slot()).toHotbar(slot.get() - 1);
+            InvUtils.move().from(exp.slot()).toHotbar(slot.get());
         }
     }
 

@@ -6,10 +6,6 @@ public class TPSSyncUtil {
     private static Supplier<Double> tpsSupplier;
     private static boolean syncEnabled;
 
-    public static void setTpsSupplier(Supplier<Double> supplier) {
-        tpsSupplier = supplier;
-    }
-
     public static double getCurrentTPS() {
         return tpsSupplier != null ? tpsSupplier.get() : 20.0;
     }
@@ -18,7 +14,4 @@ public class TPSSyncUtil {
         syncEnabled = enabled;
     }
 
-    public static boolean isSyncEnabled() {
-        return syncEnabled;
-    }
 }
