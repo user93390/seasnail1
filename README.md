@@ -23,16 +23,12 @@
 - SelfAnvil+
 - AutoAnchor+
 - AutoSand
-- EchestFarmer+
-- PistonPush+
-- SnailBomber (Better CrystalAura)
-- AutoTrap+
-- AutoWeb+
+- PVPinfo
+- BedBomb
 
 **Miscellaneous Modules:**
 - Chatcontrol
 - PacketMine+
-- QuiverPlus
 - AutoEZ
 - XP-Automation
 - StealthMine+ (Better Packet Mine)
