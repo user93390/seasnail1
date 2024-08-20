@@ -1,0 +1,509 @@
+package org.snail.plus.modules.combat;
+
+
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.mixininterface.IBox;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.entity.DamageUtils;
+import meteordevelopment.meteorclient.utils.entity.SortPriority;
+import meteordevelopment.meteorclient.utils.entity.TargetUtils;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.SlabBlock;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Items;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.*;
+import net.minecraft.world.World;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.TPSSyncUtil;
+import org.snail.plus.utils.WorldUtils;
+
+import java.util.Objects;
+
+
+public class AutoAnchor extends Module {
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgDamage = settings.createGroup("Damage");
+    private final SettingGroup sgRender = settings.createGroup("Render");
+    private final SettingGroup sgMisc = settings.createGroup("Misc");
+
+    private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
+            .name("range")
+            .description("Range to target player(s)")
+            .defaultValue(3.0)
+            .sliderMax(10.0)
+            .sliderMin(1.0)
+            .build());
+    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
+            .name("rotation")
+            .description("Rotates towards the block when placing.")
+            .defaultValue(false)
+            .build());
+    private final Setting<SortPriority> priority = sgGeneral.add(new EnumSetting.Builder<SortPriority>()
+            .name("target-priority")
+            .description("How to filter targets within range.")
+            .defaultValue(SortPriority.LowestDistance)
+            .build());
+
+    private final Setting<SwapMode> swapMethod = sgGeneral.add(new EnumSetting.Builder<SwapMode>()
+            .name("swap mode")
+            .description("swap mode. Silent is most consistent, but invswitch is more convenient")
+            .defaultValue(SwapMode.silent)
+            .build());
+
+    private final Setting<Double> AnchorDelay = sgGeneral.add(new DoubleSetting.Builder()
+            .name("anchor delay")
+            .description("the anchor delay")
+            .defaultValue(1.0)
+            .min(0)
+            .sliderMax(5)
+            .build());
+    private final Setting<Double> GlowstoneDelay = sgGeneral.add(new DoubleSetting.Builder()
+            .name("glowstone delay")
+            .description("the glowstone delay")
+            .defaultValue(1.0)
+            .min(0)
+            .sliderMax(5)
+            .build());
+    private final Setting<Boolean> TpsSync = sgGeneral.add(new BoolSetting.Builder()
+            .name("TPS sync")
+            .description("syncs delay with current server tps")
+            .defaultValue(true)
+            .build());
+    private final Setting<SafetyMode> safety = sgDamage.add(new EnumSetting.Builder<SafetyMode>()
+            .name("safe-mode")
+            .description("Safety mode")
+            .defaultValue(SafetyMode.safe)
+            .build());
+    private final Setting<Double> maxSelfDamage = sgDamage.add(new DoubleSetting.Builder()
+            .name("max self damage score")
+            .description("the max amount to deal to you")
+            .defaultValue(3.0)
+            .sliderMax(36.0)
+            .sliderMin(0.0)
+            .visible(() -> safety.get() != SafetyMode.off)
+            .build());
+    private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder()
+            .name("min damage score")
+            .description("the lowest amount of damage you should deal to the target (higher = less targets | lower = more targets)")
+            .defaultValue(3.0)
+            .sliderMax(36.0)
+            .sliderMin(0.0)
+            .visible(() -> safety.get() != SafetyMode.off)
+            .build());
+    private final Setting<Double> DamageRatio = sgDamage.add(new DoubleSetting.Builder()
+            .name("damage ratio")
+            .description("the ratio. min damage / maxself")
+            .defaultValue(3.0)
+            .sliderMax(36.0)
+            .sliderMin(0.0)
+            .visible(() -> safety.get() != SafetyMode.off)
+            .visible(() -> safety.get() == SafetyMode.safe)
+            .build());
+    private final Setting<Boolean> strictDirection = sgGeneral.add(new BoolSetting.Builder()
+            .name("strict direction")
+            .description("Only places anchors in the direction you are facing")
+            .defaultValue(false)
+            .build());
+    private final Setting<Boolean> placeSupport = sgGeneral.add(new BoolSetting.Builder()
+            .name("place-support")
+            .description("Whether to place support blocks.")
+            .defaultValue(true)
+            .build());
+    private final Setting<Boolean> predictMovement = sgGeneral.add(new BoolSetting.Builder()
+            .name("movement predict")
+            .description("predicts the targets movement")
+            .defaultValue(false)
+            .build());
+    private final Setting<Boolean> Breaker = sgGeneral.add(new BoolSetting.Builder()
+            .name("Breaker")
+            .description("Breaks string and glowstone to prevent the anchor placements")
+            .defaultValue(true)
+            .build());
+    private final Setting<Boolean> Smart = sgGeneral.add(new BoolSetting.Builder()
+            .name("smart")
+            .description("Places respawn anchors at south, east, west, north. And places up top and below if the player is surrounded")
+            .defaultValue(true)
+            .build());
+
+    private final Setting<Integer> RadiusZ = sgGeneral.add(new IntSetting.Builder()
+            .name("Radius Z")
+            .description("the radius for Z")
+            .defaultValue(1)
+            .sliderMax(5)
+            .sliderMin(1)
+            .visible(Smart::get)
+            .build());
+    private final Setting<Integer> RadiusX = sgGeneral.add(new IntSetting.Builder()
+            .name("Radius X")
+            .description("the radius for X")
+            .defaultValue(1)
+            .sliderMax(5)
+            .sliderMin(1)
+            .visible(Smart::get)
+            .build());
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
+            .name("side color")
+            .description("Side color")
+            .defaultValue(new SettingColor(255, 0, 0, 75))
+            .build());
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
+            .name("line color")
+            .description("Line color")
+            .defaultValue(new SettingColor(255, 0, 0, 255))
+            .build());
+
+    private final Setting<RenderMode> renderMode = sgRender.add(new EnumSetting.Builder<RenderMode>()
+            .name("render mode")
+            .description("render mode. Smooth is cool")
+            .defaultValue(RenderMode.smooth)
+            .build());
+    private final Setting<Integer> rendertime = sgRender.add(new IntSetting.Builder()
+            .name("render time")
+            .description("render time")
+            .defaultValue(3)
+            .sliderMax(100)
+            .sliderMin(1)
+            .visible(() -> renderMode.get() == RenderMode.fading)
+            .build());
+    private final Setting<Boolean> shrink = sgRender.add(new BoolSetting.Builder()
+            .name("fade shrink")
+            .description("shrink fading render")
+            .defaultValue(true)
+            .visible(() -> renderMode.get() == RenderMode.fading)
+            .build());
+    private final Setting<Integer> Smoothness = sgRender.add(new IntSetting.Builder()
+            .name("smoothness")
+            .description("the smoothness")
+            .defaultValue(3)
+            .sliderMax(100)
+            .sliderMin(1)
+            .visible(() -> renderMode.get() == RenderMode.smooth)
+            .build());
+    private final Setting<SwingMode> swingMode = sgMisc.add(new EnumSetting.Builder<SwingMode>()
+            .name("swing type")
+            .description("swing type")
+            .defaultValue(SwingMode.mainhand)
+            .build());
+    private final Setting<Boolean> MultiTask= sgMisc.add(new BoolSetting.Builder()
+            .name("multi-task")
+            .description("allows you to use different items when the module is interacting / placing")
+            .defaultValue(false)
+            .build());
+    private final Setting<Boolean> pauseUse = sgMisc.add(new BoolSetting.Builder()
+            .name("pause on use")
+            .description("pauses the module when you use a item")
+            .defaultValue(false)
+            .visible(() -> !MultiTask.get())
+            .build());
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+            .name("shape-mode")
+            .description("How the shapes are rendered.")
+            .defaultValue(ShapeMode.Both)
+            .build());
+    private long lastAnchorPlaceTime = 0;
+    private long lastGlowstonePlaceTime = 0;
+    private PlayerEntity target;
+    private boolean Swapped;
+    private BlockPos AnchorPos;
+    private Box renderBoxOne, renderBoxTwo;
+    private boolean anchorPlaced = false;
+
+    public AutoAnchor() {
+        super(Addon.Snail, "Anchor Bomb+", "explodes anchors near targets");
+    }
+
+    @Override
+    public void onActivate() {
+        target = null;
+        AnchorPos = null;
+    }
+
+    @Override
+    public void onDeactivate() {
+        target = null;
+        AnchorPos = null;
+    }
+
+    @EventHandler
+    private void onTick(TickEvent.Post event) {
+        if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
+            toggle();
+            return;
+        }
+        target = TargetUtils.getPlayerTarget(range.get(), priority.get());
+        if (TargetUtils.isBadTarget(target, range.get())) return;
+        long currentTime = System.currentTimeMillis();
+        if ((currentTime - lastAnchorPlaceTime) < AnchorDelay.get() * 1000) return;
+        lastAnchorPlaceTime = currentTime;
+        if ((currentTime - lastGlowstonePlaceTime) < GlowstoneDelay.get() * 1000) return;
+        lastGlowstonePlaceTime = currentTime;
+        if (TpsSync.get()) {
+            /* sync delay to tps */
+            double currentDelay = TpsSync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : AnchorDelay.get();
+
+            /* glowstone delay */
+            if ((currentDelay - lastGlowstonePlaceTime) < lastGlowstonePlaceTime * 1000) return;
+            lastGlowstonePlaceTime = currentTime;
+
+            /* anchor delay */
+            if ((currentDelay - lastAnchorPlaceTime) < lastAnchorPlaceTime * 1000) return;
+            lastAnchorPlaceTime = currentTime;
+        }
+        BlockPos targetHeadPos = target.getBlockPos().up(2);
+        if (predictMovement.get()) {
+            Vec3d targetPos = Vec3d.of(target.getBlockPos());
+            targetPos.add(
+                    target.getX() - target.prevX,
+                    target.getY() - target.prevY,
+                    target.getZ() - target.prevZ
+            );
+            targetHeadPos = target.getBlockPos().up(2);
+            anchorPlaced = false;
+            Swapped = false;
+        }
+
+        if(pauseUse.get() && Objects.requireNonNull(mc.player).isUsingItem()) {
+            return;
+        }
+
+        if (CombatUtils.isBurrowed(target)) return;
+
+        if (!CombatUtils.isSurrounded(target) && Smart.get()) {
+        AnchorPos = findBestPosition(target);
+        } else {
+            if (Smart.get() && CombatUtils.isSurrounded(target) && WorldUtils.isAir(targetHeadPos) || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+                AnchorPos = targetHeadPos;
+                TargetHeadPos();
+                SwapAndPlace();
+            }
+        }
+
+        if (!Smart.get() && WorldUtils.isAir(targetHeadPos) || mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+            AnchorPos = targetHeadPos;
+            TargetHeadPos();
+            SwapAndPlace();
+        }
+        if (placeSupport.get() && CombatUtils.isSurrounded(target)) {
+            placeSupportBlocks(target);
+        }
+        if (anchorPlaced) {
+            switch (swingMode.get()) {
+                case none:
+                    break;
+                case mainhand:
+                    Objects.requireNonNull(mc.player).swingHand(Hand.MAIN_HAND);
+                    break;
+                case offhand:
+                    Objects.requireNonNull(mc.player).swingHand(Hand.OFF_HAND);
+                case packet:
+                    Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
+                    break;
+            }
+        }
+        if (Breaker.get() && mc.world.getBlockState(targetHeadPos).getBlock() == Blocks.GLOWSTONE || Breaker.get() && mc.world.getBlockState(targetHeadPos).getBlock() instanceof SlabBlock) {
+            Objects.requireNonNull(mc.interactionManager).breakBlock(targetHeadPos);
+        }
+    }
+    private BlockPos findBestPosition(PlayerEntity entity) {
+        double x = entity.getX() - RadiusX.get();
+        double y = entity.getY();
+        double z =  entity.getZ() - RadiusZ.get();
+        BlockPos position = new BlockPos(new Vec3i((int) x, (int) y, (int) z));
+
+        WorldUtils.willMiss(position, entity);
+        if(!WorldUtils.willMiss(position, entity)) {
+            return position;
+        } else {
+            x = entity.getX() + RadiusX.get();
+            position = new BlockPos(new Vec3i((int) x, (int) y, (int) z));
+            WorldUtils.willMiss(position, entity);
+            if(!WorldUtils.willMiss(position, entity)) {
+                return position;
+            } else {
+                z = entity.getZ() + RadiusZ.get();
+                position = new BlockPos(new Vec3i((int) x, (int) y, (int) z));
+                WorldUtils.willMiss(position, entity);
+                if(!WorldUtils.willMiss(position, entity)) {
+                    return position;
+                } else {
+                    z = entity.getZ() - RadiusZ.get();
+                    position = new BlockPos(new Vec3i((int) x, (int) y, (int) z));
+                    WorldUtils.willMiss(position, entity);
+                    if(!WorldUtils.willMiss(position, entity)) {
+                        return position;
+                    } else {
+                        y = entity.getY() + 1;
+                        position = new BlockPos(new Vec3i((int) x, (int) y, (int) z));
+                        WorldUtils.willMiss(position, entity);
+                        if(!WorldUtils.willMiss(position, entity)) {
+                            return position;
+                        } else {
+                            y = entity.getY() - 1;
+                            position = new BlockPos(new Vec3i((int) x, (int) y, (int) z));
+                            WorldUtils.willMiss(position, entity);
+                            if(!WorldUtils.willMiss(position, entity)) {
+                                return position;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        SwapAndPlace();
+        if(WorldUtils.isAir(position)) {
+            return position;
+        } else {
+        }
+        if(WorldUtils.isAir(position)) {
+            return AnchorPos = position;
+        }
+        return position;
+    }
+
+
+    private void placeSupportBlocks(PlayerEntity target) {
+        BlockPos supportPosNorth = target.getBlockPos().north(1);
+        BlockPos supportPosNorthUpOne = target.getBlockPos().north(1).up(1);
+        BlockPos supportPosNorthUpTwo = target.getBlockPos().north(1).up(2);
+        BlockPos supportPosNorthUpThree = target.getBlockPos().north(1).up(3);
+        BlockPos supportPosNorthUpFour = target.getBlockPos().up(3);
+        BlockUtils.place(supportPosNorth, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 100, true);
+        BlockUtils.place(supportPosNorthUpOne, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 100, true);
+        BlockUtils.place(supportPosNorthUpTwo, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 100, true);
+        BlockUtils.place(supportPosNorthUpThree, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 100, true);
+        BlockUtils.place(supportPosNorthUpFour, InvUtils.findInHotbar(Items.OBSIDIAN), rotate.get(), 100, true);
+    }
+
+
+    @EventHandler
+    public void AnchorRender(Render3DEvent event) {
+        RenderMode mode = renderMode.get();
+        boolean ShrinkNow = shrink.get() && TargetUtils.isBadTarget(target, range.get()) || AnchorPos == null;
+        if (TargetUtils.isBadTarget(target, range.get())) return;
+        if (AnchorPos != null) {
+            if (mode == RenderMode.normal) {
+                event.renderer.box(AnchorPos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+            } else if (mode == RenderMode.fading) {
+                RenderUtils.renderTickingBlock(
+                        AnchorPos, sideColor.get(),
+                        lineColor.get(), shapeMode.get(),
+                        0, rendertime.get(), true, ShrinkNow
+                );
+            }
+            if (mode == RenderMode.smooth) {
+                if (renderBoxOne == null) renderBoxOne = new Box(AnchorPos);
+                if (renderBoxTwo == null) renderBoxTwo = new Box(AnchorPos);
+
+
+                if (renderBoxTwo instanceof IBox) {
+                    ((IBox) renderBoxTwo).set(
+                            AnchorPos.getX(), AnchorPos.getY(), AnchorPos.getZ(),
+                            AnchorPos.getX() + 1, AnchorPos.getY() + 1, AnchorPos.getZ() + 1
+                    );
+                }
+
+
+                double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
+                double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
+                double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
+
+
+                ((IBox) renderBoxOne).set(
+                        renderBoxOne.minX + offsetX,
+                        renderBoxOne.minY + offsetY,
+                        renderBoxOne.minZ + offsetZ,
+                        renderBoxOne.maxX + offsetX,
+                        renderBoxOne.maxY + offsetY,
+                        renderBoxOne.maxZ + offsetZ
+                );
+
+                event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            }
+        }
+    }
+
+    private void TargetHeadPos() {
+        if (!Swapped) {
+            SwapAndPlace();
+        }
+    }
+
+    private void SwapAndPlace() {
+        FindItemResult glowstone = InvUtils.findInHotbar(Items.GLOWSTONE);
+        FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+        ClientPlayerEntity player = mc.player;
+        AnchorPos = findBestPosition(target);
+        switch (swapMethod.get()) {
+            case normal:
+                if (Objects.requireNonNull(mc.world).getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(AnchorPos).getBlock() == Blocks.FIRE || mc.world.getBlockState(AnchorPos).isAir()) {
+                    if (BlockUtils.canPlace(AnchorPos)) {
+                        BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
+                    }
+                }
+                if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+                    InvUtils.swap(glowstone.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
+                    InvUtils.swap(anchor.slot(), false);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
+                    InvUtils.swap(anchor.slot(), false);
+                    Swapped = true;
+                }
+                break;
+            case silent:
+                anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                glowstone = InvUtils.findInHotbar(Items.GLOWSTONE);
+                if (Objects.requireNonNull(mc.world).getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR || mc.world.getBlockState(AnchorPos).getBlock() == Blocks.FIRE || mc.world.getBlockState(AnchorPos).isAir()) {
+                    if (BlockUtils.canPlace(AnchorPos)) {
+                        BlockUtils.place(AnchorPos, anchor, rotate.get(), 100, true);
+                    }
+                }
+                if (mc.world.getBlockState(AnchorPos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+                    InvUtils.swap(glowstone.slot(), true);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
+                    InvUtils.swapBack();
+                    InvUtils.swap(anchor.slot(), true);
+                    Objects.requireNonNull(mc.interactionManager).interactBlock(player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(AnchorPos.getX() + 0.5, AnchorPos.getY() + 0.5, AnchorPos.getZ() + 0.5), Direction.UP, AnchorPos, true));
+                    InvUtils.swapBack();
+                    Swapped = true;
+                }
+                break;
+        }
+    }
+
+    public enum SafetyMode {
+        safe,
+        balance,
+        off,
+    }
+
+    public enum SwapMode {
+        silent,
+        normal,
+    }
+
+    public enum RenderMode {
+        fading,
+        normal,
+        smooth
+    }
+
+    public enum SwingMode {
+        offhand,
+        mainhand,
+        packet,
+        none
+    }
+}

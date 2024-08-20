@@ -1,12 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "snailplus",
-  "version": "2.2",
+  "id": "snail_plus",
+  "version": "1.0.0",
   "name": "Snail++",
-  "description": "1.21 meteor addon",
+  "description": "1.21 - 1.20.4 meteor addon developed by seasnail1",
   "authors": [
-    "seasnail1",
-    "chronosuser"
+    "seasnail1"
   ],
   "contact": {
     "repo": "https://discord.gg/mZrSMrNfMw"
