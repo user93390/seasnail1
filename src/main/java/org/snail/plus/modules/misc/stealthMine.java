@@ -180,7 +180,7 @@ public class stealthMine extends Module {
 
     private final Setting<Boolean> swingHand = sgMisc.add(new BoolSetting.Builder()
             .name("swing hand")
-            .description("swings you're hand when mining")
+            .description("swings your hand when mining")
             .defaultValue(false)
             .build());
 
