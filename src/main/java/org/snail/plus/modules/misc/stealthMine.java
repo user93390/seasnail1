@@ -15,6 +15,8 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.NametagUtils;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -73,21 +75,6 @@ public class stealthMine extends Module {
             .description("how blocks are mined")
             .defaultValue(breakMode.instant)
             .build());
-
-    private final Setting<Boolean> queue = sgMisc.add(new BoolSetting.Builder()
-            .name("Queue")
-            .description("breaks blocks in a queue")
-            .defaultValue(true)
-            .build());
-
-    private final Setting<Integer> maxQueueBlocks = sgMisc.add(new IntSetting.Builder()
-            .name("max queue blocks")
-            .description("the max amount of blocks to have in a queue")
-            .sliderRange(1, 10)
-            .defaultValue(3)
-            .visible(queue::get)
-            .build());
-
     private final Setting<Boolean> PauseOnUse = sgGeneral.add(new BoolSetting.Builder()
             .name("Pause on use")
             .description("pauses the module when using another item")
@@ -99,23 +86,65 @@ public class stealthMine extends Module {
             .description("prevents desync")
             .defaultValue(true)
             .build());
+
+    private final Setting<renderMode> RenderMode = sgRender.add(new EnumSetting.Builder<renderMode>()
+            .name("render mode")
+            .description("how blocks are rendered")
+            .defaultValue(renderMode.VH)
+            .build());
+
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side color")
             .description("Side color")
             .defaultValue(new SettingColor(255, 0, 0, 75))
+            .visible(() -> RenderMode.get() != renderMode.gradient)
             .build());
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("line color")
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
+            .visible(() -> RenderMode.get() != renderMode.gradient)
             .build());
-    private final Setting<Double> Speed = sgGeneral.add(new DoubleSetting.Builder()
+
+    private final Setting<SettingColor> startColor = sgRender.add(new ColorSetting.Builder()
+            .name("start color")
+            .description("the start color for the block.")
+            .defaultValue(new SettingColor(25, 252, 25, 150))
+            .visible(() -> RenderMode.get() == renderMode.gradient)
+            .build());
+
+    private final Setting<SettingColor> endColor = sgRender.add(new ColorSetting.Builder()
+            .name("end color")
+            .description("The end color for the block.")
+            .defaultValue(new SettingColor(255, 25, 25, 150))
+            .visible(() -> RenderMode.get() == renderMode.gradient)
+            .build());
+
+    private final Setting<Double> Speed = sgRender.add(new DoubleSetting.Builder()
             .name("render speed")
             .description("how much speed to multiply to the render")
             .defaultValue(1.5)
             .sliderMin(0)
             .sliderMax(10)
+            .visible(() -> RenderMode.get() == renderMode.VH)
             .build());
+
+    private final Setting<Integer> fadeSpeed = sgRender.add(new IntSetting.Builder()
+            .name("fade speed")
+            .description("the fade speed")
+            .defaultValue(10)
+            .sliderMin(0)
+            .sliderMax(100)
+            .visible(() -> RenderMode.get() == renderMode.fade)
+            .build());
+
+    private final Setting<Boolean> shrink  = sgGeneral.add(new BoolSetting.Builder()
+            .name("fade shrink")
+            .description("shrinks when fading out")
+            .defaultValue(true)
+            .visible(() -> RenderMode.get() == renderMode.fade)
+            .build());
+
     private final Setting<Boolean> nametags = sgRender.add(new BoolSetting.Builder()
             .name("show progress")
             .description("shows the progress when breaking using nametags")
@@ -271,24 +300,60 @@ public class stealthMine extends Module {
         mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
     }
 
+    private final Color cSides = new Color();
+    private final Color cLines = new Color();
     @EventHandler
     private void Render(Render3DEvent event) {
-        this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
-        double ShrinkFactor = 1d - blockBreakingProgress * Speed.get();
-        BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
-        VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
-        if (shape.isEmpty()) {
-            return;
+        switch (RenderMode.get()) {
+            case VH -> {
+                this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
+                double ShrinkFactor = 1d - blockBreakingProgress * Speed.get();
+                BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
+                VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
+                if (shape.isEmpty()) {
+                    return;
+                }
+                Box orig = shape.getBoundingBox();
+                orig.shrink(
+                        orig.getLengthX() * ShrinkFactor,
+                        orig.getLengthY() * ShrinkFactor,
+                        orig.getLengthZ() * ShrinkFactor
+                );
+                renderBlock(event, orig, ShrinkFactor);
+            }
+            case normal -> event.renderer.box(blockPos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            case fade -> {
+                currentPos = blockPos;
+                boolean shouldShrink = shrink.get() && (blockPos.getX() != currentPos.getX() || blockPos.getY() != currentPos.getY() || blockPos.getZ() != currentPos.getZ());
+
+                RenderUtils.renderTickingBlock(
+                        blockPos, sideColor.get(),
+                        lineColor.get(), shapeMode.get(),
+                        0, fadeSpeed.get(), true, shouldShrink
+                );
+            }
+            case gradient -> {
+                Color c1Sides = startColor.get().copy().a(startColor.get().a / 2);
+                Color c2Sides = endColor.get().copy().a(endColor.get().a / 2);
+                Color c1Lines = startColor.get().copy().a(startColor.get().a / 2);
+                Color c2Lines = endColor.get().copy().a(endColor.get().a / 2);
+                cSides.set(
+                        (int) Math.round(c1Sides.r + (c2Sides.r - c1Sides.r) * blockBreakingProgress),
+                        (int) Math.round(c1Sides.g + (c2Sides.g - c1Sides.g) * blockBreakingProgress),
+                        (int) Math.round(c1Sides.b + (c2Sides.b - c1Sides.b) * blockBreakingProgress),
+                        (int) Math.round(c1Sides.a + (c2Sides.a - c1Sides.a) * blockBreakingProgress)
+                );
+
+                cLines.set(
+
+                        (int) Math.round(c1Lines.r + (c2Lines.r - c1Lines.r) * blockBreakingProgress),
+                        (int) Math.round(c1Lines.g + (c2Lines.g - c1Lines.g) * blockBreakingProgress),
+                        (int) Math.round(c1Lines.b + (c2Lines.b - c1Lines.b) * blockBreakingProgress),
+                        (int) Math.round(c1Lines.a + (c2Lines.a - c1Lines.a) * blockBreakingProgress)
+                );
+                event.renderer.box(blockPos, cSides, cLines, shapeMode.get(), 0);
+            }
         }
-        Box orig = shape.getBoundingBox();
-        orig.shrink(
-                orig.getLengthX() * ShrinkFactor,
-                orig.getLengthY() * ShrinkFactor,
-                orig.getLengthZ() * ShrinkFactor
-        );
-
-        renderBlock(event, orig, ShrinkFactor);
-
     }
     private final Vector3d vec3 = new Vector3d();
     @EventHandler
@@ -334,16 +399,12 @@ public class stealthMine extends Module {
             syncSlot();
         }
         if (BlockUtils.canBreak(blockPos, blockState) || blockPos.isWithinDistance(blockPos, Range.get()) || !WorldUtils.isAir(blockPos)) {
-            if(canBreak()) {
-                breakBlock(blockPos);
-                updatePlaceTime();
-            }
+            breakBlock(blockPos);
             Switch();
-            // Reset blockBreakingProgress if the block is broken
             if (WorldUtils.isAir(blockPos)) {
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
             }
-            // Update block breaking progress only if the pickaxe was found
+
             if (bestSlot.found()) {
                 blockBreakingProgress += BlockUtils.getBreakDelta(bestSlot.slot(), blockState);
                 if (blockBreakingProgress >= 1) blockBreakingProgress = 1;
@@ -351,15 +412,7 @@ public class stealthMine extends Module {
             if(WorldUtils.isBreakable(blockPos)) blockBreakingProgress = 0;
         }
     }
-    private void updatePlaceTime() {
-        System.currentTimeMillis();
-    }
 
-    private boolean canBreak() {
-        long currentTime = System.currentTimeMillis();
-        long lastBreakTime = 0;
-        return (currentTime - lastBreakTime) >= Delay.get() * 50;
-    }
 
     public void breakBlock(BlockPos blockPos) {
         switch (mineMode.get()) {
@@ -383,7 +436,6 @@ public class stealthMine extends Module {
     }
 
     public void Switch() {
-        // Swap to the pickaxe slot
         switch (swapMode.get()) {
             case silent:
                 if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) {
@@ -391,19 +443,9 @@ public class stealthMine extends Module {
                 }
                     mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
 
-                if(canBreak()) {
-                    breakBlock(blockPos);
-                    updatePlaceTime();
-                }
                 break;
             case normal:
-                // Use InvUtils.swap for normal swapping
                 InvUtils.swap(bestSlot.slot(), false);
-                if(canBreak()) {
-                    breakBlock(blockPos);
-                    updatePlaceTime();
-                }
-
                 break;
         }
     }
@@ -496,5 +538,11 @@ public class stealthMine extends Module {
         bypass,
         normal,
         instant,
+    }
+    public enum renderMode {
+        VH,
+        normal,
+        fade,
+        gradient,
     }
 }
