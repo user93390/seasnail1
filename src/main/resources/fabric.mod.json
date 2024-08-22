@@ -10,7 +10,7 @@
   "contact": {
     "repo": "https://discord.gg/mZrSMrNfMw"
   },
-  "icon": "assets/snail++/icon.png",
+  "icon": "assets/image/file.png",
   "environment": "client",
   "entrypoints": {
     "meteor": [
