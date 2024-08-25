@@ -33,6 +33,7 @@ import net.minecraft.util.shape.VoxelShape;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.TimeUtils;
 import org.snail.plus.utils.WorldUtils;
 
 import java.util.Objects;
@@ -441,7 +442,7 @@ public class stealthMine extends Module {
                 if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) {
                     break;
                 }
-                    mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
+                mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
 
                 break;
             case normal:

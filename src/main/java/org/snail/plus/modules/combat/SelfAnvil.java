@@ -112,7 +112,7 @@ public class SelfAnvil extends Module {
     private void PlaceSupportBlocks(PlayerEntity player, FindItemResult obsidian) {
         for(int i = 0; i <= 2; i++) {
 
-         BlockPos support = new BlockPos((int) player.getX(), (int)player.getY() + i,(int) player.getZ());
+            BlockPos support = new BlockPos((int) player.getX(), (int)player.getY() + i,(int) player.getZ());
             if(rotate.get()) Rotations.rotate(Rotations.getYaw(support), Rotations.getPitch(support));
             InvUtils.swap(obsidian.slot(), true);
             mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(support.getX(), support.getY(), support.getZ()), Direction.UP, support, false));

@@ -161,6 +161,37 @@ public class XPautomation extends Module {
         //slot 3 is helmet
         //slot 4 is boots
 
+        ItemStack helmet = mc.player.getInventory().getArmorStack(3);
+        ItemStack chestplate = mc.player.getInventory().getArmorStack(2);
+        ItemStack leggings = mc.player.getInventory().getArmorStack(1);
+        ItemStack boots = mc.player.getInventory().getArmorStack(0);
+        if (helmet.getDamage() == 0 && chestplate.getDamage() == 0 && leggings.getDamage() == 0 && boots.getDamage() == 0) {
+            //call putArmorOn function
+            putArmorOn();
+            ChatUtils.info("Your armor is at full HP, disabling...");
+            toggle();
+            return;
+        } else {
+            if (helmet.getDamage() != 0) {
+                InvUtils.move().from(3).toHotbar(1);
+                useXP();
+                InvUtils.move().from(1).to(3);
+            } else if (chestplate.getDamage() != 0) {
+                InvUtils.move().from(2).toHotbar(1);
+                useXP();
+                InvUtils.move().from(1).to(2);
+            } else if (leggings.getDamage() != 0) {
+                InvUtils.move().from(1).toHotbar(1);
+                useXP();
+                InvUtils.move().from(1).to(1);
+            } else if (boots.getDamage() != 0) {
+                InvUtils.move().from(0).toHotbar(1);
+                useXP();
+                InvUtils.move().from(1).to(0);
+            }
+        }
+
+
         if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) return;
 
         double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : delay.get();
@@ -209,6 +240,25 @@ public class XPautomation extends Module {
         }
     }
 
+    public void putArmorOn() {
+        ItemStack helmet = mc.player.getInventory().getArmorStack(3);
+        ItemStack chestplate = mc.player.getInventory().getArmorStack(2);
+        ItemStack leggings = mc.player.getInventory().getArmorStack(1);
+        ItemStack boots = mc.player.getInventory().getArmorStack(0);
+
+        if(helmet.getDamage() == 0) {
+            InvUtils.move().from(3).to(armorSlot.get());
+        }
+        if(chestplate.getDamage() == 0) {
+            InvUtils.move().from(2).to(armorSlot.get());
+        }
+        if(leggings.getDamage() == 0) {
+            InvUtils.move().from(1).to(armorSlot.get());
+        }
+        if(boots.getDamage() == 0) {
+            InvUtils.move().from(0).to(armorSlot.get());
+        }
+    }
     public void useXP() {
         exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if(!exp.found()) return;

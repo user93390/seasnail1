@@ -8,7 +8,7 @@ import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.entity.SortPriority;
+import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -28,6 +28,7 @@ import org.snail.plus.utils.WorldUtils;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class AutoAnchor extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -47,36 +48,12 @@ public class AutoAnchor extends Module {
             .description("Rotates towards the block when placing.")
             .defaultValue(false)
             .build());
-    private final Setting<SortPriority> priority = sgGeneral.add(new EnumSetting.Builder<SortPriority>()
-            .name("target-priority")
-            .description("How to filter targets within range.")
-            .defaultValue(SortPriority.LowestDistance)
-            .build());
-
-    private final Setting<SwapMode> swapMethod = sgGeneral.add(new EnumSetting.Builder<SwapMode>()
-            .name("swap mode")
-            .description("swap mode. Silent is most consistent, but invswitch is more convenient")
-            .defaultValue(SwapMode.silent)
-            .build());
-
-    private final Setting<Double> AnchorDelay = sgGeneral.add(new DoubleSetting.Builder()
-            .name("anchor delay")
-            .description("the anchor delay")
+    private final Setting<Double> anchorSpeed = sgGeneral.add(new DoubleSetting.Builder()
+            .name("anchor speed")
+            .description("Speed at which anchors are placed.")
             .defaultValue(1.0)
-            .min(0)
-            .sliderMax(5)
-            .build());
-    private final Setting<Double> GlowstoneDelay = sgGeneral.add(new DoubleSetting.Builder()
-            .name("glowstone delay")
-            .description("the glowstone delay")
-            .defaultValue(1.0)
-            .min(0)
-            .sliderMax(5)
-            .build());
-    private final Setting<Boolean> TpsSync = sgGeneral.add(new BoolSetting.Builder()
-            .name("TPS sync")
-            .description("syncs delay with current server tps")
-            .defaultValue(true)
+            .min(0.1)
+            .sliderMax(10.0)
             .build());
     private final Setting<SafetyMode> safety = sgDamage.add(new EnumSetting.Builder<SafetyMode>()
             .name("safe-mode")
@@ -118,14 +95,14 @@ public class AutoAnchor extends Module {
             .description("Whether to place support blocks.")
             .defaultValue(true)
             .build());
-    private final Setting<Boolean> predictMovement = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> movementPredict = sgGeneral.add(new BoolSetting.Builder()
             .name("movement predict")
-            .description("predicts the targets movement")
-            .defaultValue(false)
+            .description("Predicts the player's movement")
+            .defaultValue(true)
             .build());
     private final Setting<Boolean> Breaker = sgGeneral.add(new BoolSetting.Builder()
             .name("Breaker")
-            .description("Breaks string and glowstone to prevent the anchor placements")
+            .description("Breaks blocks in the way of the anchor")
             .defaultValue(true)
             .build());
     private final Setting<Boolean> Smart = sgGeneral.add(new BoolSetting.Builder()
@@ -188,11 +165,6 @@ public class AutoAnchor extends Module {
             .sliderMin(1)
             .visible(() -> renderMode.get() == RenderMode.smooth)
             .build());
-    private final Setting<SwingMode> swingMode = sgMisc.add(new EnumSetting.Builder<SwingMode>()
-            .name("swing type")
-            .description("swing type")
-            .defaultValue(SwingMode.mainhand)
-            .build());
     private final Setting<Boolean> MultiTask = sgMisc.add(new BoolSetting.Builder()
             .name("multi-task")
             .description("allows you to use different items when the module is interacting / placing")
@@ -209,13 +181,11 @@ public class AutoAnchor extends Module {
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
-    private boolean Swapped;
     private BlockPos[] AnchorPos;
     private Box renderBoxOne, renderBoxTwo;
-
     private Thread anchorThread;
     private volatile boolean isRunning = false;
-
+    private final ReentrantLock lock = new ReentrantLock();
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Bomb+", "explodes anchors near targets");
     }
@@ -224,7 +194,16 @@ public class AutoAnchor extends Module {
     public void onActivate() {
         AnchorPos = null;
         isRunning = true;
-        anchorThread = new Thread(this::runAnchorLogic);
+        anchorThread = new Thread(() -> {
+            while (isRunning) {
+                onTick(null); // Call onTick method
+                try {
+                    Thread.sleep(50); // Sleep for 50ms (equivalent to 20 ticks per second)
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }, "Anchor Thread");
         anchorThread.start();
     }
 
@@ -236,120 +215,199 @@ public class AutoAnchor extends Module {
             try {
                 anchorThread.join();
             } catch (InterruptedException e) {
-                // Handle the interruption
+                Thread.currentThread().interrupt();
             }
         }
     }
-
+    private long lastPlacedTime = 0;
     @EventHandler
     private void onTick(TickEvent.Post event) {
+        if(pauseUse.get() && mc.player.isUsingItem()) return;
         if (isRunning) {
             if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
                 toggle();
                 return;
             }
-            for (PlayerEntity player : mc.world.getPlayers()) {
-                if (player == mc.player || Friends.get().isFriend(player)) continue;
-                if (mc.player.distanceTo(player) < range.get()) {
-                    AnchorPos = positions(player);
-                    breakAnchor();
-                    for (BlockPos pos : AnchorPos) {
-                        Rotations.rotate(Rotations.getYaw(pos), (Rotations.getPitch(pos)));
-                    }
-                }
-            }
-        }
-    }
-
-    private void runAnchorLogic() {
-        while (isRunning) {
-            if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
-                toggle();
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) {
                 return;
             }
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player == mc.player || Friends.get().isFriend(player)) continue;
-                if (mc.player.distanceTo(player) < range.get()) {
-                    AnchorPos = positions(player);
-                    breakAnchor();
+                if (mc.player.distanceTo(player) <= range.get()) {
+                    AnchorPos = bestPosition(player, player.getBlockPos());
+                    if (movementPredict.get()) {
+                        AnchorPos = bestPosition(player, predictPlayerPosition(player));
+                    }
+                    lock.lock();
+                    try {
+                        breakAnchor();
+                    } finally {
+                        lock.unlock();
+                    }
                     for (BlockPos pos : AnchorPos) {
+                        for (Direction dir : Direction.values()) {
+                            if (strictDirection.get() && WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite()))
+                                continue;
+                        }
                         Rotations.rotate(Rotations.getYaw(pos), (Rotations.getPitch(pos)));
                     }
+                    if (placeSupport.get()) {
+                        placeSupport();
+                    }
+                    lastPlacedTime = currentTime;
                 }
-            }
-            try {
-                Thread.sleep(100); // Sleep for 100 milliseconds
-            } catch (InterruptedException e) {
-                // Handle the interruption
             }
         }
     }
-
     public BlockPos[] positions(PlayerEntity entity) {
-        ArrayList<BlockPos> posList = new ArrayList<>();
-        int radiusSquared = RadiusX.get() * RadiusX.get(); // Calculate the square of the radius
+        try {
 
-        // Iterate through a square area around the target
-        for (int x = -RadiusX.get(); x <= RadiusX.get(); x++) {
-            for (int z = -RadiusZ.get(); z <= RadiusZ.get(); z++) {
-                // Calculate the squared distance from the target
-                int distanceSquared = x * x + z * z;
 
-                // If the squared distance is within the radius squared, add the position
-                if (distanceSquared <= radiusSquared) {
-                    BlockPos pos = entity.getBlockPos().add(x, 0, z);
-                    Rotations.rotate(Rotations.getYaw(pos), (Rotations.getPitch(pos)));
-                    if (WorldUtils.isAir(pos) && !entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) {
-                        posList.add(pos);
-                        return posList.toArray(new BlockPos[0]); // Return the first valid position
-                    } else {
-                        // If it's not air, try to find a valid position nearby
-                        for (int yOffset = -1; yOffset <= 1; yOffset++) {
-                            BlockPos nearbyPos = pos.add(0, yOffset, 0);
-                            if (WorldUtils.isAir(nearbyPos)  && !entity.getBoundingBox().intersects(nearbyPos.getX(), nearbyPos.getY(), nearbyPos.getZ(), nearbyPos.getX() + 1, nearbyPos.getY() + 1, nearbyPos.getZ() + 1)) {
-                                posList.add(nearbyPos);
-                                return posList.toArray(new BlockPos[0]); // Return the first valid position
+            ArrayList<BlockPos> posList = new ArrayList<>();
+            int radiusSquared = RadiusX.get() * RadiusX.get(); // Calculate the square of the radius
+
+            // Iterate through a square area around the target
+            for (int x = -RadiusX.get(); x <= RadiusX.get(); x++) {
+                for (int z = -RadiusZ.get(); z <= RadiusZ.get(); z++) {
+                    // Calculate the squared distance from the target
+                    int distanceSquared = x * x + z * z;
+
+                    // If the squared distance is within the radius squared, add the position
+                    if (distanceSquared <= radiusSquared) {
+                        BlockPos pos = entity.getBlockPos().add(x, 0, z);
+                        Rotations.rotate(Rotations.getYaw(pos), (Rotations.getPitch(pos)));
+                        if (WorldUtils.isAir(pos) && !entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) {
+                            posList.add(pos);
+                            return posList.toArray(new BlockPos[0]); // Return the first valid position
+                        } else {
+                            // If it's not air, try to find a valid position nearby
+                            for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                                BlockPos nearbyPos = pos.add(0, yOffset, 0);
+                                if (WorldUtils.isAir(nearbyPos) && !entity.getBoundingBox().intersects(nearbyPos.getX(), nearbyPos.getY(), nearbyPos.getZ(), nearbyPos.getX() + 1, nearbyPos.getY() + 1, nearbyPos.getZ() + 1)) {
+                                    posList.add(nearbyPos);
+                                    return posList.toArray(new BlockPos[0]); // Return the first valid position
+                                }
                             }
                         }
                     }
                 }
             }
-        }
+            // Always place anchors above and below the target
+            if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().up(2).getX(), entity.getBlockPos().up(2).getY(), entity.getBlockPos().up(2).getZ(), entity.getBlockPos().up(2).getX() + 1, entity.getBlockPos().up(2).getY() + 1, entity.getBlockPos().up(2).getZ() + 1)) {
+                posList.add(entity.getBlockPos().up(2));
+                return posList.toArray(new BlockPos[0]); // Return the first valid position
+            }
+            if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().down(1).getX(), entity.getBlockPos().down(1).getY(), entity.getBlockPos().down(1).getZ(), entity.getBlockPos().down(1).getX() + 1, entity.getBlockPos().down(1).getY() + 1, entity.getBlockPos().down(1).getZ() + 1)) {
+                posList.add(entity.getBlockPos().down(1));
+                return posList.toArray(new BlockPos[0]); // Return the first valid position
+            }
 
-        // Always place anchors above and below the target
-        if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().up(2).getX(), entity.getBlockPos().up(2).getY(), entity.getBlockPos().up(2).getZ(), entity.getBlockPos().up(2).getX() + 1, entity.getBlockPos().up(2).getY() + 1, entity.getBlockPos().up(2).getZ() + 1)) {
-            posList.add(entity.getBlockPos().up(2));
-            return posList.toArray(new BlockPos[0]); // Return the first valid position
+            return posList.toArray(new BlockPos[0]); // If no valid positions are found, return an empty array
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BlockPos[0];
         }
-        if (WorldUtils.isAir(entity.getBlockPos().up(2))  && !entity.getBoundingBox().intersects(entity.getBlockPos().down(1).getX(), entity.getBlockPos().down(1).getY(), entity.getBlockPos().down(1).getZ(), entity.getBlockPos().down(1).getX() + 1, entity.getBlockPos().down(1).getY() + 1, entity.getBlockPos().down(1).getZ() + 1)) {
-            posList.add(entity.getBlockPos().down(1));
-            return posList.toArray(new BlockPos[0]); // Return the first valid position
-        }
+    }
 
-        return posList.toArray(new BlockPos[0]); // If no valid positions are found, return an empty array
+    private BlockPos predictPlayerPosition(PlayerEntity entity) {
+        return BlockPos.ofFloored(entity.getPos().add(entity.getVelocity()));
+    }
+
+    public BlockPos[] bestPosition(PlayerEntity entity, BlockPos pos) {
+        try {
+
+
+            float dmg = DamageUtils.anchorDamage(entity, Vec3d.of(pos));
+            float selfDmg = DamageUtils.anchorDamage(mc.player, Vec3d.of(pos));
+            switch (safety.get()) {
+                case safe -> {
+                    if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get() && dmg / selfDmg >= DamageRatio.get()) {
+                        AnchorPos = positions(entity);
+                        return positions(entity);
+                    } else {
+                        // If the damage is not within the specified range, try to find a valid position nearby
+                        for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                            BlockPos nearbyPos = pos.add(0, yOffset, 0);
+                            float nearbyDmg = DamageUtils.anchorDamage(entity, Vec3d.of(nearbyPos));
+                            float nearbySelfDmg = DamageUtils.anchorDamage(mc.player, Vec3d.of(nearbyPos));
+                            if (nearbyDmg >= minDamage.get() && nearbySelfDmg <= maxSelfDamage.get() && nearbyDmg / nearbySelfDmg >= DamageRatio.get()) {
+                                AnchorPos = positions(entity);
+                                return positions(entity);
+                            }
+                        }
+                    }
+                }
+                case balance -> {
+                    if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
+                        AnchorPos = positions(entity);
+                    } else {
+                        // If the damage is not within the specified range, try to find a valid position nearby
+                        for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                            BlockPos nearbyPos = pos.add(0, yOffset, 0);
+                            float nearbyDmg = DamageUtils.anchorDamage(entity, Vec3d.of(nearbyPos));
+                            float nearbySelfDmg = DamageUtils.anchorDamage(mc.player, Vec3d.of(nearbyPos));
+                            if (nearbyDmg >= minDamage.get() && nearbySelfDmg <= maxSelfDamage.get()) {
+                                AnchorPos = positions(entity);
+                                return positions(entity);
+                            }
+                        }
+                    }
+                }
+                case off -> {
+                    AnchorPos = positions(entity);
+                    return positions(entity);
+                }
+            }
+            return new BlockPos[0];
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BlockPos[0];
+        }
     }
 
     public void breakAnchor() {
-        for (BlockPos pos : AnchorPos) {
-            FindItemResult stone = InvUtils.findInHotbar(Items.GLOWSTONE);
-            FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
-            if (stone.found() && anchor.found()) {
-                InvUtils.swap(anchor.slot(), true);
-                mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, false));
-                InvUtils.swapBack();
+        lock.lock();
+        try {
+            for (BlockPos pos : AnchorPos) {
+                FindItemResult stone = InvUtils.findInHotbar(Items.GLOWSTONE);
+                FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                if (stone.found() && anchor.found()) {
+                    InvUtils.swap(anchor.slot(), true);
+                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, false));
+                    InvUtils.swapBack();
 
-                InvUtils.swap(stone.slot(), true);
-                mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, true));
-                InvUtils.swapBack();
+                    InvUtils.swap(stone.slot(), true);
+                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, true));
+                    InvUtils.swapBack();
 
-                InvUtils.swap(anchor.slot(), true);
-                mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, false));
-                InvUtils.swapBack();
+                    InvUtils.swap(anchor.slot(), true);
+                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, false));
+                    InvUtils.swapBack();
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
-        Swapped = true;
     }
 
+    public void placeSupport() {
+        for (BlockPos pos : AnchorPos) {
+            FindItemResult obsidian = InvUtils.findInHotbar(Items.OBSIDIAN);
+            if (obsidian.found()) {
+                for (int i = 1; i <= 2; i++) {
+                    Rotations.rotate(Rotations.getYaw(new Vec3d(pos.getX(), pos.getY() + i, pos.getZ())), Rotations.getPitch(new Vec3d(pos.getX(), pos.getY() + i, pos.getZ())));
+                    BlockPos support = new BlockPos(pos.getX(), pos.getY() + i, pos.getZ());
+                    if (rotate.get()) Rotations.rotate(Rotations.getYaw(support), Rotations.getPitch(support));
+                    InvUtils.swap(obsidian.slot(), true);
+                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(support.getX(), support.getY(), support.getZ()), Direction.UP, support, false));
+                    InvUtils.swapBack();
+                }
+            }
+        }
+    }
 
     @EventHandler
     public void onrender(Render3DEvent event) {

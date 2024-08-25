@@ -1,5 +1,6 @@
 package org.snail.plus.modules.misc;
 
+import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -10,10 +11,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 import static net.minecraft.text.Text.of;
@@ -21,7 +24,7 @@ import static net.minecraft.text.Text.of;
 public class ChatControl extends Module {
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
     private final SettingGroup sgChat = settings.createGroup("Chat");
-    private final SettingGroup sgClient = settings.createGroup("Client");
+    private final SettingGroup sgFilter = settings.createGroup("Filter");
 
     private final Setting<Boolean> visual = sgVisualRange.add(new BoolSetting.Builder()
             .name("visual-range")
@@ -65,9 +68,42 @@ public class ChatControl extends Module {
             .description("Adds a '>' to your text to make it green")
             .defaultValue(true)
             .build());
-
+    private final Setting<Boolean> filter = sgFilter.add(new BoolSetting.Builder()
+            .name("filter")
+            .description("Filters out messages that contain coordinates.")
+            .defaultValue(true)
+            .build());
+    private final Setting<List<String>> messages = sgFilter.add(new StringListSetting.Builder()
+            .name("messages")
+            .description("Messages to filter out.")
+            .defaultValue("discord./gg/", "https://")
+            .visible(filter::get)
+            .build());
+    private final Setting<Boolean> block = sgFilter.add(new BoolSetting.Builder()
+            .name("block player")
+            .description("ignores the player if they send the message x amount of times")
+            .defaultValue(true)
+            .visible(filter::get)
+            .build());
+    private final Setting<Boolean> info = sgFilter.add(new BoolSetting.Builder()
+            .name("send info")
+            .description("sends info to chat when a player is blocked")
+            .defaultValue(true)
+            .visible(filter::get)
+            .build());
+    private final Setting<Integer> blockAmount = sgFilter.add(new IntSetting.Builder()
+            .name("block amount")
+            .description("amount of messages to block the player")
+            .defaultValue(3)
+            .visible(filter::get)
+            .visible(block::get)
+            .build());
+    private ArrayList<Integer> warnedAmount = new ArrayList<>();
     private final Set<UUID> alertedPlayers = new HashSet<>();
     private final Set<UUID> playersInRange = new HashSet<>();
+    private final Set<UUID> currentPlayersInRange = new HashSet<>();
+    private final Set<UUID> playersWarned = new HashSet<>();
+
 
     public ChatControl() {
         super(Addon.Snail, "Chat Control", "Custom prefix and visual range :)");
@@ -78,15 +114,18 @@ public class ChatControl extends Module {
     public void onDeactivate() {
         alertedPlayers.clear();
         playersInRange.clear();
+        playersWarned.clear();
+        warnedAmount.clear();
     }
-    private final Set<UUID> currentPlayersInRange = new HashSet<>();
 
     @Override
     public void onActivate() {
         alertedPlayers.clear();
         playersInRange.clear();
-
+        playersWarned.clear();
+        warnedAmount.clear();
     }
+
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
@@ -103,6 +142,7 @@ public class ChatControl extends Module {
                         double targetX = Math.round(player.getX());
                         double targetY = Math.round(player.getY());
                         double targetZ = Math.round(player.getZ());
+
 
                         ChatUtils.sendMsg(of(Formatting.GREEN + player.getName().getString() + " is within render distance. (" + targetX + ", " + targetY + ", " + targetZ + ")"));
                         List<SoundEvent> soundEvents = sounds.get();
@@ -130,6 +170,36 @@ public class ChatControl extends Module {
             }
             alertedPlayers.add(player.getUuid());
             playersInRange.clear();
+        }
+    }
+
+
+    @EventHandler
+    private void onMessageReceive(ReceiveMessageEvent event) {
+        try {
+            if(filter.get() && !messages.get().isEmpty()) {
+                for(String messages : messages.get()) {
+                    if (event.getMessage().contains(Text.of(messages))) {
+                        mc.inGameHud.getChatHud().getMessageHistory().remove(event.getMessage().getString());
+                        event.cancel();
+                        if (info.get()) {
+                            ChatUtils.sendMsg(of(Formatting.RED + "Message filtered " + event.getMessage().getString()));
+                        }
+                        for(int warnedTimes : warnedAmount) {
+                            for (warnedTimes = 0; warnedTimes < blockAmount.get();) {
+                                if (block.get()) {
+                                    if (info.get()) {
+                                        ChatUtils.sendMsg(of(Formatting.RED + "someone has been blocked for spamming"));
+                                    }
+                                    warnedTimes++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            ChatUtils.sendMsg(of(Formatting.RED + "Error in onMessageReceive: " + e.getMessage()));
         }
     }
 

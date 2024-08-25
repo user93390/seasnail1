@@ -42,4 +42,13 @@ public class TimeUtils {
         float millisecondsPerTick = 1000.0f / currentTPS;
         return time / millisecondsPerTick;
     }
+
+    private static long lastPlaceTick = 0;
+    public static boolean addDelay(Double delay) {
+
+        long currentTick = (long) TicksPerSecond(delay);
+        if ((currentTick - lastPlaceTick) < delay) return false;
+        lastPlaceTick = currentTick;
+        return true;
+    }
 }

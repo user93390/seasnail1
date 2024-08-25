@@ -1,10 +1,8 @@
 # Snail++
 
-### Snail++ is a [Meteor Client](https://meteorclient.com/) addon developed by Seasnail1.
+### Snail++ is a meteor client addon developed by Seasnail1.
 
-**THIS IS MY FIRST ADDON! DO NOT EXPECT GOOD CODE!**
-
-`1.20.4-1.21`
+`1.20.4-1.21.1`
 
 ![Static Badge](https://img.shields.io/badge/Works%20on%20-%20My%20Machine%20-%20green?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Made%20By%20-%20Seasnail%20-%20magenta?style=for-the-badge)
@@ -13,27 +11,25 @@
 
 
 ### Credits:
-- > The Fabric development team for making the [Fabric Mod Loader](https://fabricmc.net/) & [api](https://modrinth.com/mod/fabric-api)
-- > The Meteor Development team for making both the Meteor Client and the Addon API/Template
+- > credits to the fabric development team for making the [Fabric loader](https://fabricmc.net/use/installer/)
+- > credits to the meteor development team for making the [Meteor client](https://meteorclient.com/)
 
 ### Module List:
 
 **Combat Modules:**
-- AntiBurrow
 - SelfAnvil+
 - AutoAnchor+
 - AutoSand
-- PVPinfo
+- PVP info
 - BedBomb
 
 **Miscellaneous Modules:**
-- Chatcontrol
+- Chat control
 - PacketMine+
 - AutoEZ
 - XP-Automation
-- StealthMine+ (Better Packet Mine)
+- stealthMine
 - BurrowEsp
 
-once a skid, finally after 6 months, a masterpiece  -seasnail1.
 
-discord: https://discord.gg/nh9pjVhsVb
+[discord](https://discord.gg/nh9pjVhsVb)

@@ -4,6 +4,7 @@ import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
@@ -18,6 +19,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BedItem;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -25,8 +27,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.tick.Tick;
 import org.snail.plus.Addon;
+import org.snail.plus.utils.WorldUtils;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class BedBomb extends Module {
@@ -34,7 +39,7 @@ public class BedBomb extends Module {
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     public final Setting<Boolean> DamageSync = sgDamage.add(new BoolSetting.Builder()
             .name("damage Sync")
-            .description("only places when target can really take damage, super useful on constantiam or any strict server")
+            .description("only places when target can really take damage")
             .defaultValue(false)
             .build());
     private final Setting<Integer> breakDelay = sgGeneral.add(new IntSetting.Builder()
@@ -49,7 +54,6 @@ public class BedBomb extends Module {
             .sliderMax(20)
             .sliderMin(0)
             .build());
-
     private final SettingGroup sgAntiCheat = settings.createGroup("anti-cheat");
     public final Setting<Boolean> airPlace = sgAntiCheat.add(new BoolSetting.Builder()
             .name("air-place")
@@ -58,7 +62,7 @@ public class BedBomb extends Module {
             .build());
     public final Setting<Boolean> RaytraceBypass = sgAntiCheat.add(new BoolSetting.Builder()
             .name("Raytrace Bypass")
-            .description("tries bypassing constantiam's raytrace checks; won't work all the time")
+            .description("tries bypassing Constantiam's raytrace checks")
             .defaultValue(false)
             .build());
     private final SettingGroup sgSmart = settings.createGroup("Smart");
@@ -135,16 +139,16 @@ public class BedBomb extends Module {
     private final Setting<Integer> RadiusZ = sgGeneral.add(new IntSetting.Builder()
             .name("Radius Z")
             .description("the radius for Z")
-            .defaultValue(2)
+            .defaultValue(1)
             .sliderMax(5)
-            .sliderMin(-5)
+            .sliderMin(1)
             .build());
     private final Setting<Integer> RadiusX = sgGeneral.add(new IntSetting.Builder()
             .name("Radius X")
             .description("the radius for X")
-            .defaultValue(2)
+            .defaultValue(1)
             .sliderMax(5)
-            .sliderMin(-5)
+            .sliderMin(1)
             .build());
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotation")
@@ -165,11 +169,6 @@ public class BedBomb extends Module {
             .name("range")
             .description("the target range")
             .defaultValue(3.0)
-            .build());
-    private final Setting<SortPriority> priority = sgGeneral.add(new EnumSetting.Builder<SortPriority>()
-            .name("target-priority")
-            .description("How to filter targets within range.")
-            .defaultValue(SortPriority.LowestDistance)
             .build());
     private final Setting<SafetyMode> safety = sgDamage.add(new EnumSetting.Builder<SafetyMode>()
             .name("safe-mode")
@@ -228,174 +227,147 @@ public class BedBomb extends Module {
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
-    private final long lastLaydown = 0;
-    PlayerEntity target;
-    BlockPos BedPos;
-    CardinalDirection direction;
-    private int layTimer;
-    private int placeTimer;
-    private int breakTimer;
-    private long lastLaydownTime = System.currentTimeMillis();
-    private long lastPlaceTime = System.currentTimeMillis();
-    private long lastBreakTime = System.currentTimeMillis();
-
 
     public BedBomb() {
-        super(Addon.Snail, "Bed Bomb+", "Places beds and breaks beds around targets to deal massive damage");
+        super(Addon.Snail, "bed Aura+", "Places beds and breaks beds around targets to deal massive damage");
     }
+    private BlockPos[] BedPos = new BlockPos[0];
+    private Thread BedTread;
+    private volatile boolean isRunning = false;
 
     @Override
     public void onActivate() {
-        target = null;
         BedPos = null;
+        isRunning = true;
+        BedTread = new Thread(() -> {
+            while (isRunning) {
+                ontick(null);
+                try {
+                    Thread.sleep(50); // Sleep for 50ms (equivalent to 20 ticks per second)
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }, "Bed Thread");
+        BedTread.start();
         direction = CardinalDirection.North;
-        layTimer = layDelay.get();
-        placeTimer = placeDelay.get();
-        breakTimer = breakDelay.get();
-
+    }
+    private CardinalDirection direction;
+    @Override
+    public void onDeactivate() {
+        BedPos = null;
+        isRunning = false;
+        direction = CardinalDirection.North;
     }
 
     @EventHandler
-    public void onTick(TickEvent.Post event) {
-        FindItemResult bed = InvUtils.find(itemStack -> itemStack.getItem() instanceof BedItem);
-        target = TargetUtils.getPlayerTarget(range.get(), priority.get());
-        if (TargetUtils.isBadTarget(target, range.get())) return;
-        placeBed(bed, findPosition(target));
-        if (canPlaceBed()) {
-            placeBed(bed, findPosition(target));
-            updatePlaceTime();
+    public void ontick(TickEvent.Post event) {
+        if (Objects.requireNonNull(mc.world).getDimension().bedWorks()) {
+            toggle();
+            return;
         }
+        if(pauseUse.get() && mc.player.isUsingItem()) return;
+        for(PlayerEntity Player : mc.world.getPlayers()) {
+            if (mc.player.distanceTo(Player) <= range.get()) {
+                if (Player == mc.player || Friends.get().isFriend(Player)) continue;
+                BedPos = positions(Player);
+                double yaw = switch (direction) {
+                    case East -> 90;
+                    case South -> 180;
+                    case West -> -90;
+                    default -> 0;
+                };
 
-        if (BedPos != null && canBreakBed()) {
-            breakBed(findPosition(target));
-            updateBreakTime();
-        }
-
-        if (autoLay.get() && canLayDown()) {
-
-            updateLaydownTime();
-        }
-
-        if (AutoTrap.get()) {
-            trap();
-        }
-    }
-
-
-    public void placeBed(FindItemResult bed, BlockPos BedPos) {
-        double yaw = switch (direction) {
-            case East -> 90;
-            case South -> 180;
-            case West -> -90;
-            default -> 0;
-        };
-        if (BedPos != null) {
-            Rotations.rotate(yaw, Rotations.getPitch(BedPos), () -> BlockUtils.place(BedPos, bed, rotate.get(), 100));
-            if (StringBreaker.get()) {
-            breakString();
+                for (BlockPos pos : BedPos) {
+                    for (Direction dir : Direction.values()) {
+                        if (strictDirection.get() && WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite())) continue;
+                    }
+                    if(rotate.get()) {
+                        Rotations.rotate(yaw, (Rotations.getPitch(pos)));
+                    }
+                    breakBed();
+                }
             }
         }
     }
-    /*
-    very bad way of making timers, I may improve it at some point in time.
-     */
-    private boolean canPlaceBed() {
-        long currentTime = System.currentTimeMillis();
-        return (currentTime - lastPlaceTime) >= placeDelay.get() * 50;
-    }
+    public BlockPos[] positions(PlayerEntity entity) {
+        ArrayList<BlockPos> posList = new ArrayList<>();
+        int radiusSquared = RadiusX.get() * RadiusX.get(); // Calculate the square of the radius
 
-    private void updatePlaceTime() {
-        lastPlaceTime = System.currentTimeMillis();
-    }
+        // Iterate through a square area around the target
+        for (int x = -RadiusX.get(); x <= RadiusX.get(); x++) {
+            for (int z = -RadiusZ.get(); z <= RadiusZ.get(); z++) {
+                // Calculate the squared distance from the target
+                int distanceSquared = x * x + z * z;
 
-    private boolean canBreakBed() {
-        long currentTime = System.currentTimeMillis();
-        return (currentTime - lastBreakTime) >= breakDelay.get() * 50;
-    }
-
-    private void updateBreakTime() {
-        lastBreakTime = System.currentTimeMillis();
-    }
-
-    private boolean canLayDown() {
-        long currentTime = System.currentTimeMillis();
-        return (currentTime - lastLaydownTime) >= layDelay.get() * 50;
-    }
-
-    private void updateLaydownTime() {
-        lastLaydownTime = System.currentTimeMillis();
-    }
-
-
-    public void trap() {
-    }
-
-    public void breakBed(BlockPos BedPos) {
-        rayTraceBypass();
-        Objects.requireNonNull(mc.interactionManager).interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(BedPos), Direction.UP, BedPos, false));
-    }
-
-    public void rayTraceBypass() {
-        if (RaytraceBypass.get()) {
-            Rotations.rotate(mc.player.getYaw(), -90); //test
-        }
-    }
-    public BlockPos findPosition(PlayerEntity playerEntity) {
-        double X = playerEntity.getX() - RadiusX.get();
-        double Y = playerEntity.getY();
-        if (airPlace.get()) Y = playerEntity.getY() + 1;
-        double Z = playerEntity.getZ() - RadiusZ.get();
-
-        return BedPos = new BlockPos(new Vec3i((int) X, (int) Y, (int) Z));
-    }
-
-    public void breakString() {
-        Boolean webbed = false;
-        Boolean doubled = false;
-        BlockState blockState = Objects.requireNonNull(mc.world).getBlockState(target.getBlockPos());
-        FindItemResult bestSlot = InvUtils.findFastestTool(blockState);
-        if (mc.world.getBlockState(target.getBlockPos()).getBlock() == Block.getBlockFromItem(Items.STRING) && !SmartBreaker.get()) {
-            webbed = true;
-        } else if (mc.world.getBlockState(target.getBlockPos()).getBlock() == Block.getBlockFromItem(Items.STRING) && mc.world.getBlockState(target.getBlockPos().up(1)).getBlock() == Block.getBlockFromItem(Items.STRING) && SmartBreaker.get()) {
-            doubled = true;
+                // If the squared distance is within the radius squared, add the position
+                if (distanceSquared <= radiusSquared) {
+                    BlockPos pos = entity.getBlockPos().add(x, 0, z);
+                    Rotations.rotate(Rotations.getYaw(pos), (Rotations.getPitch(pos)));
+                    if (WorldUtils.isAir(pos) && !entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) {
+                        posList.add(pos);
+                        return posList.toArray(new BlockPos[0]); // Return the first valid position
+                    } else {
+                        // If it's not air, try to find a valid position nearby
+                        for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                            BlockPos nearbyPos = pos.add(0, yOffset, 0);
+                            if (WorldUtils.isAir(nearbyPos)  && !entity.getBoundingBox().intersects(nearbyPos.getX(), nearbyPos.getY(), nearbyPos.getZ(), nearbyPos.getX() + 1, nearbyPos.getY() + 1, nearbyPos.getZ() + 1)) {
+                                posList.add(nearbyPos);
+                                return posList.toArray(new BlockPos[0]); // Return the first valid position
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        if (doubled) {
-            InvUtils.swap(bestSlot.slot(), true);
-            BlockUtils.breakBlock(target.getBlockPos().up(1), true);
+        // Always place anchors above and below the target
+        if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().up(2).getX(), entity.getBlockPos().up(2).getY(), entity.getBlockPos().up(2).getZ(), entity.getBlockPos().up(2).getX() + 1, entity.getBlockPos().up(2).getY() + 1, entity.getBlockPos().up(2).getZ() + 1)) {
+            posList.add(entity.getBlockPos().up(2));
+            return posList.toArray(new BlockPos[0]); // Return the first valid position
         }
-        if (webbed) {
-            InvUtils.swap(bestSlot.slot(), true);
-            BlockUtils.breakBlock(target.getBlockPos(), true);
+        if (WorldUtils.isAir(entity.getBlockPos().up(2))  && !entity.getBoundingBox().intersects(entity.getBlockPos().down(1).getX(), entity.getBlockPos().down(1).getY(), entity.getBlockPos().down(1).getZ(), entity.getBlockPos().down(1).getX() + 1, entity.getBlockPos().down(1).getY() + 1, entity.getBlockPos().down(1).getZ() + 1)) {
+            posList.add(entity.getBlockPos().down(1));
+            return posList.toArray(new BlockPos[0]); // Return the first valid position
         }
+
+        return posList.toArray(new BlockPos[0]); // If no valid positions are found, return an empty array
     }
 
+    public synchronized void breakBed() {
+        FindItemResult bed = InvUtils.findInHotbar(ItemStack -> ItemStack.getItem() instanceof BedItem);
+        if (bed.found()) {
+            for (BlockPos pos : BedPos) {
+                InvUtils.swap(bed.slot(), true);
+                mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), Direction.DOWN, pos, false));
+
+                if(!WorldUtils.isAir(pos)) {
+                    mc.interactionManager.interactBlock(mc.player, Hand.OFF_HAND, new BlockHitResult(Vec3d.ofCenter(pos), Direction.DOWN, pos, false));
+                }
+            }
+        }
+    }
     @EventHandler
     private void onRender(Render3DEvent event) {
         if (BedPos != null) {
-            int x = BedPos.getX();
-            int y = BedPos.getY();
-            int z = BedPos.getZ();
+            for (BlockPos pos : BedPos) {
+                int x = pos.getX();
+                int y = pos.getY();
+                int z = pos.getZ();
 
-            switch (direction) {
-                case North ->
-                        event.renderer.box(x, y, z, x + 1, y + 0.6, z + 2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                case South ->
-                        event.renderer.box(x, y, z - 1, x + 1, y + 0.6, z + 1, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                case East ->
-                        event.renderer.box(x - 1, y, z, x + 1, y + 0.6, z + 1, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                case West ->
-                        event.renderer.box(x, y, z, x + 2, y + 0.6, z + 1, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                switch (direction) {
+                    case North ->
+                            event.renderer.box(x, y, z, x + 1, y + 0.6, z + 2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    case South ->
+                            event.renderer.box(x, y, z - 1, x + 1, y + 0.6, z + 1, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    case East ->
+                            event.renderer.box(x - 1, y, z, x + 1, y + 0.6, z + 1, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    case West ->
+                            event.renderer.box(x, y, z, x + 2, y + 0.6, z + 1, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                }
             }
         }
     }
-
-    @Override
-    public void onDeactivate() {
-        target = null;
-        BedPos = null;
-    }
-
     public enum SafetyMode {
         safe,
         balance,
