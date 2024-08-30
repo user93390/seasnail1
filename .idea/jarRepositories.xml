@@ -2,34 +2,19 @@
 <project version="4">
   <component name="RemoteRepositoriesConfiguration">
     <remote-repository>
-      <option name="id" value="central" />
-      <option name="name" value="Maven Central repository" />
-      <option name="url" value="https://repo1.maven.org/maven2" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="jboss.community" />
-      <option name="name" value="JBoss Community repository" />
-      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="Meteor Dev Releases" />
-      <option name="name" value="Meteor Dev Releases" />
-      <option name="url" value="https://maven.meteordev.org/releases" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="MavenRepo" />
-      <option name="name" value="MavenRepo" />
-      <option name="url" value="https://repo.maven.apache.org/maven2/" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="Meteor Dev Snapshots" />
-      <option name="name" value="Meteor Dev Snapshots" />
-      <option name="url" value="https://maven.meteordev.org/snapshots" />
+      <option name="id" value="LoomLocalMinecraft" />
+      <option name="name" value="LoomLocalMinecraft" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../../java%20projects/Mods/seasnail1/.gradle/loom-cache/minecraftMaven/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="LoomLocalMinecraft" />
       <option name="name" value="LoomLocalMinecraft" />
       <option name="url" value="file:/$USER_HOME$/java%20projects/seasnail1/.gradle/loom-cache/minecraftMaven/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalRemappedMods" />
+      <option name="name" value="LoomLocalRemappedMods" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../../../java%20projects/Minecraft/Mods/seasnail1/.gradle/loom-cache/remapped_mods/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="Fabric" />
@@ -42,14 +27,9 @@
       <option name="url" value="https://libraries.minecraft.net/" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="LoomLocalRemappedMods" />
-      <option name="name" value="LoomLocalRemappedMods" />
-      <option name="url" value="file:/$USER_HOME$/java%20projects/seasnail1/.gradle/loom-cache/remapped_mods/" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="LoomGlobalMinecraft" />
-      <option name="name" value="LoomGlobalMinecraft" />
-      <option name="url" value="file:/$USER_HOME$/.gradle/caches/fabric-loom/minecraftMaven/" />
+      <option name="id" value="central" />
+      <option name="name" value="Maven Central repository" />
+      <option name="url" value="https://repo1.maven.org/maven2" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="LoomLocalRemappedMods" />
@@ -59,22 +39,17 @@
     <remote-repository>
       <option name="id" value="LoomLocalMinecraft" />
       <option name="name" value="LoomLocalMinecraft" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../java%20projects/seasnail1/.gradle/loom-cache/minecraftMaven/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalMinecraft" />
+      <option name="name" value="LoomLocalMinecraft" />
       <option name="url" value="file:/$USER_HOME$/java%20projects/seasnail1-main/.gradle/loom-cache/minecraftMaven/" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="LoomLocalRemappedMods" />
-      <option name="name" value="LoomLocalRemappedMods" />
-      <option name="url" value="file:/$PROJECT_DIR$/.gradle/loom-cache/remapped_mods/" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="LoomLocalMinecraft" />
-      <option name="name" value="LoomLocalMinecraft" />
-      <option name="url" value="file:/$PROJECT_DIR$/.gradle/loom-cache/minecraftMaven/" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="LoomLocalMinecraft" />
-      <option name="name" value="LoomLocalMinecraft" />
-      <option name="url" value="file:/$PROJECT_DIR$/../../java%20projects/seasnail1/.gradle/loom-cache/minecraftMaven/" />
+      <option name="id" value="LoomGlobalMinecraft" />
+      <option name="name" value="LoomGlobalMinecraft" />
+      <option name="url" value="file:/$USER_HOME$/.gradle/caches/fabric-loom/minecraftMaven/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="LoomLocalRemappedMods" />
@@ -89,17 +64,12 @@
     <remote-repository>
       <option name="id" value="LoomLocalMinecraft" />
       <option name="name" value="LoomLocalMinecraft" />
-      <option name="url" value="file:/$PROJECT_DIR$/../../../java%20projects/Mods/seasnail1/.gradle/loom-cache/minecraftMaven/" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../../../java%20projects/Minecraft/Mods/seasnail1-main/.gradle/loom-cache/minecraftMaven/" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="LoomLocalRemappedMods" />
-      <option name="name" value="LoomLocalRemappedMods" />
-      <option name="url" value="file:/$PROJECT_DIR$/../../../../java%20projects/Minecraft/Mods/seasnail1/.gradle/loom-cache/remapped_mods/" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="LoomLocalMinecraft" />
-      <option name="name" value="LoomLocalMinecraft" />
-      <option name="url" value="file:/$PROJECT_DIR$/../../../../java%20projects/Minecraft/Mods/seasnail1/.gradle/loom-cache/minecraftMaven/" />
+      <option name="id" value="Meteor Dev Snapshots" />
+      <option name="name" value="Meteor Dev Snapshots" />
+      <option name="url" value="https://maven.meteordev.org/snapshots" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="LoomLocalRemappedMods" />
@@ -107,9 +77,44 @@
       <option name="url" value="file:/$PROJECT_DIR$/../../../../java%20projects/Minecraft/Mods/seasnail1-main/.gradle/loom-cache/remapped_mods/" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="MavenRepo" />
+      <option name="name" value="MavenRepo" />
+      <option name="url" value="https://repo.maven.apache.org/maven2/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalRemappedMods" />
+      <option name="name" value="LoomLocalRemappedMods" />
+      <option name="url" value="file:/$USER_HOME$/java%20projects/seasnail1/.gradle/loom-cache/remapped_mods/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="Meteor Dev Releases" />
+      <option name="name" value="Meteor Dev Releases" />
+      <option name="url" value="https://maven.meteordev.org/releases" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="LoomLocalMinecraft" />
       <option name="name" value="LoomLocalMinecraft" />
-      <option name="url" value="file:/$PROJECT_DIR$/../../../../java%20projects/Minecraft/Mods/seasnail1-main/.gradle/loom-cache/minecraftMaven/" />
+      <option name="url" value="file:/$PROJECT_DIR$/.gradle/loom-cache/minecraftMaven/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalMinecraft" />
+      <option name="name" value="LoomLocalMinecraft" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../../../java%20projects/Minecraft/Mods/seasnail1/.gradle/loom-cache/minecraftMaven/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jboss.community" />
+      <option name="name" value="JBoss Community repository" />
+      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalRemappedMods" />
+      <option name="name" value="LoomLocalRemappedMods" />
+      <option name="url" value="file:/$PROJECT_DIR$/.gradle/loom-cache/remapped_mods/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="Gradle Central Plugin Repository" />
+      <option name="name" value="Gradle Central Plugin Repository" />
+      <option name="url" value="https://plugins.gradle.org/m2" />
     </remote-repository>
   </component>
 </project>

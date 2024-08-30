@@ -1,9 +1,10 @@
 plugins {
-    id "fabric-loom" version "1.7.2"
+    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
+java {
+}
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -11,12 +12,18 @@ group = project.maven_group
 
 repositories {
     maven {
-        name = "Meteor Dev Releases"
-        url = "https://maven.meteordev.org/releases"
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+    mavenCentral()
+    gradlePluginPortal()
+    maven {
+        name = 'Meteor Dev Releases'
+        url = 'https://maven.meteordev.org/releases'
     }
     maven {
-        name = "Meteor Dev Snapshots"
-        url = "https://maven.meteordev.org/snapshots"
+        name = 'Meteor Dev Snapshots'
+        url = 'https://maven.meteordev.org/snapshots'
     }
 }
 
@@ -28,14 +35,18 @@ dependencies {
 
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 processResources {
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version, "mc_version": project.minecraft_version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version, 'mc_version': project.minecraft_version
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.encoding("UTF-8")
+    options.encoding = 'UTF-8'
+}
+kotlin {
+    jvmToolchain(21)
 }

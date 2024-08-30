@@ -1,22 +1,18 @@
 package org.snail.plus.utils;
 
-import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.MathHelper;
+import org.snail.plus.Addon;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class CombatUtils {
-        private static boolean block;
-        public static boolean isSurrounded (PlayerEntity target){
+    public static boolean isSurrounded(PlayerEntity target) {
         BlockPos north = target.getBlockPos().north();
         BlockPos east = target.getBlockPos().east();
         BlockPos south = target.getBlockPos().south();
@@ -28,11 +24,13 @@ public class CombatUtils {
 
         return isNorthBlocked && isEastBlocked && isSouthBlocked && isWestBlocked;
     }
-        private static boolean IsValidBlock (BlockPos pos) {
+
+    private static boolean IsValidBlock(BlockPos pos) {
         Block block = Objects.requireNonNull(mc.world).getBlockState(pos).getBlock();
-        return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK;
+        return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK || block == Blocks.CRYING_OBSIDIAN || block == Blocks.ENDER_CHEST || block == Blocks.ANVIL || block == Blocks.COBWEB;
     }
-        public static boolean isCentered (PlayerEntity target) {
+
+    public static boolean isCentered(PlayerEntity target) {
         BlockPos blockPos = target.getBlockPos();
         double centerX = blockPos.getX() + 0.5;
         double centerZ = blockPos.getZ() + 0.5;
@@ -43,10 +41,33 @@ public class CombatUtils {
         double threshold = 0.2;
         return distanceX < threshold && distanceZ < threshold;
     }
-        public static boolean isBurrowed (PlayerEntity target) {
-        if (target == null) return false;
-            BlockPos blockPos = new BlockPos((int) target.getPos().x, (int) (target.getPos().y + 0.4), (int) target.getPos().z);
-        Block block = Objects.requireNonNull(mc.world).getBlockState(blockPos).getBlock();
-        return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK || block == Blocks.COBWEB;
+
+    /**
+     * Checks if the given player is burrowed (i.e., not in an air block).
+     *
+     * @param target The player entity to check.
+     * @return True if the player is burrowed, false otherwise.
+     */
+    public static boolean isBurrowed(PlayerEntity target) {
+        double x = target.getBlockZ();
+        double y = (target.getBlockZ() + 0.4);
+        double z = target.getBlockZ();
+        BlockPos playerPos = new BlockPos(MathHelper.floor(x), MathHelper.floor(y), MathHelper.floor(z));
+        return IsValidBlock(playerPos);
+    }
+    public static boolean isHole(BlockPos pos) {
+        BlockPos north = pos.north();
+        BlockPos east = pos.east();
+        BlockPos south = pos.south();
+        BlockPos west = pos.west();
+        BlockPos up = pos.up();
+        BlockPos down = pos.down();
+        boolean isNorthBlocked = IsValidBlock(north);
+        boolean isEastBlocked = IsValidBlock(east);
+        boolean isSouthBlocked = IsValidBlock(south);
+        boolean isWestBlocked = IsValidBlock(west);
+        boolean isUpBlocked = IsValidBlock(up);
+        boolean isDownBlocked = IsValidBlock(down);
+        return isNorthBlocked && isEastBlocked && isSouthBlocked && isWestBlocked && isUpBlocked && isDownBlocked;
     }
 }

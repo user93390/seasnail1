@@ -1,7 +1,7 @@
 
 {
   "required": true,
-  "package": "org.snail.plus.addon.mixin",
+  "package": "org.snail.plus.mixins",
   "compatibilityLevel": "JAVA_21",
   "client": [
   ],
@@ -9,6 +9,6 @@
     "defaultRequire": 1
   },
   "mixins": [
-
+    "ChatUtilsMixin"
   ]
 }

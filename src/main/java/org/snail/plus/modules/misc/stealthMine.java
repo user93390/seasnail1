@@ -9,7 +9,6 @@ import meteordevelopment.meteorclient.renderer.text.TextRenderer;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
-import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -25,15 +24,16 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.TimeUtils;
 import org.snail.plus.utils.WorldUtils;
 
 import java.util.Objects;
@@ -55,14 +55,6 @@ public class stealthMine extends Module {
             .name("packet mine range")
             .description("the range")
             .defaultValue(4.5)
-            .sliderMin(1)
-            .sliderMax(10)
-            .build());
-
-    private final Setting<Double> Delay = sgGeneral.add(new DoubleSetting.Builder()
-            .name("remine Delay")
-            .description("the remine delay (more delay = less chance desyns)")
-            .defaultValue(1)
             .sliderMin(1)
             .sliderMax(10)
             .build());
@@ -215,14 +207,6 @@ public class stealthMine extends Module {
             .visible(Autocity::get)
             .defaultValue(true)
             .build());
-    private final Setting<logic> cityLogic = sgAutoCity.add(new EnumSetting.Builder<logic>()
-            .name("Logic")
-            .description("the logic to use. surroundToBurrow mines the surround block first, then burrow (if there is burrow)")
-            .visible(Autocity::get)
-            .defaultValue(logic.surroundToBurrow)
-            .visible(Burrow::get)
-            .visible(Autocity::get)
-            .build());
     private final Setting<Boolean> chatInfo = sgAutoCity.add(new BoolSetting.Builder()
             .name("chat info")
             .description("sends chat info about the module")
@@ -244,25 +228,6 @@ public class stealthMine extends Module {
     private final Setting<Boolean> supportPlace = sgAutoCity.add(new BoolSetting.Builder()
             .name("support place")
             .description("places support blocks if needed")
-            .defaultValue(false)
-            .visible(Autocity::get)
-            .build());
-    private final Setting<SortPriority> priority = sgAutoCity.add(new EnumSetting.Builder<SortPriority>()
-            .name("target-priority")
-            .description("How to filter targets within range.")
-            .defaultValue(SortPriority.LowestDistance)
-            .visible(Autocity::get)
-            .build());
-    private final Setting<Double> supportDelay = sgAutoCity.add(new DoubleSetting.Builder()
-            .name("support delay")
-            .description("delay for support")
-            .defaultValue(0)
-            .visible(Autocity::get)
-            .visible(supportPlace::get)
-            .build());
-    private final Setting<Boolean> Cev = sgAutoCity.add(new BoolSetting.Builder()
-            .name("auto cev")
-            .description("places a crystal on top of the targets head and break the block under the crystal to deal massive damage (won't work now)")
             .defaultValue(false)
             .visible(Autocity::get)
             .build());
@@ -291,7 +256,7 @@ public class stealthMine extends Module {
 
     @Override
     public void onDeactivate() {
-        blockPos.set(0, -1, 0);
+        blockPos.set(0, -1.7, 0);
         blockBreakingProgress = 0;
         mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
     }
@@ -359,8 +324,8 @@ public class stealthMine extends Module {
     private final Vector3d vec3 = new Vector3d();
     @EventHandler
     private void onRender2D(Render2DEvent event) {
-        if(blockPos.getY() == -1) return;
-        if(nametags.get()){
+        if (nametags.get()) {
+            if (blockPos.getY() == -1) return;
             vec3.set(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5);
             if (NametagUtils.to2D(vec3, scale.get())) {
                 NametagUtils.begin(vec3);
@@ -375,17 +340,48 @@ public class stealthMine extends Module {
         }
     }
 
+    public BlockPos autoCity(PlayerEntity entity) {
+        if (onlySurrounded.get() && !CombatUtils.isSurrounded(entity)) return null;
+
+        BlockPos[] positions = {
+                entity.getBlockPos().east(1),
+                entity.getBlockPos().west(1),
+                entity.getBlockPos().south(1),
+                entity.getBlockPos().north(1)
+        };
+
+        for (BlockPos pos : positions) {
+            if (WorldUtils.isAir(pos) || !WorldUtils.isBreakable(pos)) continue;
+
+            if (supportPlace.get()) {
+                InvUtils.swap(InvUtils.findInHotbar(Items.OBSIDIAN).slot(), true);
+                mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY() - 1, pos.getZ()), Direction.UP, pos, false));
+                InvUtils.swapBack();
+            }
+            BreakBlock(StartBreakingBlockEvent.get(pos, Direction.UP));
+            Switch();
+            return pos;
+        }
+            return null;
+    }
+
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        PlayerEntity target = TargetUtils.getPlayerTarget(cityRange.get(), priority.get());
-        if (mc.world == null || mc.player == null) {
-            if (pauseUse.get() && mc.player.isUsingItem()) {
-                return;
-            }
+        if (mc.world == null || mc.player == null || pauseUse.get() && mc.player.isUsingItem()) {
             return;
         }
-        if (Autocity.get() && target != null && CityBind.get().isPressed()) {
-            blockPos = (BlockPos.Mutable) autoCity(target, InvUtils.findInHotbar(Items.OBSIDIAN));
+        for (PlayerEntity player : mc.world.getPlayers()) {
+            if (Autocity.get() && player != null ) {
+                if (CityBind.get().isPressed()) {
+                        BlockPos newPos = autoCity(player);
+                        if (newPos != null) {
+                            blockPos.set(newPos);
+                            if (chatInfo.get()) {
+                                info("Auto City: Block at " + newPos + " mined");
+                            }
+                    }
+                }
+            }
         }
         BlockState blockState = mc.world.getBlockState(blockPos);
         bestSlot = InvUtils.findFastestTool(blockState);
@@ -395,7 +391,6 @@ public class stealthMine extends Module {
                 break;
             }
         }
-        // Check if there's a block to break and if it's within range
         if (syncSlot.get()) {
             syncSlot();
         }
@@ -443,9 +438,11 @@ public class stealthMine extends Module {
                     break;
                 }
                 mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
-
                 break;
             case normal:
+                if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) {
+                    break;
+                }
                 InvUtils.swap(bestSlot.slot(), false);
                 break;
         }
@@ -470,64 +467,6 @@ public class stealthMine extends Module {
         double z2 = blockPos.getZ() + box.maxZ + zShrink;
 
         event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-    }
-    public BlockPos autoCity(PlayerEntity entity, FindItemResult block) {
-        blockPos.set(new Vec3i(currentPos.getX(), currentPos.getY(), currentPos.getZ()), Direction.DOWN);
-        if (onlySurrounded.get() && !CombatUtils.isSurrounded(entity)) return null;
-        if (CityBind.get().isPressed()) {
-            info(Formatting.GREEN + "autoCity is active");
-            currentPos = entity.getBlockPos().east(1);
-            if (!WorldUtils.isAir(currentPos) && !WorldUtils.isBreakable(currentPos)) {
-
-                if (supportPlace.get()) {
-                    InvUtils.swap(block.slot(), true);
-                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(currentPos.getX(), currentPos.getY() - 1, currentPos.getZ()), Direction.UP, currentPos, false));
-                    InvUtils.swapBack();
-                }
-            } else {
-                currentPos = entity.getBlockPos().west(1);
-                if (!WorldUtils.isAir(currentPos) && !WorldUtils.isBreakable(currentPos)) {
-                    breakBlock(currentPos);
-                    if (supportPlace.get()) {
-                        InvUtils.swap(block.slot(), true);
-
-                        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(currentPos.getX(), currentPos.getY() - 1, currentPos.getZ()), Direction.UP, currentPos, false));
-                        InvUtils.swapBack();
-                    }
-                } else {
-                    currentPos = entity.getBlockPos().south(1);
-                    if (!WorldUtils.isAir(currentPos) && !WorldUtils.isBreakable(currentPos)) {
-
-                        breakBlock(currentPos);
-                        if (supportPlace.get()) {
-                            InvUtils.swap(block.slot(), true);
-
-                            mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(currentPos.getX(), currentPos.getY() - 1, currentPos.getZ()), Direction.UP, currentPos, false));
-                            InvUtils.swapBack();
-                        }
-
-                    } else {
-                        currentPos = entity.getBlockPos().north(1);
-                        if (!WorldUtils.isAir(currentPos) && !WorldUtils.isBreakable(currentPos)) {
-                            breakBlock(currentPos);
-
-                            if (supportPlace.get()) {
-                                InvUtils.swap(block.slot(), true);
-                                mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(currentPos.getX(), currentPos.getY() - 1, currentPos.getZ()), Direction.UP, currentPos, false));
-                                InvUtils.swapBack();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return blockPos = currentPos.mutableCopy();
-    }
-
-
-    public enum logic {
-        burrowToSurround,
-        surroundToBurrow
     }
 
     public enum SwapMode {

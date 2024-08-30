@@ -19,17 +19,6 @@ public class WorldUtils {
     public  static  boolean isBreakable(BlockPos position) {
         return Objects.requireNonNull(mc.world).isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK || mc.world.getBlockState(position).getBlock() == Blocks.BARRIER ;
     }
-    public static boolean willMiss(BlockPos position, PlayerEntity Player) {
-        double centerX = position.getX() + 0.5;
-        double centerZ = position.getZ() + 0.5;
-        double playerX = Player.getX();
-        double playerZ = Player.getZ();
-        double distanceX = Math.abs(playerX - centerX);
-        double distanceZ = Math.abs(playerZ - centerZ);
-        double threshold = 0.2;
-
-        return !(distanceX < threshold) || !(distanceZ < threshold);
-    }
 
     public static boolean strictDirection(BlockPos position, Direction Direction) {
         return switch (Direction) {

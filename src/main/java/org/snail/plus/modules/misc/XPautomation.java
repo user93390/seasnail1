@@ -155,7 +155,6 @@ public class XPautomation extends Module {
             toggle();
             return;
         }
-        //TODO: add armor swap to make you use less exp
         //slot 1 is leggings
         //slot 2 is chest plate
         //slot 3 is helmet

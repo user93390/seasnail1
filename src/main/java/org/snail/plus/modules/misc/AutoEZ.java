@@ -50,14 +50,15 @@ public class AutoEZ extends Module {
                     return;
                 }
 
-                int randomIndex = (int) (Math.random() * messages.size());
+                int randomIndex = (int) Math.round(Math.random() * (messages.size() - 1));
                 String msg = messages.get(randomIndex)
                         .replace("{victim}", WorldUtils.getName(player))
                         .replace("{coords}", WorldUtils.getCoords(player));
 
                 if (dm.get()) {
                     ChatUtils.sendPlayerMsg("/msg " + player.getName().getString() + " " + msg);
-                } else {
+                }
+                if (!dm.get()) {
                     ChatUtils.sendPlayerMsg(msg);
                 }
 

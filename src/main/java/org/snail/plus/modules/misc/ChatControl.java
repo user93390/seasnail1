@@ -59,7 +59,7 @@ public class ChatControl extends Module {
             .build());
     private final Setting<String> prefixText = sgChat.add(new StringSetting.Builder()
             .name("prefix-text")
-            .description("The text to add as your prefix.")
+            .description("The text to add as your prefix when you type in chat.")
             .defaultValue("| snail++")
             .visible(prefix::get)
             .build());
@@ -144,7 +144,7 @@ public class ChatControl extends Module {
                         double targetZ = Math.round(player.getZ());
 
 
-                        ChatUtils.sendMsg(of(Formatting.GREEN + player.getName().getString() + " is within render distance. (" + targetX + ", " + targetY + ", " + targetZ + ")"));
+                        ChatUtils.sendMsg(of(Formatting.RED + player.getName().getString() + " is within render distance. (" + targetX + ", " + targetY + ", " + targetZ + ")"));
                         List<SoundEvent> soundEvents = sounds.get();
                         if (!soundEvents.isEmpty()) {
                             mc.getSoundManager().play(WorldUtils.playSound(soundEvents.get(0), 1.0f));
@@ -163,7 +163,7 @@ public class ChatControl extends Module {
         for (PlayerEntity player : Objects.requireNonNull(mc.world).getPlayers()) {
             if (player == mc.player || alertedPlayers.contains(player.getUuid())) continue;
             if (checkUuid.get() && player.getUuidAsString().isEmpty()) continue;
-            ChatUtils.sendMsg(of(Formatting.RED + player.getName().getString() + "Has left render distance"));
+            ChatUtils.sendMsg(of(Formatting.GREEN + player.getName().getString() + "Has left render distance"));
             List<SoundEvent> soundEvents = sounds.get();
             if (!soundEvents.isEmpty()) {
                 mc.getSoundManager().play(WorldUtils.playSound(soundEvents.get(0), 1.0f));
@@ -181,7 +181,6 @@ public class ChatControl extends Module {
                 for(String messages : messages.get()) {
                     if (event.getMessage().contains(Text.of(messages))) {
                         mc.inGameHud.getChatHud().getMessageHistory().remove(event.getMessage().getString());
-                        event.cancel();
                         if (info.get()) {
                             ChatUtils.sendMsg(of(Formatting.RED + "Message filtered " + event.getMessage().getString()));
                         }
