@@ -69,7 +69,6 @@ public class XPautomation extends Module {
             .name("tps-sync")
             .description("Sync the delay with server TPS")
             .defaultValue(false)
-            .onChanged(TPSSyncUtil::setSyncEnabled)
             .build());
 
     private final Setting<Boolean> smartMode = sgGeneral.add(new BoolSetting.Builder()

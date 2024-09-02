@@ -8,8 +8,6 @@ import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.renderer.text.TextRenderer;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.entity.SortPriority;
-import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -20,21 +18,18 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
+import org.snail.plus.utils.swapUtils;
 
 import java.util.Objects;
 
@@ -190,47 +185,6 @@ public class stealthMine extends Module {
             .defaultValue(SwapMode.silent)
             .build());
 
-    private final Setting<Boolean> Autocity = sgAutoCity.add(new BoolSetting.Builder()
-            .name("auto city")
-            .description("Mines targets surrounds")
-            .defaultValue(false)
-            .build());
-    private final Setting<Double> cityRange = sgAutoCity.add(new DoubleSetting.Builder()
-            .name("City range")
-            .description("auto city range")
-            .visible(Autocity::get)
-            .defaultValue(4.5)
-            .build());
-    private final Setting<Boolean> Burrow = sgAutoCity.add(new BoolSetting.Builder()
-            .name("Anti Burrow")
-            .description("mines players burrows")
-            .visible(Autocity::get)
-            .defaultValue(true)
-            .build());
-    private final Setting<Boolean> chatInfo = sgAutoCity.add(new BoolSetting.Builder()
-            .name("chat info")
-            .description("sends chat info about the module")
-            .defaultValue(false)
-            .visible(Autocity::get)
-            .build());
-    private final Setting<Boolean> onlySurrounded = sgAutoCity.add(new BoolSetting.Builder()
-            .name("only surrounded")
-            .description("only targets players in there surround")
-            .defaultValue(false)
-            .visible(Autocity::get)
-            .build());
-    private final Setting<Keybind> CityBind = sgAutoCity.add(new KeybindSetting.Builder()
-            .name("bind")
-            .description("Starts auto city when this button is pressed.")
-            .defaultValue(Keybind.none())
-            .visible(Autocity::get)
-            .build());
-    private final Setting<Boolean> supportPlace = sgAutoCity.add(new BoolSetting.Builder()
-            .name("support place")
-            .description("places support blocks if needed")
-            .defaultValue(false)
-            .visible(Autocity::get)
-            .build());
     private BlockPos currentPos = BlockPos.ORIGIN;
 
     private double blockBreakingProgress;
@@ -340,48 +294,10 @@ public class stealthMine extends Module {
         }
     }
 
-    public BlockPos autoCity(PlayerEntity entity) {
-        if (onlySurrounded.get() && !CombatUtils.isSurrounded(entity)) return null;
-
-        BlockPos[] positions = {
-                entity.getBlockPos().east(1),
-                entity.getBlockPos().west(1),
-                entity.getBlockPos().south(1),
-                entity.getBlockPos().north(1)
-        };
-
-        for (BlockPos pos : positions) {
-            if (WorldUtils.isAir(pos) || !WorldUtils.isBreakable(pos)) continue;
-
-            if (supportPlace.get()) {
-                InvUtils.swap(InvUtils.findInHotbar(Items.OBSIDIAN).slot(), true);
-                mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY() - 1, pos.getZ()), Direction.UP, pos, false));
-                InvUtils.swapBack();
-            }
-            BreakBlock(StartBreakingBlockEvent.get(pos, Direction.UP));
-            Switch();
-            return pos;
-        }
-            return null;
-    }
-
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (mc.world == null || mc.player == null || pauseUse.get() && mc.player.isUsingItem()) {
             return;
-        }
-        for (PlayerEntity player : mc.world.getPlayers()) {
-            if (Autocity.get() && player != null ) {
-                if (CityBind.get().isPressed()) {
-                        BlockPos newPos = autoCity(player);
-                        if (newPos != null) {
-                            blockPos.set(newPos);
-                            if (chatInfo.get()) {
-                                info("Auto City: Block at " + newPos + " mined");
-                            }
-                    }
-                }
-            }
         }
         BlockState blockState = mc.world.getBlockState(blockPos);
         bestSlot = InvUtils.findFastestTool(blockState);
@@ -433,18 +349,32 @@ public class stealthMine extends Module {
 
     public void Switch() {
         switch (swapMode.get()) {
-            case silent:
+            case silent -> {
                 if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) {
                     break;
                 }
-                mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
-                break;
-            case normal:
+                if (blockBreakingProgress < 1.5) {
+                    mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
+                }
+            }
+
+            case normal -> {
                 if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) {
                     break;
                 }
+                if (blockBreakingProgress < 1.5) {
                 InvUtils.swap(bestSlot.slot(), false);
-                break;
+                }
+            }
+
+            case Inventory -> {
+                if(blockBreakingProgress > 1.4) {
+                    swapUtils.pickSwitch(bestSlot.slot());
+                }
+                    if(WorldUtils.isAir(blockPos)) {
+                        swapUtils.pickSwapBack();
+                    }
+            }
         }
     }
 
@@ -472,6 +402,7 @@ public class stealthMine extends Module {
     public enum SwapMode {
         silent,
         normal,
+        Inventory,
     }
 
     public enum breakMode {

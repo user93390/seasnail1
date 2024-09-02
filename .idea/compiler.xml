@@ -5,6 +5,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="com.example.seasnail1-main.main" options="--add-exports java.desktop/com.sun.beans.introspect=ALL-UNNAMED" />
       <module name="com.example.seasnail1.main" options="" />
     </option>
   </component>

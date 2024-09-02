@@ -29,7 +29,7 @@ public class BurrowEsp extends Module {
             .build());
     private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape Mode")
-            .description("the shape mode")
+            .description("the shape mode of the box")
             .defaultValue(ShapeMode.Both)
             .build());
     private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
@@ -73,7 +73,11 @@ public class BurrowEsp extends Module {
     @EventHandler
     public void onRender(Render3DEvent event) {
         for (BlockPos pos : burrowedPlayers.stream().map(PlayerEntity::getBlockPos).toList()) {
-            event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            for(PlayerEntity player : burrowedPlayers) {
+                if (CombatUtils.isBurrowed(player)) {
+                    event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                }
+            }
         }
     }
 

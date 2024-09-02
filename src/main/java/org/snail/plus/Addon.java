@@ -3,38 +3,42 @@
 package org.snail.plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
-import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.toast.Toast;
+import net.minecraft.client.toast.TutorialToast;
 import net.minecraft.client.tutorial.TutorialStep;
+import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snail.plus.hud.Watermark;
-import org.snail.plus.modules.combat.*;
+import org.snail.plus.modules.combat.AutoAnchor;
+import org.snail.plus.modules.combat.AutoSand;
+import org.snail.plus.modules.combat.BurrowEsp;
+import org.snail.plus.modules.combat.SelfAnvil;
 import org.snail.plus.modules.misc.*;
-
-
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
-
 public class Addon extends MeteorAddon {
+
     public static final Logger LOG = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
 
     @Override
     public void onInitialize() {
+        MinecraftClient mc = MinecraftClient.getInstance();
         loadModules();
         Config.get().load();
         LOG.info("Loaded config");
         LOG.info("Snail++ loaded! join the discord at https://discord.gg/nh9pjVhsVb");
 
         mc.getTutorialManager().setStep(TutorialStep.NONE);
+        mc.options.skipMultiplayerWarning = true;
     }
-
     @Override
     public void onRegisterCategories() {
         Modules.registerCategory(Snail);
@@ -53,9 +57,6 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new SelfAnvil());
         Hud.get().register(Watermark.INFO);
     }
-
-
-
     @Override
     public String getPackage() {
         return "org.snail.plus";

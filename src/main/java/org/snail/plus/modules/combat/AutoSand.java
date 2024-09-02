@@ -139,7 +139,7 @@ public class AutoSand extends Module {
         BlockPos targetPos = target.getBlockPos().up(height.get());
 
         if (onlySurrounded.get() && CombatUtils.isSurrounded(target) && Objects.requireNonNull(mc.world).getBlockState(targetPos).isAir()) {
-            // Check for strict direction
+            // Check for a strict direction
             for (Direction dir : Direction.values()) {
                 if (strictDirection.get() && WorldUtils.strictDirection(targetPos.offset(dir), dir.getOpposite())) continue;
             }
@@ -158,7 +158,6 @@ public class AutoSand extends Module {
             BlockUtils.place(targetPos, Blocks, rotate.get(), 0, false);
             sandPlaced = true;
 
-            // Auto-disable if enabled and sand is placed
             if (autoDisable.get() && sandPlaced) {
                 this.toggle();
             }

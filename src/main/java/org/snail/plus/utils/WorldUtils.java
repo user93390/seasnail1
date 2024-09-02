@@ -39,4 +39,5 @@ public class WorldUtils {
     public static String getCoords(PlayerEntity player) {
         return "%s, %s, %s".formatted(player.getX(), player.getY(), player.getZ());
     }
+
 }

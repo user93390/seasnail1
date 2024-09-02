@@ -5,7 +5,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import org.snail.plus.Addon;
 
 import java.util.Objects;
 
@@ -43,7 +42,7 @@ public class CombatUtils {
     }
 
     /**
-     * Checks if the given player is burrowed (i.e., not in an air block).
+     * Checks if the given player is burrowed (in other words, not in an air block).
      *
      * @param target The player entity to check.
      * @return True if the player is burrowed, false otherwise.
@@ -54,20 +53,5 @@ public class CombatUtils {
         double z = target.getBlockZ();
         BlockPos playerPos = new BlockPos(MathHelper.floor(x), MathHelper.floor(y), MathHelper.floor(z));
         return IsValidBlock(playerPos);
-    }
-    public static boolean isHole(BlockPos pos) {
-        BlockPos north = pos.north();
-        BlockPos east = pos.east();
-        BlockPos south = pos.south();
-        BlockPos west = pos.west();
-        BlockPos up = pos.up();
-        BlockPos down = pos.down();
-        boolean isNorthBlocked = IsValidBlock(north);
-        boolean isEastBlocked = IsValidBlock(east);
-        boolean isSouthBlocked = IsValidBlock(south);
-        boolean isWestBlocked = IsValidBlock(west);
-        boolean isUpBlocked = IsValidBlock(up);
-        boolean isDownBlocked = IsValidBlock(down);
-        return isNorthBlocked && isEastBlocked && isSouthBlocked && isWestBlocked && isUpBlocked && isDownBlocked;
     }
 }
