@@ -28,6 +28,8 @@ import org.snail.plus.utils.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -39,6 +41,7 @@ public class AutoAnchor extends Module {
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
+    private final SettingGroup sgDebug = settings.createGroup("Debug");
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("range")
@@ -77,6 +80,12 @@ public class AutoAnchor extends Module {
             .name("min damage score")
             .description("the lowest amount of damage you should deal to the target (higher = less targets | lower = more targets)")
             .defaultValue(3.0)
+            .sliderRange(0.0, 36.0)
+            .build());
+    private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
+            .name("pause health")
+            .description("pauses the module when you are below this health")
+            .defaultValue(0.0)
             .sliderRange(0.0, 36.0)
             .build());
 
@@ -152,10 +161,29 @@ public class AutoAnchor extends Module {
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
+    private final Setting<Boolean> debugRender = sgDebug.add(new BoolSetting.Builder()
+            .name("debug render")
+            .description("debug render")
+            .defaultValue(false)
+            .build());
+    private final Setting<Boolean> debugCalculations = sgDebug.add(new BoolSetting.Builder()
+            .name("debug calculations")
+            .description("debug calculations")
+            .defaultValue(false)
+            .build());
+    private final Setting<Boolean> debugPlace = sgDebug.add(new BoolSetting.Builder()
+            .name("debug place")
+            .description("debug place")
+            .defaultValue(false)
+            .build());
+    private final Setting<Boolean> debugBreak = sgDebug.add(new BoolSetting.Builder()
+            .name("debug break")
+            .description("debug break")
+            .defaultValue(false)
+            .build());
 
+    ExecutorService executor = Executors.newSingleThreadExecutor();
     private Box renderBoxOne, renderBoxTwo;
-    private Thread anchorThread;
-    private volatile boolean isRunning;
     private final ReentrantLock lock = new ReentrantLock();
     private List<BlockPos> AnchorPos = new ArrayList<>();
     private long lastPlacedTime;
@@ -165,30 +193,29 @@ public class AutoAnchor extends Module {
 
     @Override
     public void onActivate() {
-        AnchorPos = new ArrayList<>();
-        isRunning = true;
-        anchorThread = new Thread(() -> {
-            while (isRunning) {
-                onTick(null);
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+        try {
+            AnchorPos = new ArrayList<>();
+            if (executor == null || executor.isShutdown() || executor.isTerminated()) {
+                executor = Executors.newSingleThreadExecutor();
             }
-        }, "Anchor Thread");
-        anchorThread.start();
+            executor.submit(() -> onTick(null));
+        } catch (Exception e) {
+            Addon.LOG.error(Arrays.toString(e.getStackTrace()));
+        }
     }
 
     @Override
     public void onDeactivate() {
-        isRunning = false;
-        if (anchorThread != null) {
-            try {
-                anchorThread.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        try {
+            if (executor != null) {
+                executor.shutdown();
             }
+            if (AnchorPos != null) {
+                AnchorPos = new ArrayList<>(AnchorPos);
+                AnchorPos.clear();
+            }
+        } catch (Exception e) {
+            Addon.LOG.error(Arrays.toString(e.getStackTrace()));
         }
     }
     /**
@@ -205,17 +232,21 @@ public class AutoAnchor extends Module {
             for (int x = -RadiusX.get(); x <= RadiusX.get(); x++) {
                 for (int z = -RadiusZ.get(); z <= RadiusZ.get(); z++) {
                     int distanceSquared = x * x + z * z;
+                    if(debugCalculations.get()) info("found squared distance: " + distanceSquared);
 
                     if (distanceSquared <= radiusSquared) {
                         BlockPos pos = entity.getBlockPos().add(x, 0, z);
                         BlockPos mcPos = mc.player.getBlockPos().add(x, 0, z);
                         if (WorldUtils.isAir(pos) && !entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1) ||
                             WorldUtils.isAir(pos) && !mc.player.getBoundingBox().intersects(mcPos.getX(), mcPos.getY(), mcPos.getZ(), mcPos.getX() + 1, mcPos.getY() + 1, mcPos.getZ() + 1)) {
+                            if(debugCalculations.get()) info("found pos: " + pos);
                             posList.add(pos);
                             return calculate(pos, entity);
                         } else {
+
                             for (int yOffset = -1; yOffset <= 1; yOffset++) {
                                 BlockPos nearbyPos = pos.add(0, yOffset, 0);
+                                if(debugCalculations.get()) info("fallback to " + nearbyPos);
                                 if (WorldUtils.isAir(nearbyPos) && !entity.getBoundingBox().intersects(nearbyPos.getX(), nearbyPos.getY(), nearbyPos.getZ(), nearbyPos.getX() + 1, nearbyPos.getY() + 1, nearbyPos.getZ() + 1)) {
                                     posList.add(nearbyPos);
                                     return calculate(nearbyPos, entity);
@@ -239,7 +270,6 @@ public class AutoAnchor extends Module {
         } catch (Exception e) {
             Addon.LOG.error(Arrays.toString(e.getStackTrace()));
             return new ArrayList<>();
-
         }
     }
 
@@ -255,18 +285,22 @@ public class AutoAnchor extends Module {
     public List<BlockPos> calculate(@NotNull BlockPos pos, PlayerEntity entity) {
         double dmg = DamageUtils.anchorDamage(entity, new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
         double selfDmg = DamageUtils.anchorDamage(mc.player, new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
-        if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
+        if (dmg >= minDamage.get() || selfDmg < maxSelfDamage.get()) {
             if (!entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) return List.of(pos);
+            if(debugCalculations.get()) info("filtered pos: " + pos);
             return List.of(pos);
         } else {
+            if(debugCalculations.get()) info("couldn't filter pos, fallback to other positions " + pos);
             for (int i = -RadiusX.get(); i < RadiusX.get(); i++) {
                 for (int j = -RadiusZ.get(); j < RadiusZ.get(); j++) {
                     for (int yOffset = -1; yOffset <= 1; yOffset++) {
                         BlockPos newPos = pos.add(i, yOffset, j);
+                        if(debugCalculations.get()) info("found new pos: " + newPos);
                         dmg = DamageUtils.anchorDamage(entity, new Vec3d(newPos.getX(), newPos.getY(), newPos.getZ()));
                         selfDmg = DamageUtils.anchorDamage(mc.player, new Vec3d(newPos.getX(), newPos.getY(), newPos.getZ()));
                         if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
                             if ((!entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) && !WorldUtils.isAir(pos)) {
+                                if(debugCalculations.get()) info("filtered new pos: " + newPos);
                                 return List.of(newPos);
                             }
                         }
@@ -275,17 +309,16 @@ public class AutoAnchor extends Module {
             }
         }
 
-        // Check head positions
         BlockPos headPos = pos.up();
+        if(debugCalculations.get()) info("checking head pos: " + headPos);
         dmg = DamageUtils.anchorDamage(entity, new Vec3d(headPos.getX(), headPos.getY(), headPos.getZ()));
         selfDmg = DamageUtils.anchorDamage(mc.player, new Vec3d(headPos.getX(), headPos.getY(), headPos.getZ()));
         if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
             if (!entity.getBoundingBox().intersects(headPos.getX(), headPos.getY(), headPos.getZ(), headPos.getX() + 1, headPos.getY() + 1, headPos.getZ() + 1)) {
-                info("found good head position at " + headPos);
+                if(debugCalculations.get()) info("filtered head pos: " + headPos);
                 return List.of(headPos);
             }
         }
-
         return List.of(pos);
     }
     /**
@@ -295,8 +328,8 @@ public class AutoAnchor extends Module {
      */
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (pauseUse.get() && mc.player.isUsingItem() || !isRunning) return;
-
+        if (pauseUse.get() && mc.player.isUsingItem()) return;
+        if(mc.player.getHealth() + mc.player.getAbsorptionAmount() <= pauseHealth.get()) return;
         if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
             toggle();
             return;
@@ -312,6 +345,7 @@ public class AutoAnchor extends Module {
             lock.lock();
             try {
                 if (rotate.get()) Rotations.rotate(Rotations.getYaw(AnchorPos.getFirst()), Rotations.getPitch(AnchorPos.getFirst()));
+
                 breakAnchor();
             } finally {
                 lock.unlock();
@@ -366,12 +400,14 @@ public class AutoAnchor extends Module {
     }
 
     private void swapAndInteract(FindItemResult item, BlockPos pos, boolean isGlowstone) {
+        if(debugBreak.get()) info("swapping and interacting with block at " + pos + "is Glowstone: " + isGlowstone);
         InvUtils.swap(item.slot(), true);
         mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, isGlowstone));
         InvUtils.swapBack();
     }
 
     private void interactBlock(BlockPos pos, boolean isGlowstone) {
+        if(debugPlace.get()) info("interacting with block at " + pos);
         mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, isGlowstone));
     }
 
@@ -394,7 +430,7 @@ public class AutoAnchor extends Module {
                     double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
                     double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
                     double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
-
+                    if(debugRender.get()) info("offsets: " + offsetX + " " + offsetY + " " + offsetZ);
                     ((IBox) renderBoxOne).set(
                             renderBoxOne.minX + offsetX,
                             renderBoxOne.minY + offsetY,
@@ -403,7 +439,7 @@ public class AutoAnchor extends Module {
                             renderBoxOne.maxY + offsetY,
                             renderBoxOne.maxZ + offsetZ
                     );
-
+                    if(debugRender.get()) info("rendering box: " + renderBoxOne);
                     event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 }
             }
