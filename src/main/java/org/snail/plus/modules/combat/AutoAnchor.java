@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.renderer.*;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.*;
@@ -20,6 +21,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.util.math.Box;
+import org.jetbrains.annotations.NotNull;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.*;
 
@@ -195,7 +197,7 @@ public class AutoAnchor extends Module {
      * @param entity The player entity around which to find positions.
      * @return An array of BlockPos representing the best positions for placing anchors.
      */
-    public BlockPos[] positions(PlayerEntity entity) {
+    public List<BlockPos> positions(PlayerEntity entity) {
         try {
             ArrayList<BlockPos> posList = new ArrayList<>();
             int radiusSquared = RadiusX.get() * RadiusX.get();
@@ -210,33 +212,81 @@ public class AutoAnchor extends Module {
                         if (WorldUtils.isAir(pos) && !entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1) ||
                             WorldUtils.isAir(pos) && !mc.player.getBoundingBox().intersects(mcPos.getX(), mcPos.getY(), mcPos.getZ(), mcPos.getX() + 1, mcPos.getY() + 1, mcPos.getZ() + 1)) {
                             posList.add(pos);
-                            return posList.toArray(new BlockPos[0]);
+                            return calculate(pos, entity);
                         } else {
                             for (int yOffset = -1; yOffset <= 1; yOffset++) {
                                 BlockPos nearbyPos = pos.add(0, yOffset, 0);
                                 if (WorldUtils.isAir(nearbyPos) && !entity.getBoundingBox().intersects(nearbyPos.getX(), nearbyPos.getY(), nearbyPos.getZ(), nearbyPos.getX() + 1, nearbyPos.getY() + 1, nearbyPos.getZ() + 1)) {
                                     posList.add(nearbyPos);
-                                    return posList.toArray(new BlockPos[0]);
+                                    return calculate(nearbyPos, entity);
                                 }
                             }
                         }
                     }
                 }
             }
-            // Always place anchors above and below the target
             if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().up(2).getX(), entity.getBlockPos().up(2).getY(), entity.getBlockPos().up(2).getZ(), entity.getBlockPos().up(2).getX() + 1, entity.getBlockPos().up(2).getY() + 1, entity.getBlockPos().up(2).getZ() + 1)) {
                 posList.add(entity.getBlockPos().up(2));
-                return posList.toArray(new BlockPos[0]);
+                calculate(entity.getBlockPos().up(2), entity);
+                return calculate(entity.getBlockPos().up(2), entity);
             }
             if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().down(1).getX(), entity.getBlockPos().down(1).getY(), entity.getBlockPos().down(1).getZ(), entity.getBlockPos().down(1).getX() + 1, entity.getBlockPos().down(1).getY() + 1, entity.getBlockPos().down(1).getZ() + 1)) {
                 posList.add(entity.getBlockPos().down(1));
-                return posList.toArray(new BlockPos[0]);
+                calculate(entity.getBlockPos().down(1), entity);
+                return calculate(entity.getBlockPos().down(1), entity);
             }
-            return posList.toArray(new BlockPos[0]); // If no valid positions are found, return an empty array
+            return posList;
         } catch (Exception e) {
+            Addon.LOG.error(Arrays.toString(e.getStackTrace()));
+            return new ArrayList<>();
 
-            return new BlockPos[0];
         }
+    }
+
+    /**
+     * Calculates the best positions around a given block position for placing anchors.
+     * This method checks the initial position, searches for new positions within a specified radius,
+     * and also checks head positions.
+     *
+     * @param pos The initial block position to check.
+     * @param entity The player entity around which to find positions.
+     * @return A list of BlockPos representing the best positions for placing anchors.
+     */
+    public List<BlockPos> calculate(@NotNull BlockPos pos, PlayerEntity entity) {
+        double dmg = DamageUtils.anchorDamage(entity, new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
+        double selfDmg = DamageUtils.anchorDamage(mc.player, new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
+        if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
+            if (!entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) return List.of(pos);
+            return List.of(pos);
+        } else {
+            for (int i = -RadiusX.get(); i < RadiusX.get(); i++) {
+                for (int j = -RadiusZ.get(); j < RadiusZ.get(); j++) {
+                    for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                        BlockPos newPos = pos.add(i, yOffset, j);
+                        dmg = DamageUtils.anchorDamage(entity, new Vec3d(newPos.getX(), newPos.getY(), newPos.getZ()));
+                        selfDmg = DamageUtils.anchorDamage(mc.player, new Vec3d(newPos.getX(), newPos.getY(), newPos.getZ()));
+                        if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
+                            if ((!entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) && !WorldUtils.isAir(pos)) {
+                                return List.of(newPos);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check head positions
+        BlockPos headPos = pos.up();
+        dmg = DamageUtils.anchorDamage(entity, new Vec3d(headPos.getX(), headPos.getY(), headPos.getZ()));
+        selfDmg = DamageUtils.anchorDamage(mc.player, new Vec3d(headPos.getX(), headPos.getY(), headPos.getZ()));
+        if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
+            if (!entity.getBoundingBox().intersects(headPos.getX(), headPos.getY(), headPos.getZ(), headPos.getX() + 1, headPos.getY() + 1, headPos.getZ() + 1)) {
+                info("found good head position at " + headPos);
+                return List.of(headPos);
+            }
+        }
+
+        return List.of(pos);
     }
     /**
      * Event handler for the tick event. This method is called every tick to perform the main logic of the AutoAnchor module.
@@ -258,7 +308,7 @@ public class AutoAnchor extends Module {
         for (PlayerEntity player : mc.world.getPlayers()) {
             if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
 
-            AnchorPos = List.of(positions(player));
+            AnchorPos = positions(player);
             lock.lock();
             try {
                 if (rotate.get()) Rotations.rotate(Rotations.getYaw(AnchorPos.getFirst()), Rotations.getPitch(AnchorPos.getFirst()));
@@ -268,7 +318,7 @@ public class AutoAnchor extends Module {
             }
 
             for (Direction dir : Direction.values()) {
-                if (strictDirection.get() && WorldUtils.strictDirection(AnchorPos.get(0).offset(dir), dir.getOpposite())) continue;
+                if (strictDirection.get() && WorldUtils.strictDirection(AnchorPos.getFirst().offset(dir), dir.getOpposite())) continue;
             }
 
             lastPlacedTime = currentTime;
@@ -375,10 +425,9 @@ public class AutoAnchor extends Module {
         normal,
         smooth
     }
-
     public enum swapMode {
         inventory,
-        normal,
-        silent
+        silent,
+        normal
     }
 }
