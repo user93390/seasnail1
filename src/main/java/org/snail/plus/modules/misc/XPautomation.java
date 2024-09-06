@@ -164,7 +164,6 @@ public class XPautomation extends Module {
         ItemStack leggings = mc.player.getInventory().getArmorStack(1);
         ItemStack boots = mc.player.getInventory().getArmorStack(0);
         if (helmet.getDamage() == 0 && chestplate.getDamage() == 0 && leggings.getDamage() == 0 && boots.getDamage() == 0) {
-            //call putArmorOn function
             putArmorOn();
             ChatUtils.info("Your armor is at full HP, disabling...");
             toggle();

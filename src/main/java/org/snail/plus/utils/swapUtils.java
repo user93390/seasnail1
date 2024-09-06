@@ -7,6 +7,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class swapUtils {
     public static int pickSlot = -1;
+    //credits to blackout client
     public static boolean pickSwitch(int slot) {
         if (slot >= 0) {
             Managers.swapMng.modifyStartTime = System.currentTimeMillis();

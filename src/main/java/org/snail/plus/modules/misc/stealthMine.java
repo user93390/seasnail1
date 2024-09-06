@@ -53,16 +53,19 @@ public class stealthMine extends Module {
             .sliderMin(1)
             .sliderMax(10)
             .build());
+
     private final Setting<Boolean> strictDirection = sgMisc.add(new BoolSetting.Builder()
             .name("strict direction")
             .description("Only breaks the block in the direction you are facing")
             .defaultValue(true)
             .build());
+
     private final Setting<breakMode> mineMode = sgGeneral.add(new EnumSetting.Builder<breakMode>()
             .name("Mine mode")
             .description("how blocks are mined")
             .defaultValue(breakMode.instant)
             .build());
+
     private final Setting<Boolean> PauseOnUse = sgGeneral.add(new BoolSetting.Builder()
             .name("Pause on use")
             .description("pauses the module when using another item")
@@ -87,6 +90,7 @@ public class stealthMine extends Module {
             .defaultValue(new SettingColor(255, 0, 0, 75))
             .visible(() -> RenderMode.get() != renderMode.gradient)
             .build());
+
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("line color")
             .description("Line color")
@@ -275,6 +279,7 @@ public class stealthMine extends Module {
             }
         }
     }
+
     private final Vector3d vec3 = new Vector3d();
     @EventHandler
     private void onRender2D(Render2DEvent event) {

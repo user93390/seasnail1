@@ -187,6 +187,7 @@ public class AutoAnchor extends Module {
     private final ReentrantLock lock = new ReentrantLock();
     private List<BlockPos> AnchorPos = new ArrayList<>();
     private long lastPlacedTime;
+
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
     }
@@ -273,6 +274,7 @@ public class AutoAnchor extends Module {
         }
     }
 
+
     /**
      * Calculates the best positions around a given block position for placing anchors.
      * This method checks the initial position, searches for new positions within a specified radius,
@@ -308,18 +310,7 @@ public class AutoAnchor extends Module {
                 }
             }
         }
-
-        BlockPos headPos = pos.up();
-        if(debugCalculations.get()) info("checking head pos: " + headPos);
-        dmg = DamageUtils.anchorDamage(entity, new Vec3d(headPos.getX(), headPos.getY(), headPos.getZ()));
-        selfDmg = DamageUtils.anchorDamage(mc.player, new Vec3d(headPos.getX(), headPos.getY(), headPos.getZ()));
-        if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
-            if (!entity.getBoundingBox().intersects(headPos.getX(), headPos.getY(), headPos.getZ(), headPos.getX() + 1, headPos.getY() + 1, headPos.getZ() + 1)) {
-                if(debugCalculations.get()) info("filtered head pos: " + headPos);
-                return List.of(headPos);
-            }
-        }
-        return List.of(pos);
+        return null;
     }
     /**
      * Event handler for the tick event. This method is called every tick to perform the main logic of the AutoAnchor module.
@@ -374,6 +365,9 @@ public class AutoAnchor extends Module {
                         swapAndInteract(anchor, pos, false);
                     }
                     case inventory -> {
+                        stone = InvUtils.find(Items.GLOWSTONE);
+                        anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+
                         swapUtils.pickSwitch(anchor.slot());
                         interactBlock(pos, false);
                         swapUtils.pickSwapBack();
@@ -416,14 +410,17 @@ public class AutoAnchor extends Module {
         if (AnchorPos == null) return;
 
         for (BlockPos pos : AnchorPos) {
+            if(pos.isWithinDistance(mc.player.getPos(), range.get())) continue;
             switch (renderMode.get()) {
                 case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 case fading -> RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, shrink.get());
                 case smooth -> {
                     if (renderBoxOne == null) renderBoxOne = new Box(pos);
                     if (renderBoxTwo == null) renderBoxTwo = new Box(pos);
+                    if(debugRender.get()) info("rendering box: " + renderBoxOne);
 
                     if (renderBoxTwo instanceof IBox) {
+                        if(debugRender.get()) info("setting render box to " + pos);
                         ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
                     }
 
