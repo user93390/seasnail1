@@ -10,7 +10,7 @@
   "contact": {
     "repo": "https://github.com/user93390/seasnail1"
   },
-  "icon": "assets/template/icon.png",
+  "icon": "assets/image.png",
   "environment": "client",
   "entrypoints": {
     "meteor": [
@@ -21,7 +21,7 @@
     "addon.mixins.json"
   ],
   "custom": {
-    "meteor-client:color": "225,25,25"
+    "meteor-client:color": "76,25,76"
   },
   "depends": {
     "java": ">=21",

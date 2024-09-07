@@ -1,6 +1,5 @@
 package org.snail.plus;
 
-import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.hud.Hud;
@@ -9,6 +8,7 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.tutorial.TutorialStep;
+import net.minecraft.client.util.math.MatrixStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snail.plus.hud.Watermark;
@@ -18,23 +18,26 @@ import org.snail.plus.modules.combat.BurrowEsp;
 import org.snail.plus.modules.combat.SelfAnvil;
 import org.snail.plus.modules.misc.*;
 
-public class Addon extends MeteorAddon {
+import java.util.Objects;
 
+
+public class Addon extends MeteorAddon {
+    private final MinecraftClient mc = MinecraftClient.getInstance();
     public static final Logger LOG = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
 
     @Override
     public void onInitialize() {
+
         loadModules();
         Config.get().load();
         LOG.info("Loaded config");
-        LOG.info("Snail++ loaded! join the discord at https://discord.gg/nh9pjVhsVb");
 
-        //useful settings
-        MinecraftClient.getInstance().getTutorialManager().setStep(TutorialStep.NONE);
-        MinecraftClient.getInstance().options.skipMultiplayerWarning = true;
-        MinecraftClient.getInstance().options.advancedItemTooltips = true;
+        mc.getTutorialManager().setStep(TutorialStep.NONE);
+        mc.options.skipMultiplayerWarning = true;
+        mc.options.advancedItemTooltips = true;
+        LOG.info("Snail++ loaded! join the discord at https://discord.gg/nh9pjVhsVb");
     }
 
     @Override

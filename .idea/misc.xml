@@ -4,6 +4,9 @@
     <list size="1">
       <item index="0" class="java.lang.String" itemvalue="meteordevelopment.orbit.EventHandler" />
     </list>
+    <writeAnnotations>
+      <writeAnnotation name="org.spongepowered.asm.mixin.Unique" />
+    </writeAnnotations>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="FrameworkDetectionExcludesConfiguration">
