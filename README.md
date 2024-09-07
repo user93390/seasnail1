@@ -20,16 +20,13 @@
 - SelfAnvil+
 - AutoAnchor+
 - AutoSand
-- PVP info
-- BedBomb
+- BurrowEsp
 
 **Miscellaneous Modules:**
 - Chat control
 - PacketMine+
 - AutoEZ
 - XP-Automation
-- stealthMine
-- BurrowEsp
 
 
 [discord](https://discord.gg/nh9pjVhsVb)
