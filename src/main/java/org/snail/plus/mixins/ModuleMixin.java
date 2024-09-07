@@ -29,7 +29,7 @@ public class ModuleMixin {
         if (Config.get().chatFeedback.get()) {
             String enabledMsg =  "[+] " + module.title;
             String disableMsg =  "[-] " + module.title;
-            // If the module is enabled, send a green message, otherwise send a red message.
+            // If the module is enabled, send a green message, otherwise send a red message...
             String message = module.isActive() ? Formatting.GREEN + enabledMsg : Formatting.RED + disableMsg;
             ChatUtils.sendMsg(Text.of(Formatting.BOLD + message));
             ci.cancel();
