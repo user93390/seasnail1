@@ -27,4 +27,5 @@
 - XP-Automation
 
 [made by seasnail1](https://namemc.com/profile/seasnail1.1)
+
 [discord](https://discord.gg/nh9pjVhsVb)
