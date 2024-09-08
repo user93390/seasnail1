@@ -77,17 +77,6 @@ public class XPautomation extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<Integer> armorSlot = sgGeneral.add(new IntSetting.Builder()
-            .name("armor slot")
-            .description("the slot to put Armor in")
-            .defaultValue(1)
-            .min(1)
-            .max(9)
-            .sliderMin(1)
-            .sliderMax(9)
-            .visible(smartMode::get)
-            .build());
-
     public final Setting<Double> health = sgGeneral.add(new DoubleSetting.Builder()
             .name("pause-health")
             .description("Pauses when you go below a certain health.")
@@ -149,44 +138,6 @@ public class XPautomation extends Module {
     private FindItemResult exp;
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (isArmorFullDurability() && smartMode.get()) {
-            ChatUtils.info("Your armor is at full HP, disabling...");
-            toggle();
-            return;
-        }
-        //slot 1 is leggings
-        //slot 2 is chest plate
-        //slot 3 is helmet
-        //slot 4 is boots
-
-        ItemStack helmet = mc.player.getInventory().getArmorStack(3);
-        ItemStack chestplate = mc.player.getInventory().getArmorStack(2);
-        ItemStack leggings = mc.player.getInventory().getArmorStack(1);
-        ItemStack boots = mc.player.getInventory().getArmorStack(0);
-        if (helmet.getDamage() == 0 && chestplate.getDamage() == 0 && leggings.getDamage() == 0 && boots.getDamage() == 0) {
-            putArmorOn();
-            ChatUtils.info("Your armor is at full HP, disabling...");
-            toggle();
-            return;
-        } else {
-            if (helmet.getDamage() != 0) {
-                InvUtils.move().from(3).toHotbar(1);
-                useXP();
-                InvUtils.move().from(1).to(3);
-            } else if (chestplate.getDamage() != 0) {
-                InvUtils.move().from(2).toHotbar(1);
-                useXP();
-                InvUtils.move().from(1).to(2);
-            } else if (leggings.getDamage() != 0) {
-                InvUtils.move().from(1).toHotbar(1);
-                useXP();
-                InvUtils.move().from(1).to(1);
-            } else if (boots.getDamage() != 0) {
-                InvUtils.move().from(0).toHotbar(1);
-                useXP();
-                InvUtils.move().from(1).to(0);
-            }
-        }
 
 
         if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) return;
@@ -236,26 +187,6 @@ public class XPautomation extends Module {
             }
         }
     }
-
-    public void putArmorOn() {
-        ItemStack helmet = mc.player.getInventory().getArmorStack(3);
-        ItemStack chestplate = mc.player.getInventory().getArmorStack(2);
-        ItemStack leggings = mc.player.getInventory().getArmorStack(1);
-        ItemStack boots = mc.player.getInventory().getArmorStack(0);
-
-        if(helmet.getDamage() == 0) {
-            InvUtils.move().from(3).to(armorSlot.get());
-        }
-        if(chestplate.getDamage() == 0) {
-            InvUtils.move().from(2).to(armorSlot.get());
-        }
-        if(leggings.getDamage() == 0) {
-            InvUtils.move().from(1).to(armorSlot.get());
-        }
-        if(boots.getDamage() == 0) {
-            InvUtils.move().from(0).to(armorSlot.get());
-        }
-    }
     public void useXP() {
         exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if(!exp.found()) return;
@@ -263,10 +194,12 @@ public class XPautomation extends Module {
             InvUtils.swap(exp.slot(), false);
             Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
             swingHand();
+            checkArmorDurability();
         } else if (autoSwitch.get() == AutoSwitchMode.Silent) {
             InvUtils.swap(exp.slot(), true);
             Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
             swingHand();
+            checkArmorDurability();
             InvUtils.swapBack();
         }
     }

@@ -65,6 +65,13 @@ public class stealthMine extends Module {
             .description("how blocks are mined")
             .defaultValue(breakMode.instant)
             .build());
+    private final Setting<Double> remineSpeed = sgGeneral.add(new DoubleSetting.Builder()
+            .name("remine speed")
+            .description("how fast to remine")
+            .defaultValue(1.5)
+            .sliderMin(0)
+            .sliderMax(10)
+            .build());
 
     private final Setting<Boolean> PauseOnUse = sgGeneral.add(new BoolSetting.Builder()
             .name("Pause on use")
@@ -130,7 +137,7 @@ public class stealthMine extends Module {
             .visible(() -> RenderMode.get() == renderMode.fade)
             .build());
 
-    private final Setting<Boolean> shrink  = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> shrink  = sgRender.add(new BoolSetting.Builder()
             .name("fade shrink")
             .description("shrinks when fading out")
             .defaultValue(true)
@@ -190,12 +197,11 @@ public class stealthMine extends Module {
             .build());
 
     private BlockPos currentPos = BlockPos.ORIGIN;
-
     private double blockBreakingProgress;
     public static BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
     BlockState blockState;
     private FindItemResult bestSlot;
-
+    private long lastPlacedTime;
 
     public stealthMine() {
         super(Addon.Snail, "stealth mine", "Mines blocks using packets");
@@ -306,7 +312,8 @@ public class stealthMine extends Module {
         }
         BlockState blockState = mc.world.getBlockState(blockPos);
         bestSlot = InvUtils.findFastestTool(blockState);
-
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastPlacedTime < (1000 / remineSpeed.get())) return;
         for (Direction dir : Direction.values()) {
             if (strictDirection.get() && WorldUtils.strictDirection(blockPos.offset(dir), dir.getOpposite())) {
                 break;
@@ -328,6 +335,7 @@ public class stealthMine extends Module {
             }
             if(WorldUtils.isBreakable(blockPos)) blockBreakingProgress = 0;
         }
+        lastPlacedTime = currentTime;
     }
 
 

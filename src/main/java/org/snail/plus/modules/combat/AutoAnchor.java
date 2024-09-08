@@ -194,6 +194,7 @@ public class AutoAnchor extends Module {
             .description("debug break")
             .defaultValue(false)
             .build());
+
     private final ReentrantLock lock = new ReentrantLock();
     ExecutorService executor = Executors.newSingleThreadExecutor();
     private Box renderBoxOne, renderBoxTwo;
@@ -320,10 +321,13 @@ public class AutoAnchor extends Module {
                         if (debugCalculations.get()) info("found new pos: " + newPos);
                         dmg = DamageUtils.anchorDamage(entity, predictMovement(entity));
                         selfDmg = DamageUtils.anchorDamage(mc.player,predictMovement(entity));
+                        if(debugCalculations.get()) info("dmg: " + dmg + " selfDmg: " + selfDmg);
                         if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
                             if ((!entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) && !WorldUtils.isAir(pos)) {
                                 if (debugCalculations.get()) info("filtered new pos: " + newPos);
                                 return List.of(newPos);
+                            } else {
+                                if (debugCalculations.get()) info("couldn't filter new pos, fallback to other positions " + newPos);
                             }
                         }
                     }
@@ -353,11 +357,12 @@ public class AutoAnchor extends Module {
         for (PlayerEntity player : mc.world.getPlayers()) {
             if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
                 continue;
+
+            AnchorPos = positions(player);
             for (Direction dir : Direction.values()) {
                 if (strictDirection.get() && WorldUtils.strictDirection(AnchorPos.getFirst().offset(dir), dir.getOpposite()))
                     continue;
             }
-            AnchorPos = positions(player);
             lock.lock();
             try {
                 if (rotate.get())
@@ -427,6 +432,11 @@ public class AutoAnchor extends Module {
         mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, isGlowstone));
     }
 
+    /**
+     * Event handler for rendering 3D events. This method is called to render the anchor positions.
+     *
+     * @param event The Render3DEvent that contains rendering information.
+     */
     @EventHandler
     public void render(Render3DEvent event) {
         if (AnchorPos == null) return;
