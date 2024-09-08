@@ -1,7 +1,5 @@
 # Snail++
 
-### Snail++ is a meteor client addon developed by Seasnail1.
-
 `1.20.4-1.21.1`
 
 ![Static Badge](https://img.shields.io/badge/Works%20on%20-%20My%20Machine%20-%20green?style=for-the-badge)
@@ -28,5 +26,5 @@
 - AutoEZ
 - XP-Automation
 
-
+[made by seasnail1](https://namemc.com/profile/seasnail1.1)
 [discord](https://discord.gg/nh9pjVhsVb)
