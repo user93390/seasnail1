@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 
 public class AutoAnchor extends Module {
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -48,97 +49,98 @@ public class AutoAnchor extends Module {
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("range")
-            .description("Range to target player(s)")
+            .description("The maximum distance to target players for anchor placement.")
             .defaultValue(3.0)
             .sliderRange(1.0, 10.0)
             .build());
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotation")
-            .description("Rotates towards the block when placing.")
+            .description("Enables rotation towards the block when placing anchors.")
             .defaultValue(false)
             .build());
 
     private final Setting<Double> anchorSpeed = sgGeneral.add(new DoubleSetting.Builder()
             .name("anchor speed")
-            .description("Speed at which anchors are placed.")
+            .description("The speed at which anchors are placed, in anchors per second.")
             .defaultValue(1.0)
             .sliderRange(0.1, 10.0)
             .build());
 
     private final Setting<swapMode> swap = sgGeneral.add(new EnumSetting.Builder<swapMode>()
             .name("swap mode")
-            .description("swap mode")
+            .description("The mode used for swapping items when placing anchors.")
             .defaultValue(swapMode.inventory)
             .build());
 
     private final Setting<Double> maxSelfDamage = sgDamage.add(new DoubleSetting.Builder()
-            .name("max self damage score")
-            .description("the max amount to deal to you")
+            .name("max self damage")
+            .description("The maximum amount of damage you can take from your own anchors.")
             .defaultValue(3.0)
             .sliderRange(0.0, 36.0)
             .build());
 
     private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder()
-            .name("min damage score")
-            .description("the lowest amount of damage you should deal to the target (higher = less targets | lower = more targets)")
+            .name("min damage")
+            .description("The minimum amount of damage that should be dealt to the target.")
             .defaultValue(3.0)
             .sliderRange(0.0, 36.0)
             .build());
 
     private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
             .name("pause health")
-            .description("pauses the module when you are below this health")
+            .description("Pauses the module when your health is below this value.")
             .defaultValue(0.0)
             .sliderRange(0.0, 36.0)
             .build());
 
     private final Setting<Boolean> strictDirection = sgGeneral.add(new BoolSetting.Builder()
             .name("strict direction")
-            .description("Only places anchors in the direction you are facing")
+            .description("Only places anchors in the direction you are facing.")
             .defaultValue(false)
             .build());
+
     private final Setting<Boolean> predictMovement = sgGeneral.add(new BoolSetting.Builder()
             .name("predict movement")
-            .description("Predicts player movement")
+            .description("Predicts the movement of players for more accurate anchor placement.")
             .defaultValue(true)
             .build());
 
     private final Setting<Integer> RadiusZ = sgGeneral.add(new IntSetting.Builder()
             .name("Radius Z")
-            .description("the radius for Z")
+            .description("The radius in the Z direction for anchor placement.")
             .defaultValue(1)
             .sliderRange(1, 5)
             .build());
 
     private final Setting<Integer> RadiusX = sgGeneral.add(new IntSetting.Builder()
             .name("Radius X")
-            .description("the radius for X")
+            .description("The radius in the X direction for anchor placement.")
             .defaultValue(1)
             .sliderRange(1, 5)
             .build());
 
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side color")
-            .description("Side color")
+            .description("The color of the sides of the rendered anchor box.")
             .defaultValue(new SettingColor(255, 0, 0, 75))
             .build());
 
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("line color")
-            .description("Line color")
+            .description("The color of the lines of the rendered anchor box.")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
 
     private final Setting<RenderMode> renderMode = sgRender.add(new EnumSetting.Builder<RenderMode>()
             .name("render mode")
-            .description("render mode")
+            .description("The mode used for rendering the anchor box.")
             .defaultValue(RenderMode.smooth)
             .build());
 
     private final Setting<Integer> rendertime = sgRender.add(new IntSetting.Builder()
             .name("render time")
-            .description("render time")
+            .description("The duration for which the anchor box is rendered, in ticks.")
             .defaultValue(3)
             .sliderRange(1, 100)
             .visible(() -> renderMode.get() == RenderMode.fading)
@@ -146,14 +148,14 @@ public class AutoAnchor extends Module {
 
     private final Setting<Boolean> shrink = sgRender.add(new BoolSetting.Builder()
             .name("fade shrink")
-            .description("shrink fading render")
+            .description("Enables shrinking of the anchor box during fading render mode.")
             .defaultValue(true)
             .visible(() -> renderMode.get() == RenderMode.fading)
             .build());
 
     private final Setting<Integer> Smoothness = sgRender.add(new IntSetting.Builder()
             .name("smoothness")
-            .description("the smoothness")
+            .description("The smoothness of the anchor box rendering in smooth mode.")
             .defaultValue(3)
             .sliderRange(1, 100)
             .visible(() -> renderMode.get() == RenderMode.smooth)
@@ -161,37 +163,37 @@ public class AutoAnchor extends Module {
 
     private final Setting<Boolean> pauseUse = sgMisc.add(new BoolSetting.Builder()
             .name("pause on use")
-            .description("pauses the module when you use a item")
+            .description("Pauses the module when you are using an item.")
             .defaultValue(false)
             .build());
 
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
-            .name("shape-mode")
-            .description("How the shapes are rendered.")
+            .name("shape mode")
+            .description("The shape mode used for rendering the anchor box.")
             .defaultValue(ShapeMode.Both)
             .build());
 
     private final Setting<Boolean> debugRender = sgDebug.add(new BoolSetting.Builder()
             .name("debug render")
-            .description("debug render")
+            .description("Enables debug information for rendering.")
             .defaultValue(false)
             .build());
 
     private final Setting<Boolean> debugCalculations = sgDebug.add(new BoolSetting.Builder()
             .name("debug calculations")
-            .description("debug calculations")
+            .description("Enables debug information for calculations.")
             .defaultValue(false)
             .build());
 
     private final Setting<Boolean> debugPlace = sgDebug.add(new BoolSetting.Builder()
             .name("debug place")
-            .description("debug place")
+            .description("Enables debug information for placing anchors.")
             .defaultValue(false)
             .build());
 
     private final Setting<Boolean> debugBreak = sgDebug.add(new BoolSetting.Builder()
             .name("debug break")
-            .description("debug break")
+            .description("Enables debug information for breaking anchors.")
             .defaultValue(false)
             .build());
 
