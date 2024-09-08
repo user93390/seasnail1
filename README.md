@@ -4,7 +4,7 @@
 
 ![Static Badge](https://img.shields.io/badge/Works%20on%20-%20My%20Machine%20-%20green?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Made%20By%20-%20Seasnail%20-%20magenta?style=for-the-badge)
-![Static Badge](https://img.shields.io/badge/We%20have%20discord!%20-%20%235865F2?style=for-the-badge&link=https%3A%2F%2Fdiscord.gg%2Fnh9pjVhsVb)
+
 
 
 
