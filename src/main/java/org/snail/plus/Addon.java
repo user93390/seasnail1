@@ -6,17 +6,20 @@ import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.systems.modules.combat.AutoCity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.tutorial.TutorialStep;
-import net.minecraft.client.util.math.MatrixStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snail.plus.hud.Watermark;
+import org.snail.plus.modules.chat.ArmorMessage;
+import org.snail.plus.modules.chat.AutoEZ;
+import org.snail.plus.modules.chat.ChatControl;
+import org.snail.plus.modules.chat.autoWelcomer;
 import org.snail.plus.modules.combat.*;
 import org.snail.plus.modules.misc.*;
-
-import java.util.Objects;
+import org.snail.plus.modules.render.BurrowEsp;
+import org.snail.plus.modules.render.FOV;
+import org.snail.plus.modules.render.KillEffects;
 
 
 public class Addon extends MeteorAddon {
@@ -45,6 +48,10 @@ public class Addon extends MeteorAddon {
 
     // Load modules
     public void loadModules() {
+        Modules.get().add(new ArmorMessage());
+        Modules.get().add(new autoWelcomer());
+        Modules.get().add(new AntiAim());
+        Modules.get().add(new discordRPC());
         Modules.get().add(new AutoEZ());
         Modules.get().add(new autoCity());
         Modules.get().add(new XPautomation());
@@ -55,6 +62,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new BurrowEsp());
         Modules.get().add(new AutoSand());
         Modules.get().add(new SelfAnvil());
+        Modules.get().add(new KillEffects());
         Hud.get().register(Watermark.INFO);
     }
 
