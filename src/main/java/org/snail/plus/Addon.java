@@ -6,16 +6,14 @@ import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.AutoCity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.tutorial.TutorialStep;
 import net.minecraft.client.util.math.MatrixStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snail.plus.hud.Watermark;
-import org.snail.plus.modules.combat.AutoAnchor;
-import org.snail.plus.modules.combat.AutoSand;
-import org.snail.plus.modules.combat.BurrowEsp;
-import org.snail.plus.modules.combat.SelfAnvil;
+import org.snail.plus.modules.combat.*;
 import org.snail.plus.modules.misc.*;
 
 import java.util.Objects;
@@ -48,6 +46,7 @@ public class Addon extends MeteorAddon {
     // Load modules
     public void loadModules() {
         Modules.get().add(new AutoEZ());
+        Modules.get().add(new autoCity());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
         Modules.get().add(new stealthMine());
