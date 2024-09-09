@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.settings.StringListSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.Utils;
 import org.snail.plus.Addon;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class discordRPC extends Module {
         Random random = new Random();
         if (randomMsg.get()) {
             msg = message.get().get(random.nextInt(message.get().size()))
-                    .replace("{server}", Objects.requireNonNull(mc.getServer()).getServerIp())
+                    .replace("{server}",  this.mc.isInSingleplayer() ? "Singleplayer" : Utils.getWorldName())
                     .replace("{players}", Objects.requireNonNull(mc.world).getPlayers().size() + "");
             RPC.setDetails(msg);
             DiscordIPC.setActivity(RPC);

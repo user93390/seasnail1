@@ -6,10 +6,12 @@ import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.tick.Tick;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
 
@@ -41,46 +43,29 @@ public class BurrowEsp extends Module {
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
 
-    private final List<PlayerEntity> burrowedPlayers = new ArrayList<>();
+    private final List<BlockPos> pos = new ArrayList<>();
 
     public BurrowEsp() {
         super(Addon.Snail, "Burrow esp", "highlights burrowed players");
     }
-
-    @Override
-    public void onActivate() {
-        burrowedPlayers.clear();
-    }
-
     @Override
     public void onDeactivate() {
-        burrowedPlayers.clear();
+        pos.clear();
     }
-
     @EventHandler
-    public void onTick(TickEvent.Pre event) {
-        burrowedPlayers.clear();
-        for (PlayerEntity target : mc.world.getPlayers()) {
-            if (target == mc.player || Friends.get().isFriend(target)) continue;
-            if (CombatUtils.isBurrowed(target)) {
-                burrowedPlayers.add(target);
+    public void ontick(TickEvent.Pre event) {
+        for (PlayerEntity player : mc.world.getPlayers()) {
+            if(mc.player.distanceTo(player) <= range.get()) {
+
+                info(player.getName().getString() + " is burrowed");
             }
         }
     }
-
     @EventHandler
     public void onRender(Render3DEvent event) {
-        for (BlockPos pos : burrowedPlayers.stream().map(PlayerEntity::getBlockPos).toList()) {
-            for(PlayerEntity player : burrowedPlayers) {
-                if (CombatUtils.isBurrowed(player)) {
-                    event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                }
-            }
+        for(PlayerEntity player: mc.world.getPlayers()) {
+            event.renderer.box(BlockPos.ofFloored(CombatUtils.getBurrowedPos(player)), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            info("rendering");
         }
-    }
-
-    @Override
-    public String getInfoString() {
-        return String.valueOf(burrowedPlayers.size());
     }
 }

@@ -20,11 +20,13 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -88,18 +90,16 @@ public class autoCity extends Module {
             .visible(() -> behaviorMode.get() == behavior.smart)
             .build());
 
+    private final Setting<Boolean> Burrow = sgBehavior.add(new BoolSetting.Builder()
+            .name("burrow")
+            .description("targets burrows")
+            .defaultValue(true)
+            .build());
+
     private final Setting<mineMode> MineMode = sgBehavior.add(new EnumSetting.Builder<mineMode>()
             .name("mine-mode")
             .description("how to mine blocks")
             .defaultValue(mineMode.instant)
-            .build());
-
-    private final Setting<Double> mineCooldown = sgBehavior.add(new DoubleSetting.Builder()
-            .name("mine-cooldown")
-            .description("The time to wait before instant mining the same block again.")
-            .defaultValue(0.5)
-            .sliderRange(0.0, 10.0)
-            .visible(() -> MineMode.get() == mineMode.instant)
             .build());
 
     private final Setting<renderMode> RenderMode = sgRender.add(new EnumSetting.Builder<renderMode>()
@@ -141,86 +141,102 @@ public class autoCity extends Module {
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private List<BlockPos> possiblePositions = new ArrayList<>();
-    private BlockPos currentPos;
-
+    private List<BlockPos> supportPositions = new ArrayList<>();
     public autoCity() {
         super(Addon.Snail, "auto-city+", "Automatically attacks players surrounds");
     }
 
     @Override
     public void onActivate() {
-        possiblePositions = new ArrayList<>();
-        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-            executor = Executors.newSingleThreadExecutor();
+        try {
+            possiblePositions = new ArrayList<>();
+            supportPositions = new ArrayList<>();
+            if (executor == null || executor.isShutdown() || executor.isTerminated()) {
+                executor = Executors.newSingleThreadExecutor();
+            }
+            executor.submit(() -> onTick(null));
+        } catch (Exception e) {
+            Addon.LOG.error("Error in autoCity onActivate: " + e.getMessage());
         }
-        executor.submit(() -> onTick(null));
-        currentPos = null;
     }
 
     @Override
     public void onDeactivate() {
-        possiblePositions = new ArrayList<>();
-        possiblePositions.clear();
-        currentPos = null;
+        try {
+            if (executor != null) {
+                executor.shutdown();
+            }
+            supportPositions.clear();
+            possiblePositions.clear();
+        } catch (Exception e) {
+           Addon.LOG.error("Error shutting down executor service: " + e.getMessage());
+        }
+
     }
 
     public List<BlockPos> getPossiblePositions(PlayerEntity entity) {
-        possiblePositions.clear();
-        Random random = new Random();
-
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                BlockPos pos = entity.getBlockPos().add(x, 0, z);
-                if (!WorldUtils.isAir(pos)) {
-                    possiblePositions.add(pos);
+        try {
+            Random random = new Random();
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockPos pos = entity.getBlockPos().add(x, 0, z);
+                    if (!WorldUtils.isAir(pos)) {
+                        possiblePositions.add(pos);
+                    }
                 }
             }
-        }
 
-        if (!possiblePositions.isEmpty()) {
-            currentPos = randomBlock.get() ? possiblePositions.get(random.nextInt(possiblePositions.size())) : possiblePositions.get(0);
-        }
+            if (!possiblePositions.isEmpty()) {
+                possiblePositions = Collections.singletonList(randomBlock.get() ? possiblePositions.get(random.nextInt(possiblePositions.size())) : possiblePositions.getFirst());
+            }
 
-        return possiblePositions;
+            return possiblePositions;
+        } catch (Exception e) {
+            Addon.LOG.error("Error in getPossiblePositions: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
-    public BlockPos[] getPossibleSupportBlocks() {
-        for(BlockPos pos : possiblePositions) {
-            for (int y = 0; y > -1; y--) {
-                BlockPos supportPos = pos.add(0, y, 0);
-                if (WorldUtils.isAir(supportPos)) {
-                    WorldUtils.placeBlock(InvUtils.find(Items.OBSIDIAN), supportPos, true, true, rotate.get());
-                    return new BlockPos[]{supportPos};
-                }
-            }
+    public BlockPos[] getPossibleSupportBlocks(PlayerEntity entity) {
+        for(BlockPos supportPos : getPossiblePositions(entity)) {
+            return new BlockPos[]{supportPos.down(1)};
         }
-        return null;
+        return new BlockPos[]{};
     }
 
     @EventHandler
     public void onTick(TickEvent.Post event) {
-        if (mc.world != null && mc.player != null && mc.interactionManager != null) {
+        try {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player == mc.player || Friends.get().isFriend(player)) continue;
-                if(pauseEat.get() && mc.player.isUsingItem()) continue;
+                if (pauseEat.get() && mc.player.isUsingItem()) continue;
                 if (player.distanceTo(mc.player) > range.get()) continue;
 
                 for (BlockPos blockPos : getPossiblePositions(player)) {
                     BlockState blockState = mc.world.getBlockState(blockPos);
                     FindItemResult bestSlot = InvUtils.findFastestTool(blockState);
+                    FindItemResult obsidian = InvUtils.find(Items.OBSIDIAN);
                     if (rotate.get()) {
                         Rotations.rotate(Rotations.getYaw(player), Rotations.getPitch(player));
                     }
                     if (strictDirection.get() && WorldUtils.strictDirection(blockPos, Direction.DOWN)) continue;
-                    if(supportPlace.get()) getPossibleSupportBlocks();
-
-                    attack(blockPos);
-                    swap(bestSlot);
+                    if (supportPlace.get()) supportPositions = List.of(getPossibleSupportBlocks(player));
+                    for (BlockPos supportPos : supportPositions) {
+                        if (WorldUtils.isAir(supportPos)) {
+                            WorldUtils.placeBlock(obsidian, supportPos, true, true, rotate.get());
+                        }
+                    }
+                    if (bestSlot.found()) {
+                        swap(bestSlot);
+                        attack(blockPos);
+                    }
                 }
                 if (chatInfo.get()) {
                     info("Attacking ->" + WorldUtils.getName(player));
                 }
             }
+        } catch (Exception e) {
+            Addon.LOG.error("Error in autoCity: " + e.getMessage());
         }
     }
 
@@ -242,7 +258,7 @@ public class autoCity extends Module {
         }
     }
 
-    public Boolean attack(BlockPos blockPos) {
+    public void attack(BlockPos blockPos) {
         switch (MineMode.get()) {
             case normal:
                 if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos));
@@ -254,21 +270,23 @@ public class autoCity extends Module {
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
                 break;
         }
-        return true;
     }
 
     @EventHandler
     public void onRender(Render3DEvent event) {
         switch (RenderMode.get()) {
             case normal:
-                    event.renderer.box(currentPos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
-                break;
-            case fade:
-                for (BlockPos blockPos : possiblePositions) {
-                    boolean shouldShrink = attack(blockPos);
-                    if (shouldShrink) {
-                        RenderUtils.renderTickingBlock(currentPos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0, rendertime.get(), true, false);
+                for (PlayerEntity player : mc.world.getPlayers()) {
+                    for (BlockPos pos : getPossiblePositions(player)) {
+                        event.renderer.box(pos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
                     }
+
+                    break;
+                }
+
+            case fade:
+                for (BlockPos pos : possiblePositions) {
+                        RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0, rendertime.get(), true, false);
                 }
                 break;
         }

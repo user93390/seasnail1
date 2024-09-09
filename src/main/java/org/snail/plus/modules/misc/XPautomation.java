@@ -77,6 +77,17 @@ public class XPautomation extends Module {
             .defaultValue(false)
             .build());
 
+    private final Setting<Integer> armorSlot = sgGeneral.add(new IntSetting.Builder()
+            .name("armor slot")
+            .description("the slot to put Armor in")
+            .defaultValue(1)
+            .min(1)
+            .max(9)
+            .sliderMin(1)
+            .sliderMax(9)
+            .visible(smartMode::get)
+            .build());
+
     public final Setting<Double> health = sgGeneral.add(new DoubleSetting.Builder()
             .name("pause-health")
             .description("Pauses when you go below a certain health.")
@@ -138,6 +149,11 @@ public class XPautomation extends Module {
     private FindItemResult exp;
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+        if (smartMode.get()) {
+            ChatUtils.info("Your armor is at full HP, disabling...");
+            toggle();
+            return;
+        }
 
 
         if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) return;
@@ -194,12 +210,10 @@ public class XPautomation extends Module {
             InvUtils.swap(exp.slot(), false);
             Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
             swingHand();
-            checkArmorDurability();
         } else if (autoSwitch.get() == AutoSwitchMode.Silent) {
             InvUtils.swap(exp.slot(), true);
             Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
             swingHand();
-            checkArmorDurability();
             InvUtils.swapBack();
         }
     }

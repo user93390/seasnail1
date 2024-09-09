@@ -38,7 +38,6 @@ public class stealthMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
-    private final SettingGroup sgAutoCity = settings.createGroup("Auto City");
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotate")
@@ -64,13 +63,6 @@ public class stealthMine extends Module {
             .name("Mine mode")
             .description("how blocks are mined")
             .defaultValue(breakMode.instant)
-            .build());
-    private final Setting<Double> remineSpeed = sgGeneral.add(new DoubleSetting.Builder()
-            .name("remine speed")
-            .description("how fast to remine")
-            .defaultValue(1.5)
-            .sliderMin(0)
-            .sliderMax(10)
             .build());
 
     private final Setting<Boolean> PauseOnUse = sgGeneral.add(new BoolSetting.Builder()
@@ -177,12 +169,6 @@ public class stealthMine extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<Boolean> swingHand = sgMisc.add(new BoolSetting.Builder()
-            .name("swing hand")
-            .description("swings your hand when mining")
-            .defaultValue(false)
-            .build());
-
     private final Setting<Boolean> pauseUse = sgMisc.add(new BoolSetting.Builder()
             .name("pause on use")
             .description("pauses the module when you use a item")
@@ -201,7 +187,6 @@ public class stealthMine extends Module {
     public static BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
     BlockState blockState;
     private FindItemResult bestSlot;
-    private long lastPlacedTime;
 
     public stealthMine() {
         super(Addon.Snail, "stealth mine", "Mines blocks using packets");
@@ -312,8 +297,6 @@ public class stealthMine extends Module {
         }
         BlockState blockState = mc.world.getBlockState(blockPos);
         bestSlot = InvUtils.findFastestTool(blockState);
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastPlacedTime < (1000 / remineSpeed.get())) return;
         for (Direction dir : Direction.values()) {
             if (strictDirection.get() && WorldUtils.strictDirection(blockPos.offset(dir), dir.getOpposite())) {
                 break;
@@ -335,7 +318,6 @@ public class stealthMine extends Module {
             }
             if(WorldUtils.isBreakable(blockPos)) blockBreakingProgress = 0;
         }
-        lastPlacedTime = currentTime;
     }
 
 
@@ -345,17 +327,17 @@ public class stealthMine extends Module {
                 if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos));
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.UP));
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
+
                 break;
             case instant:
                 if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos),(Rotations.getPitch(blockPos)));
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
+
                 break;
             case bypass:
                 if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos),(Rotations.getPitch(blockPos)));
                 mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
+
                 break;
         }
     }

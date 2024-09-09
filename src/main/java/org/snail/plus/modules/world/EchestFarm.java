@@ -1,11 +1,14 @@
 package org.snail.plus.modules.world;
 
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
@@ -27,6 +30,7 @@ import java.util.List;
 public class EchestFarm extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgLogic = settings.createGroup("Logic");
+    private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
@@ -116,6 +120,20 @@ public class EchestFarm extends Module {
             .defaultValue(true)
             .build());
 
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
+            .name("line color")
+            .description("line color")
+            .defaultValue(new SettingColor(255, 255, 255))
+            .build());
+
+    private final  Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
+            .name("side color")
+            .description("side color")
+            .defaultValue(new SettingColor(255, 255, 255))
+            .build());
+
+
+
     private int minedEchest = 0;
     private List<BlockPos> echestPositions = new ArrayList<>();
     private long LastMine = 0;
@@ -124,7 +142,7 @@ public class EchestFarm extends Module {
     private Boolean isBroken = false;
 
     public EchestFarm() {
-        super(Addon.Snail, "Echest Farm", "Automatically farms enderchests.");
+        super(Addon.Snail, "Echest Farm+", "Automatically farms enderchests.");
     }
 
     @Override
@@ -227,6 +245,12 @@ public class EchestFarm extends Module {
 
         if(WorldUtils.isAir(blockPos)) {
             isBroken = true;
+        }
+    }
+    @EventHandler
+    public void Onrender(Render3DEvent event) {
+        for(BlockPos pos : echestPositions) {
+            event.renderer.box(pos, sideColor.get(), lineColor.get(), ShapeMode.Both, 1);
         }
     }
     @Override

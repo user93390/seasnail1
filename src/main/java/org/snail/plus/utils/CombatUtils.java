@@ -4,7 +4,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import org.snail.plus.Addon;
 
 import java.util.Objects;
 
@@ -48,10 +49,16 @@ public class CombatUtils {
      * @return True if the player is burrowed, false otherwise.
      */
     public static boolean isBurrowed(PlayerEntity target) {
-        double x = target.getBlockZ();
-        double y = (target.getBlockZ() + 0.4);
-        double z = target.getBlockZ();
-        BlockPos playerPos = new BlockPos(MathHelper.floor(x), MathHelper.floor(y), MathHelper.floor(z));
-        return IsValidBlock(playerPos);
+        if(!mc.world.getBlockState(target.getBlockPos()).isAir()) {
+            Addon.LOG.info("{} is burrowed", target.getName().getString());
+            return  true;
+        }
+        return false;
     }
+
+
+    public static Vec3d getBurrowedPos(PlayerEntity target) {
+        return new Vec3d(target.getBlockZ(), target.getBlockZ(), target.getBlockZ());
+    }
+
 }

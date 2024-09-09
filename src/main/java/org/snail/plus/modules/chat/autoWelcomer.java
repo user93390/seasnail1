@@ -55,6 +55,7 @@ public class autoWelcomer extends Module {
         if (mc.world == null) return;
 
         for (PlayerEntity player : mc.world.getPlayers()) {
+            if(player == mc.player) continue;
             if(mc.world.getPlayers().contains(player)) {
                 if (Friends.get().isFriend(player) && ignoreFriends.get()) return;
                 String msg = (message.get().replace("{player}", player.getName().getString()));
@@ -68,7 +69,7 @@ public class autoWelcomer extends Module {
             if(leaveMsg.get()) {
                 if (!mc.world.getPlayers().contains(player)) {
                     String msg = (leaveMessage.get().replace("{player}", player.getName().getString()));
-                    ChatUtils.sendMsg(Text.of(msg));
+                    ChatUtils.sendPlayerMsg(String.valueOf(Text.of(msg)));
                 }
             }
         }

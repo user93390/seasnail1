@@ -5,11 +5,13 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friend;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
+import org.snail.plus.modules.misc.XPautomation;
 import org.snail.plus.utils.WorldUtils;
 
 import java.util.List;
@@ -26,6 +28,12 @@ public class ArmorMessage extends Module {
             .min(0)
             .max(100)
             .sliderMax(100)
+            .build());
+
+    private final Setting<Boolean> autoXP = sgGeneral.add(new BoolSetting.Builder()
+            .name("auto-xp")
+            .description("Automatically enables AutoXP+ when your armor is low.")
+            .defaultValue(true)
             .build());
 
     private final Setting<String> message = sgGeneral.add(new StringSetting.Builder()
@@ -52,6 +60,12 @@ public class ArmorMessage extends Module {
             .defaultValue(true)
             .build());
 
+    private final Setting<String> friendMessage = sgGeneral.add(new StringSetting.Builder()
+            .name("friend-message")
+            .description("The message to send to friends")
+            .defaultValue("hey {name}! armor at {present}%! go repair!")
+            .build());
+
     private final Setting<Boolean> autoDm = sgGeneral.add(new BoolSetting.Builder()
             .name("auto-dm")
             .description("Sends the message to friends.")
@@ -63,10 +77,10 @@ public class ArmorMessage extends Module {
     }
 
     private void sendWarning(String msg) {
-        if (sound.get()) {
+        if (sound.get() && !sounds.get().isEmpty()) {
             WorldUtils.playSound(sounds.get().get(new Random().nextInt(sounds.get().size())), 1.0f);
         }
-        ChatUtils.sendPlayerMsg(msg);
+        info(msg);
     }
 
     private void sendFriendWarning(Friend friend, String msg) {
@@ -74,27 +88,57 @@ public class ArmorMessage extends Module {
         ChatUtils.sendPlayerMsg(dmMsg);
     }
 
-    private boolean isArmorLow(ItemStack itemStack) {
-        return itemStack.getMaxDamage() - itemStack.getDamage() < durability.get();
+    private String isArmorLow(ItemStack itemStack, String armorPiece) {
+        return itemStack.getMaxDamage() - itemStack.getDamage() < durability.get() ? armorPiece : null;
     }
 
     @EventHandler
     public void onTick(TickEvent.Post event) {
+        ItemStack helmet = mc.player.getInventory().getArmorStack(3);
+        ItemStack chestplate = mc.player.getInventory().getArmorStack(2);
+        ItemStack leggings = mc.player.getInventory().getArmorStack(1);
+        ItemStack boots = mc.player.getInventory().getArmorStack(0);
+
+        if (helmet.isEmpty() || chestplate.isEmpty() || leggings.isEmpty() || boots.isEmpty()) return;
+
         String msg = message.get().replace("{present}", String.valueOf(durability.get().intValue()));
+        StringBuilder lowArmorPieces = new StringBuilder();
 
-        if (StreamSupport.stream(mc.player.getArmorItems().spliterator(), false)
-                .anyMatch(this::isArmorLow)) {
-            sendWarning(msg);
-            return;
+        if (mc.player.getArmorItems() != null && mc.player.getArmorItems().iterator().hasNext()) {
+            if (StreamSupport.stream(mc.player.getArmorItems().spliterator(), false)
+                    .anyMatch(itemStack -> {
+                        String lowPiece = isArmorLow(itemStack, itemStack.getName().getString());
+                        if (lowPiece != null) {
+                            lowArmorPieces.append(lowPiece).append(" ");
+                            return true;
+                        }
+                        return false;
+                    })) {
+                sendWarning(msg + " Low armor pieces: " + lowArmorPieces.toString().trim());
+                if(autoXP.get()) {
+                    ChatUtils.info("Enabling AutoXP+");
+                    if(!Modules.get().isActive(XPautomation.class)) {
+                        Modules.get().get(XPautomation.class).toggle();
+                    }
+                }
+                return;
+            }
         }
-
         if (warnFriends.get()) {
-            StreamSupport.stream(mc.world.getPlayers().spliterator(), false)
+            mc.world.getPlayers().stream()
                     .filter(player -> player != mc.player && Friends.get().isFriend(player))
                     .forEach(player -> {
+                        StringBuilder friendLowArmorPieces = new StringBuilder();
                         if (StreamSupport.stream(player.getArmorItems().spliterator(), false)
-                                .anyMatch(this::isArmorLow)) {
-                            sendFriendWarning(Friends.get().get(player), msg);
+                                .anyMatch(itemStack -> {
+                                    String lowPiece = isArmorLow(itemStack, itemStack.getName().getString());
+                                    if (lowPiece != null) {
+                                        friendLowArmorPieces.append(lowPiece).append(" ");
+                                        return true;
+                                    }
+                                    return false;
+                                })) {
+                            String friendMsg;
                         }
                     });
         }

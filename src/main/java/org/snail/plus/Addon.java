@@ -20,6 +20,7 @@ import org.snail.plus.modules.misc.*;
 import org.snail.plus.modules.render.BurrowEsp;
 import org.snail.plus.modules.render.FOV;
 import org.snail.plus.modules.render.KillEffects;
+import org.snail.plus.modules.world.EchestFarm;
 
 
 public class Addon extends MeteorAddon {
@@ -30,7 +31,6 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
-
         loadModules();
         Config.get().load();
         LOG.info("Loaded config");
@@ -62,6 +62,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new BurrowEsp());
         Modules.get().add(new AutoSand());
         Modules.get().add(new SelfAnvil());
+        Modules.get().add(new EchestFarm());
         Modules.get().add(new KillEffects());
         Hud.get().register(Watermark.INFO);
     }
