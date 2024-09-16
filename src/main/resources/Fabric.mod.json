@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "id": "snailplus",
-  "version": "1.0.2",
-  "name": "snail++",
-  "description": "meteor client addon",
+  "id": "addon-template",
+  "version": "${version}",
+  "name": "Addon Template",
+  "description": "An addon template for Meteor Client addons.",
   "authors": [
-    "seasnail1"
+    "seasnail"
   ],
   "contact": {
     "repo": "https://github.com/user93390/seasnail1"
   },
-  "icon": "assets/image.png",
+  "icon": "assets/template/icon.png",
   "environment": "client",
   "entrypoints": {
     "meteor": [
@@ -21,11 +21,11 @@
     "addon.mixins.json"
   ],
   "custom": {
-    "meteor-client:color": "76,25,76"
+    "meteor-client:color": "76, 25, 76"
   },
   "depends": {
     "java": ">=21",
-    "minecraft": ">=1.20.4",
+    "minecraft": ">1.20.3",
     "meteor-client": "*"
   }
 }
