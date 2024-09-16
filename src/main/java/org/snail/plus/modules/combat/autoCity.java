@@ -20,7 +20,6 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
@@ -142,6 +141,7 @@ public class autoCity extends Module {
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private List<BlockPos> possiblePositions = new ArrayList<>();
     private List<BlockPos> supportPositions = new ArrayList<>();
+    private BlockPos cityPos;
     public autoCity() {
         super(Addon.Snail, "auto-city+", "Automatically attacks players surrounds");
     }
@@ -149,6 +149,7 @@ public class autoCity extends Module {
     @Override
     public void onActivate() {
         try {
+            cityPos = null;
             possiblePositions = new ArrayList<>();
             supportPositions = new ArrayList<>();
             if (executor == null || executor.isShutdown() || executor.isTerminated()) {
@@ -163,6 +164,7 @@ public class autoCity extends Module {
     @Override
     public void onDeactivate() {
         try {
+            cityPos = null;
             if (executor != null) {
                 executor.shutdown();
             }
@@ -211,15 +213,14 @@ public class autoCity extends Module {
                 if (player == mc.player || Friends.get().isFriend(player)) continue;
                 if (pauseEat.get() && mc.player.isUsingItem()) continue;
                 if (player.distanceTo(mc.player) > range.get()) continue;
-
-                for (BlockPos blockPos : getPossiblePositions(player)) {
-                    BlockState blockState = mc.world.getBlockState(blockPos);
+                cityPos = getPossiblePositions(player).getFirst();
+                BlockState blockState = mc.world.getBlockState(cityPos);
                     FindItemResult bestSlot = InvUtils.findFastestTool(blockState);
                     FindItemResult obsidian = InvUtils.find(Items.OBSIDIAN);
                     if (rotate.get()) {
                         Rotations.rotate(Rotations.getYaw(player), Rotations.getPitch(player));
                     }
-                    if (strictDirection.get() && WorldUtils.strictDirection(blockPos, Direction.DOWN)) continue;
+                if (strictDirection.get() && WorldUtils.strictDirection(cityPos, Direction.DOWN)) continue;
                     if (supportPlace.get()) supportPositions = List.of(getPossibleSupportBlocks(player));
                     for (BlockPos supportPos : supportPositions) {
                         if (WorldUtils.isAir(supportPos)) {
@@ -227,9 +228,9 @@ public class autoCity extends Module {
                         }
                     }
                     if (bestSlot.found()) {
+
                         swap(bestSlot);
-                        attack(blockPos);
-                    }
+                        attack(cityPos);
                 }
                 if (chatInfo.get()) {
                     info("Attacking ->" + WorldUtils.getName(player));
@@ -276,18 +277,11 @@ public class autoCity extends Module {
     public void onRender(Render3DEvent event) {
         switch (RenderMode.get()) {
             case normal:
-                for (PlayerEntity player : mc.world.getPlayers()) {
-                    for (BlockPos pos : getPossiblePositions(player)) {
-                        event.renderer.box(pos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
-                    }
-
+                event.renderer.box(cityPos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
                     break;
-                }
 
             case fade:
-                for (BlockPos pos : possiblePositions) {
-                        RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0, rendertime.get(), true, false);
-                }
+                RenderUtils.renderTickingBlock(cityPos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0, rendertime.get(), true, false);
                 break;
         }
     }

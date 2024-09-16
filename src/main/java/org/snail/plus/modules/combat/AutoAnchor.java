@@ -202,6 +202,8 @@ public class AutoAnchor extends Module {
     private Box renderBoxOne, renderBoxTwo;
     private List<BlockPos> AnchorPos = new ArrayList<>();
     private long lastPlacedTime;
+    private  float selfDamage;
+    private  float targetDamage;
 
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
@@ -243,44 +245,57 @@ public class AutoAnchor extends Module {
      */
     public List<BlockPos> positions(PlayerEntity entity) {
         try {
-            ArrayList<BlockPos> posList = new ArrayList<>();
+            List<BlockPos> posList = new ArrayList<>();
             int radiusSquared = RadiusX.get() * RadiusX.get();
+            for (PlayerEntity player : mc.world.getPlayers()) {
 
-            for (int x = -RadiusX.get(); x <= RadiusX.get(); x++) {
-                for (int z = -RadiusZ.get(); z <= RadiusZ.get(); z++) {
-                    int distanceSquared = x * x + z * z;
-                    if (debugCalculations.get()) info("found squared distance: " + distanceSquared);
 
-                    if (distanceSquared <= radiusSquared) {
-                        BlockPos pos = entity.getBlockPos().add(x, 0, z);
-                        BlockPos mcPos = mc.player.getBlockPos().add(x, 0, z);
-                        if (WorldUtils.isAir(pos) && !entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1) ||
-                                WorldUtils.isAir(pos) && !mc.player.getBoundingBox().intersects(mcPos.getX(), mcPos.getY(), mcPos.getZ(), mcPos.getX() + 1, mcPos.getY() + 1, mcPos.getZ() + 1)) {
-                            if (debugCalculations.get()) info("found pos: " + pos);
-                            posList.add(pos);
-                            return calculate(pos, entity);
-                        } else {
-                            for (int yOffset = -1; yOffset <= 1; yOffset++) {
-                                BlockPos nearbyPos = pos.add(0, yOffset, 0);
-                                if (debugCalculations.get()) info("fallback to " + nearbyPos);
-                                if (WorldUtils.isAir(nearbyPos) && !entity.getBoundingBox().intersects(nearbyPos.getX(), nearbyPos.getY(), nearbyPos.getZ(), nearbyPos.getX() + 1, nearbyPos.getY() + 1, nearbyPos.getZ() + 1)) {
-                                    posList.add(nearbyPos);
-                                    return calculate(nearbyPos, entity);
+                for (int x = -RadiusX.get(); x <= RadiusX.get(); x++) {
+                    for (int z = -RadiusZ.get(); z <= RadiusZ.get(); z++) {
+                        int distanceSquared = x * x + z * z;
+                        if (debugCalculations.get()) info("found squared distance: " + distanceSquared);
+
+                        if (distanceSquared <= radiusSquared) {
+                            BlockPos pos = entity.getBlockPos().add(x, 0, z);
+                            BlockPos mcPos = mc.player.getBlockPos().add(x, 0, z);
+                            selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(mc.player)) : DamageUtils.anchorDamage(mc.player, Vec3d.of(pos));
+                            targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(player)) : DamageUtils.anchorDamage(player, Vec3d.of(pos));
+
+                            if (WorldUtils.isAir(pos) && !entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1) ||
+                                    WorldUtils.isAir(pos) && !mc.player.getBoundingBox().intersects(mcPos.getX(), mcPos.getY(), mcPos.getZ(), mcPos.getX() + 1, mcPos.getY() + 1, mcPos.getZ() + 1)
+                            && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                                if (debugCalculations.get()) info("found pos: " + pos);
+                                posList.add(pos);
+                                return posList;
+                            } else {
+                                for (int yOffset = -1; yOffset <= 1; yOffset++) {
+                                    BlockPos nearbyPos = pos.add(0, yOffset, 0);
+                                    selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(mc.player)) : DamageUtils.anchorDamage(mc.player, Vec3d.of(nearbyPos));
+                                    targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(player)) : DamageUtils.anchorDamage(player, Vec3d.of(nearbyPos));
+                                    if (debugCalculations.get()) info("fallback to " + nearbyPos);
+                                    if (WorldUtils.isAir(nearbyPos) && !entity.getBoundingBox().intersects(nearbyPos.getX(), nearbyPos.getY(), nearbyPos.getZ(), nearbyPos.getX() + 1, nearbyPos.getY() + 1, nearbyPos.getZ() + 1)
+                                            && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                                        posList.add(nearbyPos);
+                                        return posList;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-            if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().up(2).getX(), entity.getBlockPos().up(2).getY(), entity.getBlockPos().up(2).getZ(), entity.getBlockPos().up(2).getX() + 1, entity.getBlockPos().up(2).getY() + 1, entity.getBlockPos().up(2).getZ() + 1)) {
-                posList.add(entity.getBlockPos().up(2));
-                calculate(entity.getBlockPos().up(2), entity);
-                return calculate(entity.getBlockPos().up(2), entity);
-            }
-            if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().down(1).getX(), entity.getBlockPos().down(1).getY(), entity.getBlockPos().down(1).getZ(), entity.getBlockPos().down(1).getX() + 1, entity.getBlockPos().down(1).getY() + 1, entity.getBlockPos().down(1).getZ() + 1)) {
-                posList.add(entity.getBlockPos().down(1));
-                calculate(entity.getBlockPos().down(1), entity);
-                return calculate(entity.getBlockPos().down(1), entity);
+
+                selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(mc.player)) : DamageUtils.anchorDamage(mc.player, Vec3d.of(entity.getBlockPos().up(2)));
+                targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(player)) : DamageUtils.anchorDamage(player, Vec3d.of(entity.getBlockPos().up(2)));
+                if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().up(2).getX(), entity.getBlockPos().up(2).getY(), entity.getBlockPos().up(2).getZ(), entity.getBlockPos().up(2).getX() + 1, entity.getBlockPos().up(2).getY() + 1, entity.getBlockPos().up(2).getZ() + 1)
+                        && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                    posList.add(entity.getBlockPos().up(2));
+                    return posList;
+                }
+                if (WorldUtils.isAir(entity.getBlockPos().down(1)) && !entity.getBoundingBox().intersects(entity.getBlockPos().down(1).getX(), entity.getBlockPos().down(1).getY(), entity.getBlockPos().down(1).getZ(), entity.getBlockPos().down(1).getX() + 1, entity.getBlockPos().down(1).getY() + 1, entity.getBlockPos().down(1).getZ() + 1)
+                        && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                    posList.add(entity.getBlockPos().down(1));
+                    return posList;
+                }
             }
             return posList;
         } catch (Exception e) {
@@ -288,55 +303,11 @@ public class AutoAnchor extends Module {
             return new ArrayList<>();
         }
     }
-
     public Vec3d predictMovement(@NotNull PlayerEntity player) {
         Vec3d pos = predictMovement.get() ? player.getPos().add(player.getVelocity()) : player.getPos();
         Box box = player.getBoundingBox();
         if (predictMovement.get()) box.offset(player.getVelocity());
         return pos;
-    }
-
-
-    /**
-     * Calculates the best positions around a given block position for placing anchors.
-     * This method checks the initial position, searches for new positions within a specified radius,
-     * and also checks head positions.
-     *
-     * @param pos    The initial block position to check.
-     * @param entity The player entity around which to find positions.
-     * @return A list of BlockPos representing the best positions for placing anchors.
-     */
-    public List<BlockPos> calculate(@NotNull BlockPos pos, PlayerEntity entity) {
-        double dmg = DamageUtils.anchorDamage(entity, predictMovement(entity));
-        double selfDmg = DamageUtils.anchorDamage(mc.player, predictMovement(entity));
-        if (dmg >= minDamage.get() || selfDmg < maxSelfDamage.get()) {
-            if (!entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1))
-                return List.of(pos);
-            if (debugCalculations.get()) info("filtered pos: " + pos);
-            return List.of(pos);
-        } else {
-            if (debugCalculations.get()) info("couldn't filter pos, fallback to other positions " + pos);
-            for (int i = -RadiusX.get(); i < RadiusX.get(); i++) {
-                for (int j = -RadiusZ.get(); j < RadiusZ.get(); j++) {
-                    for (int yOffset = -1; yOffset <= 1; yOffset++) {
-                        BlockPos newPos = pos.add(i, yOffset, j);
-                        if (debugCalculations.get()) info("found new pos: " + newPos);
-                        dmg = DamageUtils.anchorDamage(entity, predictMovement(entity));
-                        selfDmg = DamageUtils.anchorDamage(mc.player,predictMovement(entity));
-                        if(debugCalculations.get()) info("dmg: " + dmg + " selfDmg: " + selfDmg);
-                        if (dmg >= minDamage.get() && selfDmg <= maxSelfDamage.get()) {
-                            if ((!entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) && !WorldUtils.isAir(pos)) {
-                                if (debugCalculations.get()) info("filtered new pos: " + newPos);
-                                return List.of(newPos);
-                            } else {
-                                if (debugCalculations.get()) info("couldn't filter new pos, fallback to other positions " + newPos);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -347,7 +318,6 @@ public class AutoAnchor extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         if (pauseUse.get() && (mc.player != null && mc.player.isUsingItem())) return;
-        if (mc.player.getHealth() + mc.player.getAbsorptionAmount() <= pauseHealth.get()) return;
         if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
             warning("You are in the wrong dimension!");
             return;
@@ -385,7 +355,7 @@ public class AutoAnchor extends Module {
                 FindItemResult stone = InvUtils.findInHotbar(Items.GLOWSTONE);
                 FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
                 if (!stone.found() || !anchor.found()) continue;
-
+                if (mc.player.getHealth() <= pauseHealth.get()) continue;
                 switch (swap.get()) {
                     case silent -> {
                         swapAndInteract(anchor, pos, false);
@@ -441,9 +411,7 @@ public class AutoAnchor extends Module {
      */
     @EventHandler
     public void render(Render3DEvent event) {
-        if (AnchorPos == null) return;
         for (BlockPos pos : AnchorPos) {
-            if (pos.isWithinDistance(mc.player.getPos(), range.get())) continue;
             switch (renderMode.get()) {
                 case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 case fading ->

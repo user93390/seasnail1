@@ -45,7 +45,6 @@ public class autoWelcomer extends Module {
             .visible(leaveMsg::get)
             .build());
 
-
     public autoWelcomer() {
         super(Addon.Snail, "auto welcomer", "welcomes players to the server automatically");
     }
@@ -53,7 +52,6 @@ public class autoWelcomer extends Module {
     @EventHandler
     public void onTick(TickEvent.Post event) {
         if (mc.world == null) return;
-
         for (PlayerEntity player : mc.world.getPlayers()) {
             if(player == mc.player) continue;
             if(mc.world.getPlayers().contains(player)) {

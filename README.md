@@ -18,12 +18,29 @@
 - AutoAnchor+
 - AutoSand
 - BurrowEsp
+- autoCity
 
 **Miscellaneous Modules:**
 - Chat control
 - PacketMine+
 - AutoEZ
 - XP-Automation
+- DiscordRPC
+- antiAim
+
+**World Modules:**
+- EchestFarm
+
+**chat Modules:**
+- autoWelcomer
+- autoEZ
+- ChatControl
+- ArmorMessage
+
+**render Modules:**
+- BurrowESP
+- FOV
+- Killeffects
 
 [made by seasnail1](https://namemc.com/profile/seasnail1.1)
 
