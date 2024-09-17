@@ -46,7 +46,6 @@ public class Addon extends MeteorAddon {
     // Load modules
     public void loadModules() {
         Modules.get().add(new AutoEZ());
-        Modules.get().add(new autoCity());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
         Modules.get().add(new stealthMine());
