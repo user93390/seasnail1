@@ -62,4 +62,8 @@ public class WorldUtils {
             BlockUtils.place(pos, item, rotate, 100, true);
         }
     }
+
+    public static boolean doesntInsert(PlayerEntity entity) {
+        return !entity.getBoundingBox().intersects(entity.getBlockPos().down(1).getX(), entity.getBlockPos().down(1).getY(), entity.getBlockPos().down(1).getZ(), entity.getBlockPos().down(1).getX() + 1, entity.getBlockPos().down(1).getY() + 1, entity.getBlockPos().down(1).getZ() + 1);
+    }
 }

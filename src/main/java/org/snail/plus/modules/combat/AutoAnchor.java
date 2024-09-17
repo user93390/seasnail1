@@ -87,6 +87,42 @@ public class AutoAnchor extends Module {
             .sliderRange(0.0, 36.0)
             .build());
 
+    private final Setting<Boolean> ratioChecks = sgDamage.add(new BoolSetting.Builder()
+            .name("ratio checks")
+            .description("Enables damage ratio checks.")
+            .defaultValue(false)
+            .build());
+
+    private final Setting<Double> DmgRatio = sgDamage.add(new DoubleSetting.Builder()
+            .name("damage ratio")
+            .description("The ratio of damage to deal to the target.")
+            .defaultValue(1.0)
+            .sliderRange(0.0, 1.0)
+            .visible(ratioChecks::get)
+            .build());
+
+    private final Setting<Double> selfDmgRatio = sgDamage.add(new DoubleSetting.Builder()
+            .name("self damage ratio")
+            .description("The ratio of damage to deal to yourself.")
+            .defaultValue(1.0)
+            .sliderRange(0.0, 1.0)
+            .visible(ratioChecks::get)
+            .build());
+
+    private final Setting<Double> lethalHealth = sgDamage.add(new DoubleSetting.Builder()
+            .name("lethal health")
+            .description("ignores self dmg checks if target health is below this value. set to 0 to disable.")
+            .defaultValue(0.0)
+            .sliderRange(0.0, 36.0)
+            .build());
+
+    private final Setting<Boolean> antiPop = sgDamage.add(new BoolSetting.Builder()
+            .name("anti pop")
+            .description("prevents you from using a totem when lethal health is reached.")
+            .defaultValue(false)
+            .visible(() -> lethalHealth.get() > 0)
+            .build());
+
     private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
             .name("pause health")
             .description("Pauses the module when your health is below this value.")
@@ -197,13 +233,13 @@ public class AutoAnchor extends Module {
             .defaultValue(false)
             .build());
 
-    private final ReentrantLock lock = new ReentrantLock();
     ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ReentrantLock lock  = new ReentrantLock();
     private Box renderBoxOne, renderBoxTwo;
     private List<BlockPos> AnchorPos = new ArrayList<>();
     private long lastPlacedTime;
-    private  float selfDamage;
-    private  float targetDamage;
+    private float selfDamage;
+    private float targetDamage;
 
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
@@ -225,6 +261,8 @@ public class AutoAnchor extends Module {
     @Override
     public void onDeactivate() {
         try {
+            selfDamage = 0;
+            targetDamage = 0;
             if (executor != null) {
                 executor.shutdown();
             }
@@ -249,8 +287,6 @@ public class AutoAnchor extends Module {
             List<BlockPos> posList = new ArrayList<>();
             int radiusSquared = RadiusX.get() * RadiusX.get();
             for (PlayerEntity player : mc.world.getPlayers()) {
-
-
                 for (int x = -RadiusX.get(); x <= RadiusX.get(); x++) {
                     for (int z = -RadiusZ.get(); z <= RadiusZ.get(); z++) {
                         int distanceSquared = x * x + z * z;
@@ -262,9 +298,7 @@ public class AutoAnchor extends Module {
                             selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(mc.player)) : DamageUtils.anchorDamage(mc.player, Vec3d.of(pos));
                             targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(player)) : DamageUtils.anchorDamage(player, Vec3d.of(pos));
 
-                            if (WorldUtils.isAir(pos) && !entity.getBoundingBox().intersects(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1) ||
-                                    WorldUtils.isAir(pos) && !mc.player.getBoundingBox().intersects(mcPos.getX(), mcPos.getY(), mcPos.getZ(), mcPos.getX() + 1, mcPos.getY() + 1, mcPos.getZ() + 1)
-                            && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                            if (WorldUtils.isAir(pos) && WorldUtils.doesntInsert(entity) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && ratioChecks.get() && (targetDamage / selfDamage) >= DmgRatio.get() && (selfDamage / targetDamage) >= selfDmgRatio.get() && (entity.getHealth() > lethalHealth.get() || !antiPop.get())) {
                                 if (debugCalculations.get()) info("found pos: " + pos);
                                 posList.add(pos);
                                 return posList;
@@ -274,8 +308,7 @@ public class AutoAnchor extends Module {
                                     selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(mc.player)) : DamageUtils.anchorDamage(mc.player, Vec3d.of(nearbyPos));
                                     targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(player)) : DamageUtils.anchorDamage(player, Vec3d.of(nearbyPos));
                                     if (debugCalculations.get()) info("fallback to " + nearbyPos);
-                                    if (WorldUtils.isAir(nearbyPos) && !entity.getBoundingBox().intersects(nearbyPos.getX(), nearbyPos.getY(), nearbyPos.getZ(), nearbyPos.getX() + 1, nearbyPos.getY() + 1, nearbyPos.getZ() + 1)
-                                            && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                                    if (WorldUtils.isAir(nearbyPos) && WorldUtils.doesntInsert(entity) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && ratioChecks.get() && (targetDamage / selfDamage) >= DmgRatio.get() && (selfDamage / targetDamage) >= selfDmgRatio.get() && (entity.getHealth() > lethalHealth.get() || !antiPop.get())) {
                                         posList.add(nearbyPos);
                                         return posList;
                                     }
@@ -287,13 +320,11 @@ public class AutoAnchor extends Module {
 
                 selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(mc.player)) : DamageUtils.anchorDamage(mc.player, Vec3d.of(entity.getBlockPos().up(2)));
                 targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(player)) : DamageUtils.anchorDamage(player, Vec3d.of(entity.getBlockPos().up(2)));
-                if (WorldUtils.isAir(entity.getBlockPos().up(2)) && !entity.getBoundingBox().intersects(entity.getBlockPos().up(2).getX(), entity.getBlockPos().up(2).getY(), entity.getBlockPos().up(2).getZ(), entity.getBlockPos().up(2).getX() + 1, entity.getBlockPos().up(2).getY() + 1, entity.getBlockPos().up(2).getZ() + 1)
-                        && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                if (WorldUtils.isAir(entity.getBlockPos().up(2)) && WorldUtils.doesntInsert(entity) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && ratioChecks.get() && (targetDamage / selfDamage) >= DmgRatio.get() && (selfDamage / targetDamage) >= selfDmgRatio.get() && (entity.getHealth() > lethalHealth.get() || !antiPop.get())) {
                     posList.add(entity.getBlockPos().up(2));
                     return posList;
                 }
-                if (WorldUtils.isAir(entity.getBlockPos().down(1)) && !entity.getBoundingBox().intersects(entity.getBlockPos().down(1).getX(), entity.getBlockPos().down(1).getY(), entity.getBlockPos().down(1).getZ(), entity.getBlockPos().down(1).getX() + 1, entity.getBlockPos().down(1).getY() + 1, entity.getBlockPos().down(1).getZ() + 1)
-                        && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                if (WorldUtils.isAir(entity.getBlockPos().down(1)) && WorldUtils.doesntInsert(entity) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && ratioChecks.get() && (targetDamage / selfDamage) >= DmgRatio.get() && (selfDamage / targetDamage) >= selfDmgRatio.get() && (entity.getHealth() > lethalHealth.get() || !antiPop.get())) {
                     posList.add(entity.getBlockPos().down(1));
                     return posList;
                 }
@@ -304,6 +335,7 @@ public class AutoAnchor extends Module {
             return new ArrayList<>();
         }
     }
+
     public Vec3d predictMovement(@NotNull PlayerEntity player) {
         Vec3d pos = predictMovement.get() ? player.getPos().add(player.getVelocity()) : player.getPos();
         Box box = player.getBoundingBox();
@@ -320,7 +352,7 @@ public class AutoAnchor extends Module {
     private void onTick(TickEvent.Post event) {
         if (pauseUse.get() && (mc.player != null && mc.player.isUsingItem())) return;
         if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
-            warning("You are in the wrong dimension!");
+            error("You can't use this in the nether!");
             return;
         }
 

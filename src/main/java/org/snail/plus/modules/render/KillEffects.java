@@ -36,6 +36,7 @@ public class KillEffects extends Module {
     public KillEffects() {
         super(Addon.Snail, "Kill Effects", "shows effects when a player dies");
     }
+
     @EventHandler
     public void onTick(TickEvent.Post event) {
         for(PlayerEntity player : mc.world.getPlayers()) {

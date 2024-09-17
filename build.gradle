@@ -1,5 +1,6 @@
 plugins {
     id "fabric-loom" version "1.7-SNAPSHOT"
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 base {
@@ -17,6 +18,7 @@ repositories {
         name = "Meteor Dev Snapshots"
         url = "https://maven.meteordev.org/snapshots"
     }
+    mavenCentral()
 }
 
 dependencies {
@@ -27,6 +29,7 @@ dependencies {
 
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 tasks {
@@ -48,12 +51,13 @@ tasks {
     }
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
     }
 
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = "UTF-8"
         it.options.release = 21
     }
+}
+kotlin {
+    jvmToolchain(21)
 }

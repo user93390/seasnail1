@@ -31,7 +31,6 @@ public class discordRPC extends Module {
             .visible(() -> !message.get().isEmpty())
             .build());
 
-
     private String msg;
 
     public discordRPC() {

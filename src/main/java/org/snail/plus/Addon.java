@@ -1,6 +1,8 @@
 package org.snail.plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.commands.Command;
+import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
@@ -64,6 +66,8 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new EchestFarm());
         Modules.get().add(new KillEffects());
         Hud.get().register(Watermark.INFO);
+        Commands.get("serverInfo");
+        Commands.get("autoCrash");
     }
 
     @Override
