@@ -243,6 +243,7 @@ public class AutoAnchor extends Module {
      * @param entity The player entity around which to find positions.
      * @return An array of BlockPos representing the best positions for placing anchors.
      */
+
     public List<BlockPos> positions(PlayerEntity entity) {
         try {
             List<BlockPos> posList = new ArrayList<>();

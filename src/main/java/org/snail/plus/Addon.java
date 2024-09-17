@@ -53,7 +53,6 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AntiAim());
         Modules.get().add(new discordRPC());
         Modules.get().add(new AutoEZ());
-        Modules.get().add(new autoCity());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
         Modules.get().add(new stealthMine());
