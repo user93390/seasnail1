@@ -10,7 +10,7 @@
   "contact": {
     "repo": "https://github.com/user93390/seasnail1"
   },
-  "icon": "assets/image.png",
+  "icon": "assets/logo.png",
   "environment": "client",
   "entrypoints": {
     "meteor": [

@@ -331,15 +331,18 @@ public class AutoAnchor extends Module {
                 continue;
 
             AnchorPos = positions(player);
-            for (Direction dir : Direction.values()) {
-                if (strictDirection.get() && WorldUtils.strictDirection(AnchorPos.getFirst().offset(dir), dir.getOpposite()))
-                    continue;
+            for (BlockPos pos : AnchorPos) {
+                for (Direction dir : Direction.values()) {
+                    if (strictDirection.get() && WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite()))
+                        continue;
+                }
             }
             lock.lock();
             try {
-                if (rotate.get())
-                    Rotations.rotate(Rotations.getYaw(AnchorPos.getFirst()), Rotations.getPitch(AnchorPos.getFirst()));
-
+                for (BlockPos pos : AnchorPos) {
+                    if (rotate.get())
+                        Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(AnchorPos.getFirst()));
+                }
                 breakAnchor();
             } finally {
                 lock.unlock();

@@ -4,9 +4,6 @@ import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 
 public class swapManager {
@@ -26,38 +23,5 @@ public class swapManager {
                 slot = packet.getSelectedSlot();
             }
         }
-    }
-
-    public ItemStack getStack() {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.player == null) {
-            return null;
-        }
-        return mc.player.getInventory().getStack(slot);
-    }
-
-    public int getSlot() {
-        return slot;
-    }
-
-    public boolean isHolding(Item... items) {
-        ItemStack stack = getStack();
-        if (stack == null) {
-            return false;
-        }
-        for (Item item : items) {
-            if (item.equals(stack.getItem())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean isHolding(Item item) {
-        ItemStack stack = getStack();
-        if (stack == null) {
-            return false;
-        }
-        return stack.getItem().equals(item);
     }
 }
