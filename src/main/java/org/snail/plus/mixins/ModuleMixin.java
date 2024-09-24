@@ -35,4 +35,21 @@ public class ModuleMixin {
             ci.cancel();
         }
     }
+    @Inject(method = "warning", at = @At("HEAD"), cancellable = true, remap = false)
+    private void warning(String message, Object[] args, CallbackInfo ci) {
+        ChatUtils.sendMsg(Text.of(Formatting.YELLOW + " [!] " + String.format(message, args)));
+        ci.cancel();
+    }
+
+    @Inject(method = "error", at = @At("HEAD"), cancellable = true, remap = false)
+    private void error(String message, Object[] args, CallbackInfo ci) {
+        ChatUtils.sendMsg(Text.of(Formatting.RED + " [!] " + String.format(message, args)));
+        ci.cancel();
+    }
+
+    @Inject(method = "info*", at = @At("HEAD"), cancellable = true, remap = false)
+    private void info(String message, Object[] args, CallbackInfo ci) {
+        ChatUtils.sendMsg(Text.of(Formatting.GRAY + " [i] " + String.format(message)));
+        ci.cancel();
+    }
 }

@@ -50,9 +50,8 @@ public class discordRPC extends Module {
     }
 
     private void updateDetails() {
-        Random random = new Random();
         if (randomMsg.get()) {
-            msg = message.get().get(random.nextInt(message.get().size()))
+            msg = message.get().getFirst()
                     .replace("{server}",  this.mc.isInSingleplayer() ? "Singleplayer" : Utils.getWorldName())
                     .replace("{players}", Objects.requireNonNull(mc.world).getPlayers().size() + "");
             RPC.setDetails(msg);

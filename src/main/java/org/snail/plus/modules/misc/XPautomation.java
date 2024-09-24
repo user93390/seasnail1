@@ -1,6 +1,5 @@
 package org.snail.plus.modules.misc;
 
-import meteordevelopment.meteorclient.events.entity.player.BreakBlockEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -9,33 +8,20 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
 import net.minecraft.util.Hand;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.TPSSyncUtil;
+import org.snail.plus.utils.WorldUtils;
+import org.snail.plus.utils.swapUtils;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public class XPautomation extends Module {
 
-    public enum AutoSwitchMode {
-        Silent,
-        Normal
-    }
-    public enum RotateMode {
-        Packet,
-        Pitch,
-        None,
-    }
-    public enum HandMode {
-        Offhand,
-        MainHand,
-        Packet,
-        none
-    }
+
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -50,8 +36,9 @@ public class XPautomation extends Module {
             .description("Rotation method")
             .defaultValue(RotateMode.Packet)
             .build());
+
     private final Setting<Boolean> clientSide = sgGeneral.add(new BoolSetting.Builder()
-            .name("client side rotations")
+            .name("client side")
             .description("only rotates client side")
             .defaultValue(false)
             .visible(() -> rotate.get() == RotateMode.Packet)
@@ -61,7 +48,6 @@ public class XPautomation extends Module {
             .name("delay")
             .description("Delay in seconds.")
             .defaultValue(1.0)
-            .range(0.0, 100.0)
             .sliderRange(0.0, 100.0)
             .build());
 
@@ -77,22 +63,10 @@ public class XPautomation extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<Integer> armorSlot = sgGeneral.add(new IntSetting.Builder()
-            .name("armor slot")
-            .description("the slot to put Armor in")
-            .defaultValue(1)
-            .min(1)
-            .max(9)
-            .sliderMin(1)
-            .sliderMax(9)
-            .visible(smartMode::get)
-            .build());
-
     public final Setting<Double> health = sgGeneral.add(new DoubleSetting.Builder()
             .name("pause-health")
             .description("Pauses when you go below a certain health.")
             .defaultValue(5.0)
-            .range(0.0, 36.0)
             .sliderRange(0.0, 36.0)
             .build());
 
@@ -100,10 +74,7 @@ public class XPautomation extends Module {
             .name("hotbar-slot")
             .description("Hotbar slot to swap XP bottle to before using.")
             .defaultValue(1)
-            .min(1)
-            .max(9)
-            .sliderMin(1)
-            .sliderMax(9)
+            .sliderRange(1, 9)
             .build());
 
     private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
@@ -121,10 +92,11 @@ public class XPautomation extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<HandMode>()
+    private final Setting<WorldUtils.HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<WorldUtils.HandMode>()
             .name("swing")
             .description("Swing method")
-            .defaultValue(HandMode.MainHand)
+            .defaultValue(WorldUtils.HandMode.MainHand)
+            .visible(() -> swing.get())
             .build());
 
     private long lastPlaceTime = 0;
@@ -137,16 +109,13 @@ public class XPautomation extends Module {
     @Override
     public void onActivate() {
         checkArmorDurability();
-        moveXPBottleToHotbar();
     }
-
 
     @Override
     public void onDeactivate() {
         returnXPBottleToOriginalSlot();
-
     }
-    private FindItemResult exp;
+
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (isArmorFullDurability() && smartMode.get()) {
@@ -154,127 +123,56 @@ public class XPautomation extends Module {
             toggle();
             return;
         }
-        //slot 1 is leggings
-        //slot 2 is chest plate
-        //slot 3 is helmet
-        //slot 4 is boots
-
-        ItemStack helmet = mc.player.getInventory().getArmorStack(3);
-        ItemStack chestplate = mc.player.getInventory().getArmorStack(2);
-        ItemStack leggings = mc.player.getInventory().getArmorStack(1);
-        ItemStack boots = mc.player.getInventory().getArmorStack(0);
-        if (helmet.getDamage() == 0 && chestplate.getDamage() == 0 && leggings.getDamage() == 0 && boots.getDamage() == 0) {
-            putArmorOn();
-            ChatUtils.info("Your armor is at full HP, disabling...");
-            toggle();
-            return;
-        } else {
-            if (helmet.getDamage() != 0) {
-                InvUtils.move().from(3).toHotbar(1);
-                useXP();
-                InvUtils.move().from(1).to(3);
-            } else if (chestplate.getDamage() != 0) {
-                InvUtils.move().from(2).toHotbar(1);
-                useXP();
-                InvUtils.move().from(1).to(2);
-            } else if (leggings.getDamage() != 0) {
-                InvUtils.move().from(1).toHotbar(1);
-                useXP();
-                InvUtils.move().from(1).to(1);
-            } else if (boots.getDamage() != 0) {
-                InvUtils.move().from(0).toHotbar(1);
-                useXP();
-                InvUtils.move().from(1).to(0);
-            }
-        }
-
-
         if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) return;
 
-        double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getCurrentTPS() : delay.get();
+        double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getTPS() : delay.get();
         long time = System.currentTimeMillis();
 
         if ((time - lastPlaceTime) < currentDelay * 1000) return;
         lastPlaceTime = time;
-        exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
+        FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
 
-        if (!exp.found() || !exp.isHotbar()) {
-            reFill();
-            return;
-        }
+        if (exp.found()) useXP(exp);
 
         switch (rotate.get()) {
             case Pitch:
                 mc.player.setPitch(pitch.get());
-                useXP();
                 break;
             case Packet:
-                Rotations.rotate(mc.player.getYaw(), 90, -100, clientSide.get(), null);
-                useXP();
                 break;
             default:
                 break;
         }
     }
 
-    private void swingHand() {
-        if (swing.get()) {
-            switch (handSwing.get()) {
-                case MainHand:
-                    Objects.requireNonNull(mc.player).swingHand(Hand.MAIN_HAND);
-                    break;
-                case Offhand:
-                    Objects.requireNonNull(mc.player).swingHand(Hand.OFF_HAND);
-                    break;
-                case Packet:
-                    Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-                    break;
-                case none:
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    public void putArmorOn() {
-        ItemStack helmet = mc.player.getInventory().getArmorStack(3);
-        ItemStack chestplate = mc.player.getInventory().getArmorStack(2);
-        ItemStack leggings = mc.player.getInventory().getArmorStack(1);
-        ItemStack boots = mc.player.getInventory().getArmorStack(0);
-
-        if(helmet.getDamage() == 0) {
-            InvUtils.move().from(3).to(armorSlot.get());
-        }
-        if(chestplate.getDamage() == 0) {
-            InvUtils.move().from(2).to(armorSlot.get());
-        }
-        if(leggings.getDamage() == 0) {
-            InvUtils.move().from(1).to(armorSlot.get());
-        }
-        if(boots.getDamage() == 0) {
-            InvUtils.move().from(0).to(armorSlot.get());
-        }
-    }
-    public void useXP() {
-        exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
-        if(!exp.found()) return;
-        if (autoSwitch.get() == AutoSwitchMode.Normal) {
-            InvUtils.swap(exp.slot(), false);
-            Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-            swingHand();
-        } else if (autoSwitch.get() == AutoSwitchMode.Silent) {
-            InvUtils.swap(exp.slot(), true);
-            Objects.requireNonNull(mc.interactionManager).interactItem(mc.player, Hand.MAIN_HAND);
-            swingHand();
-            InvUtils.swapBack();
-        }
-    }
-    private void moveXPBottleToHotbar() {
-        FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
+    private void moveXPBottleToHotbar(FindItemResult exp) {
         if (exp.found() && !exp.isHotbar() && !exp.isOffhand()) {
             originalSlot = exp.slot();
             InvUtils.move().from(exp.slot()).toHotbar(slot.get());
+        }
+    }
+
+    private void useXP(FindItemResult exp) {
+        if (!exp.found()) return;
+        switch (autoSwitch.get()) {
+            case Silent:
+                moveXPBottleToHotbar(exp);
+                InvUtils.swap(slot.get(), true);
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                InvUtils.swapBack();
+                if (!exp.found()) info("No XP bottles found in inventory.");
+                break;
+            case Normal:
+                InvUtils.swap(slot.get(), false);
+                mc.interactionManager.interactItem(mc.player, WorldUtils.swingHand(handSwing.get()));
+                if (!exp.isHotbar()) reFill();
+                if (!exp.found()) info("No XP bottles found in inventory.");
+                break;
+            case inventory:
+                swapUtils.pickSwitch(exp.slot());
+                mc.interactionManager.interactItem(mc.player, WorldUtils.swingHand(handSwing.get()));
+                swapUtils.pickSwapBack();
+                break;
         }
     }
 
@@ -290,7 +188,7 @@ public class XPautomation extends Module {
 
     private void checkArmorDurability() {
         if (smartMode.get() && isArmorFullDurability()) {
-            ChatUtils.info("Your armor is at full HP, disabling...");
+            info("Your armor is at full HP, disabling...");
             toggle();
         }
     }
@@ -307,4 +205,9 @@ public class XPautomation extends Module {
             InvUtils.move().from(exp.slot()).toHotbar(slot.get() - 1);
         }
     }
+
+    public enum AutoSwitchMode {inventory, Silent, Normal}
+
+    public enum RotateMode {Packet, Pitch, None}
+
 }

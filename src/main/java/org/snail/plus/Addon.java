@@ -34,8 +34,9 @@ public class Addon extends MeteorAddon {
 
         mc.getTutorialManager().setStep(TutorialStep.NONE);
         mc.options.skipMultiplayerWarning = true;
+
         mc.options.advancedItemTooltips = true;
-        LOG.info("Snail++ loaded! join the discord at https://discord.gg/nh9pjVhsVb");
+        LOG.info("Snail++ loaded! join the discord at " + "https://discord.gg/nh9pjVhsVb");
     }
 
     @Override
@@ -52,7 +53,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoAnchor());
         Modules.get().add(new FOV());
         Modules.get().add(new BurrowEsp());
-        Modules.get().add(new AutoSand());
+        Modules.get().add(new SandPop());
         Modules.get().add(new SelfAnvil());
         Modules.get().add(new discordRPC());
         Modules.get().add(new antiAim());

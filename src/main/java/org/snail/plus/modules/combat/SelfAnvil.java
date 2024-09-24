@@ -10,10 +10,8 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
@@ -23,6 +21,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.WorldUtils;
 
 public class SelfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -41,6 +40,7 @@ public class SelfAnvil extends Module {
             .description("Places support blocks (recommended)")
             .defaultValue(true)
             .build());
+
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
             .description("Delay in seconds between each block placement.")
@@ -48,26 +48,31 @@ public class SelfAnvil extends Module {
             .min(0)
             .sliderMax(5)
             .build());
+
     private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
             .name("auto-disable")
             .description("Disables the module when you have placed the anvil.")
             .defaultValue(true)
             .build());
+
     private final Setting<Boolean> autoCenter = sgGeneral.add(new BoolSetting.Builder()
             .name("auto center")
             .description("centers you when placing the anvil")
             .defaultValue(true)
             .build());
+
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side color")
             .description("Side color")
             .defaultValue(new SettingColor(255, 0, 0, 75))
             .build());
+
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("line color")
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
+
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape-mode")
             .description("How the shapes are rendered.")
@@ -86,6 +91,7 @@ public class SelfAnvil extends Module {
         if ((time - lastPlaceTime) < delay.get() * 1000) return;
         lastPlaceTime = time;
         FindItemResult anvil = InvUtils.findInHotbar(Items.ANVIL);
+
         if(autoCenter.get() && !CombatUtils.isCentered(mc.player)) {
             PlayerUtils.centerPlayer();
             info("centered");
@@ -94,9 +100,11 @@ public class SelfAnvil extends Module {
 
         if (mc.world.getBlockState(mc.player.getBlockPos().up(2)).isAir()) {
             if (anvil.found()) {
-                InvUtils.swap(anvil.slot(), true);
-                PlaceAnvil(mc.player.getBlockPos().up(2));
-                InvUtils.swapBack();
+                if (WorldUtils.isAir(mc.player.getBlockPos().up(2))) {
+                    InvUtils.swap(anvil.slot(), true);
+                    PlaceAnvil(mc.player.getBlockPos().up(2));
+                    InvUtils.swapBack();
+                }
             }
         }
 

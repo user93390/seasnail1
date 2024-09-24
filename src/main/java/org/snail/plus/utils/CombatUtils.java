@@ -3,26 +3,15 @@ package org.snail.plus.utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.explosion.Explosion;
 
 import java.util.Objects;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class CombatUtils {
-    public static boolean isSurrounded(PlayerEntity target) {
-        BlockPos north = target.getBlockPos().north();
-        BlockPos east = target.getBlockPos().east();
-        BlockPos south = target.getBlockPos().south();
-        BlockPos west = target.getBlockPos().west();
-        boolean isNorthBlocked = IsValidBlock(north);
-        boolean isEastBlocked = IsValidBlock(east);
-        boolean isSouthBlocked = IsValidBlock(south);
-        boolean isWestBlocked = IsValidBlock(west);
-
-        return isNorthBlocked && isEastBlocked && isSouthBlocked && isWestBlocked;
-    }
 
     private static boolean IsValidBlock(BlockPos pos) {
         Block block = Objects.requireNonNull(mc.world).getBlockState(pos).getBlock();
@@ -48,10 +37,22 @@ public class CombatUtils {
      * @return True if the player is burrowed, false otherwise.
      */
     public static boolean isBurrowed(PlayerEntity target) {
-        double x = target.getBlockZ();
-        double y = (target.getBlockZ() + 0.4);
-        double z = target.getBlockZ();
-        BlockPos playerPos = new BlockPos(MathHelper.floor(x), MathHelper.floor(y), MathHelper.floor(z));
-        return IsValidBlock(playerPos);
+        return !WorldUtils.isAir(target.getBlockPos());
+    }
+
+    public static boolean isTrapped(PlayerEntity player) {
+        int x = player.getBlockZ();
+        int y = (player.getBlockZ() + 2);
+        int z = player.getBlockZ();
+        return WorldUtils.isAir(new BlockPos(x, y, z));
+    }
+
+    public static boolean willPop(PlayerEntity entity, Explosion explosion) {
+        if(mc.player.getOffHandStack() == Items.TOTEM_OF_UNDYING.getDefaultStack()) {
+            if(explosion.getPower() >= entity.getHealth()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

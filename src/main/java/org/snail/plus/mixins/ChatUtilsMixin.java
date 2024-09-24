@@ -16,7 +16,6 @@ public class ChatUtilsMixin {
     private static void getPrefix(CallbackInfoReturnable<MutableText> cir) {
         MutableText logo = Text.literal("Snail++");
         MutableText prefix = Text.literal("");
-        //Custom colors
         Color color = new Color(76, 25, 76);
         logo.setStyle(logo.getStyle().withColor(color.getRGB()));
         prefix.setStyle(prefix.getStyle().withColor(color.getRGB()));
