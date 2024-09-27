@@ -1,10 +1,11 @@
 plugins {
     id 'fabric-loom' version '1.7-SNAPSHOT'
-    id 'org.jetbrains.kotlin.jvm'
 }
 
 java {
-
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
 
 version = project.mod_version
@@ -34,8 +35,6 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
-    // Kotlin for no reason at all :)
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 processResources {
@@ -46,7 +45,4 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-}
-kotlin {
-    jvmToolchain(21)
 }

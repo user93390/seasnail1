@@ -35,6 +35,7 @@ public class ModuleMixin {
             ci.cancel();
         }
     }
+
     @Inject(method = "warning", at = @At("HEAD"), cancellable = true, remap = false)
     private void warning(String message, Object[] args, CallbackInfo ci) {
         ChatUtils.sendMsg(Text.of(Formatting.YELLOW + " [!] " + String.format(message, args)));

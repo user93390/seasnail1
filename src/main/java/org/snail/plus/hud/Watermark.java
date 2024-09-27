@@ -9,7 +9,8 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import org.snail.plus.Addon;
 
 public class Watermark extends HudElement {
-    private final SettingGroup sgGeneral = this.settings.getDefaultGroup();    public static final HudElementInfo<Watermark> INFO = new HudElementInfo<>(Addon.HUD_GROUP, "Watermark", "Cool Watermark", Watermark::new);
+    private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
+    public static final HudElementInfo<Watermark> INFO = new HudElementInfo<>(Addon.HUD_GROUP, "Watermark", "Cool Watermark", Watermark::new);
     private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
             .name("shadow")
             .description("Shows shadow")
@@ -39,7 +40,7 @@ public class Watermark extends HudElement {
     @Override
     public void render(HudRenderer renderer) {
         setSize(renderer.textWidth(name.get(), shadow.get()), renderer.textHeight(true));
-        renderer.quad(x, y, getWidth(), getHeight(), new Color(255, 255, 255, 0));
+        renderer.quad(x, y, size.get(), size.get(), color.get());
         renderer.text(name.get(), x, y, color.get(), shadow.get());
     }
 }

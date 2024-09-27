@@ -14,12 +14,15 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
@@ -44,6 +47,7 @@ public class AutoAnchor extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacement = settings.createGroup("Placement");
     private final SettingGroup sgAutomation = settings.createGroup("Automation");
+    private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
@@ -130,10 +134,19 @@ public class AutoAnchor extends Module {
             .build());
 
     //automation idea from https://github.com/AntiCope/orion/blob/master/src/main/java/me/ghosttypes/orion/modules/main/AnchorAura.java
+
     private final Setting<Boolean> breakSelfTrap = sgAutomation.add(new BoolSetting.Builder()
             .name("break self trap")
             .description("Breaks players selftrap")
             .defaultValue(false)
+            .build());
+
+    private final Setting<Double> fastPlaceDelay = sgAutomation.add(new DoubleSetting.Builder()
+            .name("fast place speed")
+            .description("the speed at which to replace the broken block with an anchor")
+            .defaultValue(0.0)
+            .sliderRange(0.0, 10.0)
+            .visible(() -> breakSelfTrap.get())
             .build());
 
     private final Setting<Boolean> breakBurrow = sgAutomation.add(new BoolSetting.Builder()
@@ -142,17 +155,25 @@ public class AutoAnchor extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<Boolean> predictMovement = sgPlacement.add(new BoolSetting.Builder()
+    private final Setting<Boolean> predictMovement = sgExtrapolation.add(new BoolSetting.Builder()
             .name("predict movement")
             .description("Predicts the movement of players for more accurate anchor placement.")
             .defaultValue(true)
             .build());
 
-    private final Setting<Integer> extrapolationTicks = sgPlacement.add(new IntSetting.Builder()
+    private final Setting<Integer> extrapolationTicks = sgExtrapolation.add(new IntSetting.Builder()
             .name("extrapolation ticks")
             .description("The amount of ticks to extrapolate player movement.")
             .defaultValue(1)
-            .sliderRange(1, 10)
+            .sliderRange(0, 20)
+            .visible(() -> predictMovement.get())
+            .build());
+
+    private final Setting<Integer> selfExtrapolateTicks = sgExtrapolation.add(new IntSetting.Builder()
+            .name("self extrapolation ticks")
+            .description("The amount of ticks to extrapolate your movement.")
+            .defaultValue(1)
+            .sliderRange(0, 20)
             .visible(() -> predictMovement.get())
             .build());
 
@@ -180,13 +201,6 @@ public class AutoAnchor extends Module {
             .name("line color")
             .description("The color of the lines of the rendered anchor box.")
             .defaultValue(new SettingColor(255, 0, 0, 255))
-            .build());
-
-    private final Setting<Integer> RadiusY = sgPlacement.add(new IntSetting.Builder()
-            .name("Radius Y")
-            .description("The radius in the Y direction for anchor placement.")
-            .defaultValue(1)
-            .sliderRange(1, 5)
             .build());
 
     private final Setting<Integer> RadiusZ = sgPlacement.add(new IntSetting.Builder()
@@ -250,6 +264,12 @@ public class AutoAnchor extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
 
+    private final Setting<Boolean> debugExtrapolation = sgDebug.add(new BoolSetting.Builder()
+            .name("debug extrapolation")
+            .description("Enables debug information for extrapolation.")
+            .defaultValue(false)
+            .build());
+
     private final Setting<Boolean> debugRender = sgDebug.add(new BoolSetting.Builder()
             .name("debug render")
             .description("Enables debug information for rendering.")
@@ -288,7 +308,6 @@ public class AutoAnchor extends Module {
             selfDamage = 0;
             targetDamage = 0;
             AnchorPos = new ArrayList<>();
-            explosion = null;
             if (executor == null || executor.isShutdown() || executor.isTerminated()) {
                 executor = Executors.newSingleThreadExecutor();
             }
@@ -316,52 +335,43 @@ public class AutoAnchor extends Module {
         explosion = null;
     }
 
-    /**
-     * Finds the best positions around a given player entity for placing anchors.
-     *
-     * @param entity The player entity around which to find positions.
-     * @return An array of BlockPos representing the best positions for placing anchors.
-     */
     public List<BlockPos> positions(PlayerEntity entity, double radius) {
         try {
             ArrayList<BlockPos> positions = new ArrayList<>();
-
             int Radius = (int) Math.ceil(radius);
+            if(debugCalculations.get()) info("found radius " + Radius);
             for (int x = -Radius; x <= Radius; x++) {
                 for (int y = -Radius; y <= Radius; y++) {
                     for (int z = -Radius; z <= Radius; z++) {
                         BlockPos pos = entity.getBlockPos().add(x, y, z);
-                        explosion = new Explosion(mc.world, mc.player, pos.getX(), pos.getY(), pos.getZ(), explosion.getPower(), true, Explosion.DestructionType.DESTROY);
-                        if (CombatUtils.willPop(entity, explosion)) {
-                            if (entity.getHealth() <= lethalHealth.get()) {
-                                positions.add(pos);
-                            } else {
-                                continue;
-                            }
-                        }
-                        if (isValidPosition(entity, pos)) {
+                        if(debugCalculations.get()) info("found position " + pos + " checking damage...");
+                        selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, Vec3d.of(pos));
+                        targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, Vec3d.of(pos));
+                        if (WorldUtils.hitBoxCheck(entity, pos) && WorldUtils.isAir(pos) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && !CombatUtils.willPop(entity, explosion)) {
                             positions.add(pos);
+                            if(debugCalculations.get()) info("found position: " + pos);
+                            if (debugCalculations.get()) {
+                                info("found position: " + pos);
+                                info("self damage: " + selfDamage);
+                                info("target damage: " + targetDamage);
+                            }
+                        } else {
+                            if (debugCalculations.get()) {
+                                info("skipping position: " + pos);
+                                info("self damage: " + selfDamage);
+                                info("target damage: " + targetDamage);
+                            }
                         }
                     }
                 }
             }
-            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.get(0));
+            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.getFirst());
         } catch (Exception e) {
             error("An error occurred while finding positions: " + e.getMessage());
             return Collections.emptyList();
         }
     }
 
-    private boolean isValidPosition(PlayerEntity entity, BlockPos pos) {
-        selfDamage = calculateDamage(mc.player, pos);
-        targetDamage = calculateDamage(entity, pos);
-        if (debugCalculations.get()) info("found position: " + pos);
-        return WorldUtils.hitBoxCheck(entity, pos) && WorldUtils.isAir(pos) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && !CombatUtils.willPop(entity, explosion);
-    }
-
-    private double calculateDamage(PlayerEntity player, BlockPos pos) {
-        return predictMovement.get() ? DamageUtils.anchorDamage(player, predictMovement(player, extrapolationTicks.get())) : DamageUtils.anchorDamage(player, Vec3d.of(pos));
-    }
 
     /**
      * Predicts the future position of a player entity based on extrapolation ticks.
@@ -371,6 +381,7 @@ public class AutoAnchor extends Module {
      * @return A Vec3d object representing the predicted position of the player.
      */
     private Vec3d predictMovement(PlayerEntity player, Integer extrapolationTicks) {
+        if (debugExtrapolation.get()) info("predicting movement for: " + player);
         return extrapolationUtils.predictEntityPos(player, extrapolationTicks);
     }
 
@@ -391,20 +402,21 @@ public class AutoAnchor extends Module {
             if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
 
             for (PlayerEntity player : mc.world.getPlayers()) {
-                if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
-                    continue;
+                if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
 
-                AnchorPos = positions(player, Math.max(RadiusX.get(), Math.max(RadiusY.get(), RadiusZ.get())));
+                AnchorPos = positions(player, Math.max(RadiusX.get(), RadiusZ.get()));
                 for (BlockPos pos : AnchorPos) {
                     for (Direction dir : Direction.values()) {
-                        if (strictDirection.get() && WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite()))
-                            continue;
+                        if (strictDirection.get() && WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite())) continue;
                     }
                 }
                 lock.lock();
                 try {
                     for (BlockPos pos : AnchorPos) {
                         if (rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
+                        if(breakSelfTrap.get()) {
+                            breakSelfTrap(player);
+                        }
                         breakAnchor();
                     }
                 } finally {
@@ -440,6 +452,24 @@ public class AutoAnchor extends Module {
         }
     }
 
+    public void breakSelfTrap(PlayerEntity entity) {
+        lock.lock();
+        try {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastPlacedTime < (1000 / fastPlaceDelay.get())) return;
+            if(CombatUtils.isTrapped(entity)) {
+                FindItemResult pick = InvUtils.find(Items.DIAMOND_PICKAXE);
+                if(pick.found() && mc.world.getBlockState(entity.getBlockPos().up(2)).getBlock() == Blocks.RESPAWN_ANCHOR) {
+                    WorldUtils.breakBlock(entity.getBlockPos().up(2), swingMode.get(), directionMode.get(), packetPlace.get(), false, swap.get(), rotate.get());
+                }
+            }
+        } catch (Exception e) {
+            error("An error occurred while breaking anchors: " + e.getMessage());
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /**
      * Event handler for rendering 3D events. This method is called to render the anchor positions.
      *
@@ -452,7 +482,7 @@ public class AutoAnchor extends Module {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
                     continue;
-                if (renderExtrapolation.get()) {
+                if (renderExtrapolation.get() && predictMovement.get()) {
                     Vec3d extrapolatedPos = predictMovement(player, extrapolationTicks.get());
                     Box playerBox = new Box(
                             extrapolatedPos.x - player.getWidth() / 2,

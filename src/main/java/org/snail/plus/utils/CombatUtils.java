@@ -49,9 +49,7 @@ public class CombatUtils {
 
     public static boolean willPop(PlayerEntity entity, Explosion explosion) {
         if(mc.player.getOffHandStack() == Items.TOTEM_OF_UNDYING.getDefaultStack()) {
-            if(explosion.getPower() >= entity.getHealth()) {
-                return true;
-            }
+            return explosion.getPower() >= entity.getHealth();
         }
         return false;
     }
