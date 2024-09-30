@@ -2,17 +2,15 @@ package org.snail.plus.modules.misc;
 
 import meteordevelopment.discordipc.DiscordIPC;
 import meteordevelopment.discordipc.RichPresence;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
-import meteordevelopment.meteorclient.settings.StringListSetting;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
+import net.minecraft.client.gui.screen.Screen;
 import org.snail.plus.Addon;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 
 public class discordRPC extends Module {
     private static final RichPresence RPC = new RichPresence();
@@ -20,18 +18,9 @@ public class discordRPC extends Module {
 
     private final Setting<List<String>> message = sgGeneral.add(new StringListSetting.Builder()
             .name("message")
-            .description("the message")
-            .defaultValue("playing on {server} with {players} players")
+            .description("The message to display in discord")
+            .defaultValue(List.of("Playing on {server} with {players} players"))
             .build());
-
-    private final Setting<Boolean> randomMsg = sgGeneral.add(new BoolSetting.Builder()
-            .name("random")
-            .description("changes the message randomly")
-            .defaultValue(true)
-            .visible(() -> !message.get().isEmpty())
-            .build());
-
-    private String msg;
 
     public discordRPC() {
         super(Addon.Snail, "Discord RPC", "Shows your discord status in game");
@@ -39,7 +28,7 @@ public class discordRPC extends Module {
 
     @Override
     public void onActivate() {
-        DiscordIPC.start(1282470171642167428L, null);
+        DiscordIPC.start(1289704022231617659L, null);
         RPC.setStart(System.currentTimeMillis() / 1000L);
         updateDetails();
     }
@@ -50,10 +39,10 @@ public class discordRPC extends Module {
     }
 
     private void updateDetails() {
-        if (randomMsg.get()) {
-            msg = message.get().getFirst()
-                    .replace("{server}",  this.mc.isInSingleplayer() ? "Singleplayer" : Utils.getWorldName())
-                    .replace("{players}", Objects.requireNonNull(mc.world).getPlayers().size() + "");
+        for (String msg : message.get()) {
+            msg = msg
+                    .replace("{server}", Utils.getWorldName()
+                    .replace(("{players}"), Arrays.toString(Objects.requireNonNull(mc.getServer()).getPlayerNames()).formatted("[" + Arrays.stream(mc.getServer().getPlayerNames()).count() + "]")));
             RPC.setDetails(msg);
             DiscordIPC.setActivity(RPC);
         }

@@ -9,9 +9,9 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.message.MessageSignatureData;
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
@@ -97,12 +97,11 @@ public class ChatControl extends Module {
             .visible(filter::get)
             .visible(block::get)
             .build());
-    private ArrayList<Integer> warnedAmount = new ArrayList<>();
+    private Map<UUID, Integer> warnedAmount = new HashMap<>();
     private final Set<UUID> alertedPlayers = new HashSet<>();
     private final Set<UUID> playersInRange = new HashSet<>();
     private final Set<UUID> currentPlayersInRange = new HashSet<>();
     private final Set<UUID> playersWarned = new HashSet<>();
-
 
     public ChatControl() {
         super(Addon.Snail, "Chat Control", "Custom prefix and visual range :)");
@@ -124,7 +123,6 @@ public class ChatControl extends Module {
         playersWarned.clear();
         warnedAmount.clear();
     }
-
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
@@ -156,13 +154,12 @@ public class ChatControl extends Module {
             ChatUtils.sendMsg(of(Formatting.RED + "Error in onTick: " + e.getMessage()));
         }
     }
-
     @EventHandler
     private void onPlayerRemove(PlayerRemoveS2CPacket event) {
         for (PlayerEntity player : Objects.requireNonNull(mc.world).getPlayers()) {
             if (player == mc.player || alertedPlayers.contains(player.getUuid())) continue;
             if (checkUuid.get() && player.getUuidAsString().isEmpty()) continue;
-            ChatUtils.sendMsg(of(Formatting.GREEN + player.getName().getString() + "Has left render distance"));
+            ChatUtils.sendMsg(of(Formatting.GREEN + player.getName().getString() + " has left render distance"));
             List<SoundEvent> soundEvents = sounds.get();
             if (!soundEvents.isEmpty()) {
                 mc.getSoundManager().play(WorldUtils.playSound(soundEvents.get(0), 1.0f));
@@ -172,26 +169,15 @@ public class ChatControl extends Module {
         }
     }
 
-
     @EventHandler
     private void onMessageReceive(ReceiveMessageEvent event) {
         try {
-            if(filter.get() && !messages.get().isEmpty()) {
-                for(String messages : messages.get()) {
-                    if (event.getMessage().contains(Text.of(messages))) {
-                        mc.inGameHud.getChatHud().getMessageHistory().remove(event.getMessage().getString());
+            if (filter.get() && !messages.get().isEmpty()) {
+                for (String message : messages.get()) {
+                    if (event.getMessage().getString().contains(message)) {
+                        mc.inGameHud.getChatHud().removeMessage(new MessageSignatureData(event.getMessage().getString().getBytes()));
                         if (info.get()) {
-                            ChatUtils.sendMsg(of(Formatting.RED + "Message filtered " + event.getMessage().getString()));
-                        }
-                        for(int warnedTimes : warnedAmount) {
-                            for (warnedTimes = 0; warnedTimes < blockAmount.get();) {
-                                if (block.get()) {
-                                    if (info.get()) {
-                                        ChatUtils.sendMsg(of(Formatting.RED + "someone has been blocked for spamming"));
-                                    }
-                                    warnedTimes++;
-                                }
-                            }
+                            ChatUtils.sendMsg(of(Formatting.RED + "Message filtered: " + event.getMessage().getString()));
                         }
                     }
                 }
@@ -227,7 +213,6 @@ public class ChatControl extends Module {
     }
 
     private boolean containsCoords(String message) {
-        return message.matches(".*\\b-?\\d+\\s+-?\\d+\\s+-?\\d+\\b.*");
+    return message.matches(".*\\b-?\\d+\\s+-?\\d+\\s+-?\\d+\\b.*");
     }
-
 }

@@ -10,7 +10,6 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.NametagUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -18,10 +17,7 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.BlockState;
-import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
@@ -31,14 +27,16 @@ import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class stealthMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
-    private final SettingGroup sgAutoCity = settings.createGroup("Auto City");
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotate")
@@ -164,15 +162,22 @@ public class stealthMine extends Module {
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
+
+
+    private final Setting<WorldUtils.DirectionMode> directionMode = sgGeneral.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
+            .name("direction mode")
+            .description("how to face the block")
+            .defaultValue(WorldUtils.DirectionMode.Down)
+            .build());
+    private final Setting<swapUtils.swapMode> swapMode = sgGeneral.add(new EnumSetting.Builder<swapUtils.swapMode>()
+            .name("swap mode")
+            .description("how to swap items")
+            .defaultValue(swapUtils.swapMode.silent)
+            .build());
+
     private final Setting<Boolean> MultiTask = sgMisc.add(new BoolSetting.Builder()
             .name("multi-task")
             .description("allows you to use different items when the module is interacting / placing")
-            .defaultValue(false)
-            .build());
-
-    private final Setting<Boolean> swingHand = sgMisc.add(new BoolSetting.Builder()
-            .name("swing hand")
-            .description("swings your hand when mining")
             .defaultValue(false)
             .build());
 
@@ -183,16 +188,13 @@ public class stealthMine extends Module {
             .visible(() -> !MultiTask.get())
             .build());
 
-    private final Setting<SwapMode> swapMode = sgGeneral.add(new EnumSetting.Builder<SwapMode>()
-            .name("swap mode")
-            .description("how to swap")
-            .defaultValue(SwapMode.silent)
+    private final Setting<WorldUtils.HandMode> hand = sgGeneral.add(new EnumSetting.Builder<WorldUtils.HandMode>()
+            .name("hand mode")
+            .description("the hand to swing when mining")
+            .defaultValue(WorldUtils.HandMode.MainHand)
             .build());
 
-    private BlockPos currentPos = BlockPos.ORIGIN;
-
     private double blockBreakingProgress;
-    public static BlockPos.Mutable blockPos = new BlockPos.Mutable(0, Integer.MIN_VALUE, 0);
     BlockState blockState;
     private FindItemResult bestSlot;
 
@@ -200,210 +202,152 @@ public class stealthMine extends Module {
     public stealthMine() {
         super(Addon.Snail, "stealth mine", "Mines blocks using packets");
     }
+    private final Vector3d vec3 = new Vector3d();
+    private List<BlockPos> BlockPositions = new ArrayList<>();
 
-    @EventHandler
-    public static void BreakBlock(StartBreakingBlockEvent event) {
-        blockPos.set(event.blockPos);
-    }
+    private final Color cSides = new Color();
+    private final Color cLines = new Color();
 
     @Override
     public void onActivate() {
-        blockPos.set(0, -1, 0);
+        BlockPositions = new ArrayList<>();
         blockBreakingProgress = 0;
     }
 
     @Override
     public void onDeactivate() {
-        blockPos.set(0, -1.7, 0);
+        if (BlockPositions != null) {
+            BlockPositions.clear();
+        }
         blockBreakingProgress = 0;
-        mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
     }
 
-    public void syncSlot() {
-        Objects.requireNonNull(mc.player).getInventory().selectedSlot = mc.player.getInventory().selectedSlot;
-        mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
-    }
-
-    private final Color cSides = new Color();
-    private final Color cLines = new Color();
     @EventHandler
-    private void Render(Render3DEvent event) {
-        switch (RenderMode.get()) {
-            case VH -> {
-                this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
-                double ShrinkFactor = 1d - blockBreakingProgress * Speed.get();
-                BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
-                VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
-                if (shape.isEmpty()) {
-                    return;
-                }
-                Box orig = shape.getBoundingBox();
-                orig.shrink(
-                        orig.getLengthX() * ShrinkFactor,
-                        orig.getLengthY() * ShrinkFactor,
-                        orig.getLengthZ() * ShrinkFactor
-                );
-                renderBlock(event, orig, ShrinkFactor);
-            }
-            case normal -> event.renderer.box(blockPos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-            case fade -> {
-                currentPos = blockPos;
-                boolean shouldShrink = shrink.get() && (blockPos.getX() != currentPos.getX() || blockPos.getY() != currentPos.getY() || blockPos.getZ() != currentPos.getZ());
-
-                RenderUtils.renderTickingBlock(
-                        blockPos, sideColor.get(),
-                        lineColor.get(), shapeMode.get(),
-                        0, fadeSpeed.get(), true, shouldShrink
-                );
-            }
-            case gradient -> {
-                Color c1Sides = startColor.get().copy().a(startColor.get().a / 2);
-                Color c2Sides = endColor.get().copy().a(endColor.get().a / 2);
-                Color c1Lines = startColor.get().copy().a(startColor.get().a / 2);
-                Color c2Lines = endColor.get().copy().a(endColor.get().a / 2);
-                cSides.set(
-                        (int) Math.round(c1Sides.r + (c2Sides.r - c1Sides.r) * blockBreakingProgress),
-                        (int) Math.round(c1Sides.g + (c2Sides.g - c1Sides.g) * blockBreakingProgress),
-                        (int) Math.round(c1Sides.b + (c2Sides.b - c1Sides.b) * blockBreakingProgress),
-                        (int) Math.round(c1Sides.a + (c2Sides.a - c1Sides.a) * blockBreakingProgress)
-                );
-
-                cLines.set(
-
-                        (int) Math.round(c1Lines.r + (c2Lines.r - c1Lines.r) * blockBreakingProgress),
-                        (int) Math.round(c1Lines.g + (c2Lines.g - c1Lines.g) * blockBreakingProgress),
-                        (int) Math.round(c1Lines.b + (c2Lines.b - c1Lines.b) * blockBreakingProgress),
-                        (int) Math.round(c1Lines.a + (c2Lines.a - c1Lines.a) * blockBreakingProgress)
-                );
-                event.renderer.box(blockPos, cSides, cLines, shapeMode.get(), 0);
-            }
-        }
-    }
-
-    private final Vector3d vec3 = new Vector3d();
-    @EventHandler
-    private void onRender2D(Render2DEvent event) {
-        if (nametags.get()) {
-            if (blockPos.getY() == -1) return;
-            vec3.set(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5);
-            if (NametagUtils.to2D(vec3, scale.get())) {
-                NametagUtils.begin(vec3);
-                TextRenderer.get().begin(1, false, true);
-                String text = String.format("%.1f", blockBreakingProgress * 1.5);
-                double w = TextRenderer.get().getWidth(text) / 2;
-                TextRenderer.get().render(text, -w, 0, nametagColor.get(), shadow.get());
-
-                TextRenderer.get().end();
-                NametagUtils.end();
-            }
-        }
+    public void onBlockBreak(StartBreakingBlockEvent event) {
+        BlockPositions.add(event.blockPos);
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (mc.world == null || mc.player == null || pauseUse.get() && mc.player.isUsingItem()) {
-            return;
-        }
-        BlockState blockState = mc.world.getBlockState(blockPos);
-        bestSlot = InvUtils.findFastestTool(blockState);
-
-        for (Direction dir : Direction.values()) {
-            if (strictDirection.get() && WorldUtils.strictDirection(blockPos.offset(dir), dir.getOpposite())) {
-                break;
-            }
-        }
-        if (syncSlot.get()) {
-            syncSlot();
-        }
-        if (BlockUtils.canBreak(blockPos, blockState) || blockPos.isWithinDistance(blockPos, Range.get()) || !WorldUtils.isAir(blockPos)) {
-            breakBlock(blockPos);
-            Switch();
-            if (WorldUtils.isAir(blockPos)) {
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
-            }
-
-            if (bestSlot.found()) {
-                blockBreakingProgress += BlockUtils.getBreakDelta(bestSlot.slot(), blockState);
-                if (blockBreakingProgress >= 1) blockBreakingProgress = 1;
-            }
-            if(WorldUtils.isBreakable(blockPos)) blockBreakingProgress = 0;
-        }
-    }
-
-
-    public void breakBlock(BlockPos blockPos) {
-        switch (mineMode.get()) {
-            case normal:
-                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos));
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.UP));
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
-                break;
-            case instant:
-                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos),(Rotations.getPitch(blockPos)));
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
-                break;
-            case bypass:
-                if(rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos),(Rotations.getPitch(blockPos)));
-                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos, Direction.UP));
-                if(swingHand.get()) mc.player.swingHand(Hand.MAIN_HAND);
-                break;
-        }
-    }
-
-    public void Switch() {
-        switch (swapMode.get()) {
-            case silent -> {
-                if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) {
-                    break;
-                }
-                if (blockBreakingProgress < 1.5) {
-                    mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(bestSlot.slot()));
-                }
-            }
-
-            case normal -> {
-                if (!bestSlot.found() || mc.player.getInventory().selectedSlot == bestSlot.slot()) {
-                    break;
-                }
-                if (blockBreakingProgress < 1.5) {
-                InvUtils.swap(bestSlot.slot(), false);
-                }
-            }
-
-            case Inventory -> {
-                if(blockBreakingProgress > 1.4) {
-                    swapUtils.pickSwitch(bestSlot.slot());
-                }
-                    if(WorldUtils.isAir(blockPos)) {
-                        swapUtils.pickSwapBack();
+        try {
+            if (BlockPositions.isEmpty()) return;
+            for (BlockPos pos : BlockPositions) {
+                BlockState blockState = mc.world.getBlockState(pos);
+                bestSlot = InvUtils.findFastestTool(blockState);
+                int slot = bestSlot.slot();
+                    blockBreakingProgress += BlockUtils.getBreakDelta(slot, blockState);
+                    info("Block Breaking Progress: " + blockBreakingProgress);
+                    if (blockBreakingProgress >= 0.9) {
+                        InvUtils.swap(slot, true);
+                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN));
+                        InvUtils.swapBack();
                     }
+            }
+        } catch (Exception e) {
+            StackTraceElement[] stackTrace = e.getStackTrace();
+            if (stackTrace.length > 0) {
+                StackTraceElement element = stackTrace[0];
+            }
+        }
+    }
+
+    @EventHandler
+    private void Render(Render3DEvent event) {
+        if (BlockPositions.isEmpty()) return;
+        for (BlockPos blockPos : BlockPositions) {
+            switch (RenderMode.get()) {
+                case VH -> {
+                    this.blockState = Objects.requireNonNull(mc.world).getBlockState(blockPos);
+                    double ShrinkFactor = 1d - blockBreakingProgress * Speed.get();
+                    BlockState state = Objects.requireNonNull(mc.world).getBlockState(blockPos);
+                    VoxelShape shape = state.getOutlineShape(mc.world, blockPos);
+                    if (shape.isEmpty()) {
+                        return;
+                    }
+                    Box orig = shape.getBoundingBox();
+                    orig.shrink(
+                            orig.getLengthX() * ShrinkFactor,
+                            orig.getLengthY() * ShrinkFactor,
+                            orig.getLengthZ() * ShrinkFactor
+                    );
+                    renderBlock(event, orig, ShrinkFactor);
+                }
+                case normal -> event.renderer.box(blockPos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                case fade -> {
+
+                    RenderUtils.renderTickingBlock(
+                            blockPos, sideColor.get(),
+                            lineColor.get(), shapeMode.get(),
+                            0, fadeSpeed.get(), true, false
+                    );
+                }
+                case gradient -> {
+                    Color c1Sides = startColor.get().copy().a(startColor.get().a / 2);
+                    Color c2Sides = endColor.get().copy().a(endColor.get().a / 2);
+                    Color c1Lines = startColor.get().copy().a(startColor.get().a / 2);
+                    Color c2Lines = endColor.get().copy().a(endColor.get().a / 2);
+                    cSides.set(
+                            (int) Math.round(c1Sides.r + (c2Sides.r - c1Sides.r) * blockBreakingProgress),
+                            (int) Math.round(c1Sides.g + (c2Sides.g - c1Sides.g) * blockBreakingProgress),
+                            (int) Math.round(c1Sides.b + (c2Sides.b - c1Sides.b) * blockBreakingProgress),
+                            (int) Math.round(c1Sides.a + (c2Sides.a - c1Sides.a) * blockBreakingProgress)
+                    );
+
+                    cLines.set(
+                            (int) Math.round(c1Lines.r + (c2Lines.r - c1Lines.r) * blockBreakingProgress),
+                            (int) Math.round(c1Lines.g + (c2Lines.g - c1Lines.g) * blockBreakingProgress),
+                            (int) Math.round(c1Lines.b + (c2Lines.b - c1Lines.b) * blockBreakingProgress),
+                            (int) Math.round(c1Lines.a + (c2Lines.a - c1Lines.a) * blockBreakingProgress)
+                    );
+                    event.renderer.box(blockPos, cSides, cLines, shapeMode.get(), 0);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    private void onRender2D(Render2DEvent event) {
+        if (BlockPositions.isEmpty()) return;
+        for (BlockPos blockPos : BlockPositions) {
+            if (nametags.get()) {
+                if (blockPos.getY() == -1) return;
+                vec3.set(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5);
+                if (NametagUtils.to2D(vec3, scale.get())) {
+                    NametagUtils.begin(vec3);
+                    TextRenderer.get().begin(1, false, true);
+                    String text = String.format("%.1f", blockBreakingProgress * 1.5);
+                    double w = TextRenderer.get().getWidth(text) / 2;
+                    TextRenderer.get().render(text, -w, 0, nametagColor.get(), shadow.get());
+
+                    TextRenderer.get().end();
+                    NametagUtils.end();
+                }
             }
         }
     }
 
     private void renderBlock(Render3DEvent event, Box orig, double shrinkFactor) {
-        Box box = orig.shrink(
-                orig.getLengthX() * shrinkFactor,
-                orig.getLengthY() * shrinkFactor,
-                orig.getLengthZ() * shrinkFactor
-        );
+        for (BlockPos blockPos : BlockPositions) {
+            Box box = orig.shrink(
+                    orig.getLengthX() * shrinkFactor,
+                    orig.getLengthY() * shrinkFactor,
+                    orig.getLengthZ() * shrinkFactor
+            );
 
-        double xShrink = (orig.getLengthX() * shrinkFactor) / 2;
-        double yShrink = (orig.getLengthY() * shrinkFactor) / 2;
-        double zShrink = (orig.getLengthZ() * shrinkFactor) / 2;
+            double xShrink = (orig.getLengthX() * shrinkFactor) / 2;
+            double yShrink = (orig.getLengthY() * shrinkFactor) / 2;
+            double zShrink = (orig.getLengthZ() * shrinkFactor) / 2;
 
-        double x1 = blockPos.getX() + box.minX + xShrink;
-        double y1 = blockPos.getY() + box.minY + yShrink;
-        double z1 = blockPos.getZ() + box.minZ + zShrink;
-        double x2 = blockPos.getX() + box.maxX + xShrink;
-        double y2 = blockPos.getY() + box.maxY + yShrink;
-        double z2 = blockPos.getZ() + box.maxZ + zShrink;
+            double x1 = blockPos.getX() + box.minX + xShrink;
+            double y1 = blockPos.getY() + box.minY + yShrink;
+            double z1 = blockPos.getZ() + box.minZ + zShrink;
+            double x2 = blockPos.getX() + box.maxX + xShrink;
+            double y2 = blockPos.getY() + box.maxY + yShrink;
+            double z2 = blockPos.getZ() + box.maxZ + zShrink;
 
-        event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+        }
     }
-
     public enum SwapMode {
         silent,
         normal,

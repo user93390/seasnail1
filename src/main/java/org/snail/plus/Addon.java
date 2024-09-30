@@ -11,6 +11,7 @@ import net.minecraft.client.tutorial.TutorialStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snail.plus.hud.Watermark;
+import org.snail.plus.modules.chat.ArmorMessage;
 import org.snail.plus.modules.chat.AutoEZ;
 import org.snail.plus.modules.chat.ChatControl;
 import org.snail.plus.modules.combat.*;
@@ -21,7 +22,7 @@ import org.snail.plus.modules.render.FOV;
 
 public class Addon extends MeteorAddon {
     private final MinecraftClient mc = MinecraftClient.getInstance();
-    public static final Logger LOG = LoggerFactory.getLogger("Snail++");
+    public static final Logger LOG = LoggerFactory.getLogger("[Snail++] ");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
 
@@ -50,12 +51,15 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
         Modules.get().add(new stealthMine());
+        
         Modules.get().add(new AutoAnchor());
         Modules.get().add(new FOV());
         Modules.get().add(new BurrowEsp());
         Modules.get().add(new SelfAnvil());
         Modules.get().add(new discordRPC());
         Modules.get().add(new antiAim());
+        Modules.get().add(new ArmorMessage());
+        Modules.get().add(new webAura());
         Hud.get().register(Watermark.INFO);
     }
 

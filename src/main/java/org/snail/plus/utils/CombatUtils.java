@@ -5,6 +5,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.explosion.Explosion;
 
 import java.util.Objects;
@@ -15,7 +16,7 @@ public class CombatUtils {
 
     private static boolean IsValidBlock(BlockPos pos) {
         Block block = Objects.requireNonNull(mc.world).getBlockState(pos).getBlock();
-        return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK || block == Blocks.CRYING_OBSIDIAN || block == Blocks.ENDER_CHEST || block == Blocks.ANVIL || block == Blocks.COBWEB;
+        return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK || block == Blocks.CRYING_OBSIDIAN || block == Blocks.ENDER_CHEST || block == Blocks.ANVIL;
     }
 
     public static boolean isCentered(PlayerEntity target) {
@@ -30,14 +31,10 @@ public class CombatUtils {
         return distanceX < threshold && distanceZ < threshold;
     }
 
-    /**
-     * Checks if the given player is burrowed (in other words, not in an air block).
-     *
-     * @param target The player entity to check.
-     * @return True if the player is burrowed, false otherwise.
-     */
+
     public static boolean isBurrowed(PlayerEntity target) {
-        return !WorldUtils.isAir(target.getBlockPos());
+        Vec3d pos = new Vec3d(target.getX(), target.getY() + 0.4, target.getZ());
+        return target.getY() == target.prevY && IsValidBlock(BlockPos.ofFloored(pos));
     }
 
     public static boolean isTrapped(PlayerEntity player) {

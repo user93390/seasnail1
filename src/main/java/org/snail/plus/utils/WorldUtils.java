@@ -16,10 +16,12 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 import java.util.Objects;
 
@@ -44,6 +46,12 @@ public class WorldUtils {
 
     public static boolean hitBoxCheck(PlayerEntity player, BlockPos pos) {
         return !EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity));
+    }
+
+    public static boolean canSeePos(Vec3d pos) {
+        Vec3d playerEyes = mc.player.getCameraPosVec(1.0F);
+        HitResult hitResult = mc.world.raycast(new RaycastContext(playerEyes, pos, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player));
+        return hitResult.getType() == HitResult.Type.MISS || hitResult.getPos().equals(pos);
     }
 
     public static SoundInstance playSound(SoundEvent sound, float Pitch) {
