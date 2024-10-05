@@ -24,7 +24,7 @@ public class swapUtils {
             pickSlot = -1;
         }
     }
-    public enum swapMode {
+    public enum swapMode  {
         Inventory,
         silent,
         normal,
