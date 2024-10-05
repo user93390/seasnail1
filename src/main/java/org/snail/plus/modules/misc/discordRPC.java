@@ -5,12 +5,14 @@ import meteordevelopment.discordipc.RichPresence;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
-import net.minecraft.client.gui.screen.Screen;
 import org.snail.plus.Addon;
+import org.snail.plus.utils.WorldUtils;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class discordRPC extends Module {
     private static final RichPresence RPC = new RichPresence();
@@ -22,6 +24,23 @@ public class discordRPC extends Module {
             .defaultValue(List.of("Playing on {server} with {players} players"))
             .build());
 
+    private final Setting<Integer> updateInterval = sgGeneral.add(new IntSetting.Builder()
+            .name("update-interval")
+            .description("The interval in seconds to update the details.")
+            .defaultValue(10)
+            .sliderRange(1, 10000)
+            .build());
+
+    private final Setting<Integer> randomDelay = sgGeneral.add(new IntSetting.Builder()
+            .name("random-delay")
+            .description("The random delay in seconds to adjust the message display time.")
+            .defaultValue(5)
+            .sliderRange(1, 10000)
+            .build());
+
+    private ScheduledExecutorService scheduler;
+    private final Random random = new Random();
+
     public discordRPC() {
         super(Addon.Snail, "Discord RPC", "Shows your discord status in game");
     }
@@ -30,21 +49,33 @@ public class discordRPC extends Module {
     public void onActivate() {
         DiscordIPC.start(1289704022231617659L, null);
         RPC.setStart(System.currentTimeMillis() / 1000L);
-        updateDetails();
+        scheduler = Executors.newScheduledThreadPool(1);
+        scheduleNextUpdate();
     }
 
     @Override
     public void onDeactivate() {
         DiscordIPC.stop();
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdown();
+        }
+    }
+
+    private void scheduleNextUpdate() {
+        int delay = updateInterval.get() + random.nextInt(randomDelay.get());
+        scheduler.schedule(this::updateDetails, delay, TimeUnit.MILLISECONDS);
     }
 
     private void updateDetails() {
-        for (String msg : message.get()) {
-            msg = msg
-                    .replace("{server}", Utils.getWorldName()
-                    .replace(("{players}"), Arrays.toString(Objects.requireNonNull(mc.getServer()).getPlayerNames()).formatted("[" + Arrays.stream(mc.getServer().getPlayerNames()).count() + "]")));
-            RPC.setDetails(msg);
-            DiscordIPC.setActivity(RPC);
-        }
+        List<String> messages = message.get();
+        String msg = messages.size() > 1 ? messages.get(random.nextInt(messages.size())) : messages.getFirst();
+        msg = msg
+                .replace("{server}", mc.isInSingleplayer() ? Utils.getWorldName() : WorldUtils.serverIp())
+                .replace("{players}", String.valueOf(WorldUtils.currentPlayers()))
+                .replace("{fps}", String.valueOf(mc.getCurrentFps())
+                .replace("{ping}", String.valueOf(WorldUtils.currentPing())));
+        RPC.setDetails(msg);
+        DiscordIPC.setActivity(RPC);
+        scheduleNextUpdate();
     }
 }

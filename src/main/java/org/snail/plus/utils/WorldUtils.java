@@ -1,12 +1,10 @@
 package org.snail.plus.utils;
 
-import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
-import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
@@ -146,7 +144,16 @@ public class WorldUtils {
             }
         }
 
+        public static Integer currentPlayers() {
+            return mc.world.getPlayers().size();
+        }
 
+        public static String serverIp() {
+            return mc.getCurrentServerEntry().address;
+        }
+        public static int currentPing() {
+            return mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid()).getLatency();
+        }
 
     public static Hand swingHand(HandMode Mode) {
         return switch (Mode) {
