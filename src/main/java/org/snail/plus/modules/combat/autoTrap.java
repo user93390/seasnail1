@@ -98,7 +98,6 @@ public class autoTrap extends Module {
     private Long lastPlaceTime = 0L;
     private Long lastUpdateTime = 0L;
     private Long currentTime = System.currentTimeMillis();
-    private BlockPos[] positions;
 
     public autoTrap() {
         super(Addon.Snail, "auto-trap+", "Automatically places blocks around players to trap them.");
@@ -120,7 +119,6 @@ public class autoTrap extends Module {
         if (executor != null) {
             executor.shutdown();
         }
-        positions = new BlockPos[0];
         lastPlaceTime = 0L;
         lastUpdateTime = 0L;
         currentTime = System.currentTimeMillis();

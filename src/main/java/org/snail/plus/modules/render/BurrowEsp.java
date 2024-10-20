@@ -91,6 +91,7 @@ public class BurrowEsp extends Module {
             Vec3d pos = new Vec3d(player.getX(), player.getY() + 0.4, player.getZ());
 
             if(performance.get()) {
+                if(!WorldUtils.canSeePos(pos)) continue;
                 event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
             } else {
                 event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);

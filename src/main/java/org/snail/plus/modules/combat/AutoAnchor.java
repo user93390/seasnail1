@@ -312,29 +312,36 @@ public class AutoAnchor extends Module {
         try {
             ArrayList<BlockPos> positions = new ArrayList<>();
             int Radius = (int) Math.ceil(radius);
-            if(debugCalculations.get()) info("found radius " + Radius);
+            if (debugCalculations.get()) info("found radius " + Radius);
             for (int x = -Radius; x <= Radius; x++) {
                 for (int y = -Radius; y <= Radius; y++) {
                     for (int z = -Radius; z <= Radius; z++) {
                         BlockPos pos = entity.getBlockPos().add(x, y, z);
-                        if(debugCalculations.get()) info("found possible position");
+                        if (debugCalculations.get()) info("found possible position");
                         selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, Vec3d.of(pos));
                         targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, Vec3d.of(pos));
-                        if (WorldUtils.hitBoxCheck(entity, pos) && WorldUtils.isAir(pos) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && !CombatUtils.willPop(entity, explosion) && BlockUtils.canPlace(pos)) {
+
+                        if (debugCalculations.get()) {
+                            info("self damage: " + selfDamage);
+                            info("target damage: " + targetDamage);
+                            info("min damage required: " + minDamage.get());
+                        }
+
+                        if (WorldUtils.hitBoxCheck(entity, pos) && WorldUtils.isAir(pos) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && !CombatUtils.willPop(mc.player, explosion) && BlockUtils.canPlace(pos)) {
                             positions.add(pos);
-                            if(debugCalculations.get()) info("found pos");
+                            if (debugCalculations.get()) info("found pos");
                             if (debugCalculations.get()) {
                                 info("found position: " + pos);
                                 info("self damage: " + selfDamage);
                                 info("target damage: " + targetDamage);
                             }
                         } else {
-                            if(debugCalculations.get()) warning("failed position");
+                            if (debugCalculations.get()) warning("failed position");
                         }
                     }
                 }
             }
-            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.getFirst());
+            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.get(0));
         } catch (Exception e) {
             error("An error occurred while finding positions: " + e.getMessage());
             return Collections.emptyList();
@@ -401,8 +408,8 @@ public class AutoAnchor extends Module {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) return;
             for (BlockPos pos : AnchorPos) {
-                FindItemResult stone = InvUtils.findInHotbar(Items.GLOWSTONE);
-                FindItemResult anchor = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
+                FindItemResult stone = InvUtils.find(Items.GLOWSTONE);
+                FindItemResult anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
                 if (!stone.found() || !anchor.found()) continue;
                 if (mc.player.getHealth() <= pauseHealth.get()) continue;
                 if (debugBreak.get()) info("breaking anchor at: " + pos);
@@ -423,6 +430,7 @@ public class AutoAnchor extends Module {
      *
      * @param event The Render3DEvent that contains rendering information.
      */
+    @SuppressWarnings("Duplicates")
     @EventHandler
     public void render(Render3DEvent event) {
         try {

@@ -9,7 +9,6 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
 import net.minecraft.util.Hand;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.TPSSyncUtil;
@@ -20,9 +19,6 @@ import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public class XPautomation extends Module {
-
-
-
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<AutoSwitchMode> autoSwitch = sgGeneral.add(new EnumSetting.Builder<AutoSwitchMode>()
@@ -35,13 +31,6 @@ public class XPautomation extends Module {
             .name("rotation")
             .description("Rotation method")
             .defaultValue(RotateMode.Packet)
-            .build());
-
-    private final Setting<Boolean> clientSide = sgGeneral.add(new BoolSetting.Builder()
-            .name("client side")
-            .description("only rotates client side")
-            .defaultValue(false)
-            .visible(() -> rotate.get() == RotateMode.Packet)
             .build());
 
     public final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
@@ -118,31 +107,27 @@ public class XPautomation extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (isArmorFullDurability() && smartMode.get()) {
-            ChatUtils.info("Your armor is at full HP, disabling...");
-            toggle();
-            return;
-        }
-        if (Objects.requireNonNull(mc.player).getHealth() <= health.get()) return;
+        if (shouldPause()) return;
 
-        double currentDelay = sync.get() ? 1.0 / TPSSyncUtil.getTPS() : delay.get();
         long time = System.currentTimeMillis();
-
-        if ((time - lastPlaceTime) < currentDelay * 1000) return;
+        if ((time - lastPlaceTime) < delay.get() * 1000) return;
         lastPlaceTime = time;
-        FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
 
+        FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
         if (exp.found()) useXP(exp);
 
-        switch (rotate.get()) {
-            case Pitch:
-                mc.player.setPitch(pitch.get());
-                break;
-            case Packet:
-                break;
-            default:
-                break;
+        if (rotate.get() == RotateMode.Pitch) {
+            mc.player.setPitch(pitch.get());
         }
+    }
+
+    private boolean shouldPause() {
+        if (smartMode.get() && isArmorFullDurability()) {
+            ChatUtils.info("Your armor is at full HP, disabling...");
+            toggle();
+            return true;
+        }
+        return Objects.requireNonNull(mc.player).getHealth() <= health.get();
     }
 
     private void moveXPBottleToHotbar(FindItemResult exp) {
@@ -154,19 +139,18 @@ public class XPautomation extends Module {
 
     private void useXP(FindItemResult exp) {
         if (!exp.found()) return;
+
         switch (autoSwitch.get()) {
             case Silent:
                 moveXPBottleToHotbar(exp);
                 InvUtils.swap(slot.get(), true);
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 InvUtils.swapBack();
-                if (!exp.found()) info("No XP bottles found in inventory.");
                 break;
             case Normal:
                 InvUtils.swap(slot.get(), false);
                 mc.interactionManager.interactItem(mc.player, WorldUtils.swingHand(handSwing.get()));
                 if (!exp.isHotbar()) reFill();
-                if (!exp.found()) info("No XP bottles found in inventory.");
                 break;
             case inventory:
                 swapUtils.pickSwitch(exp.slot());
@@ -174,6 +158,8 @@ public class XPautomation extends Module {
                 swapUtils.pickSwapBack();
                 break;
         }
+
+        if (!exp.found()) info("No XP bottles found in inventory.");
     }
 
     private void returnXPBottleToOriginalSlot() {
@@ -209,5 +195,4 @@ public class XPautomation extends Module {
     public enum AutoSwitchMode {inventory, Silent, Normal}
 
     public enum RotateMode {Packet, Pitch, None}
-
 }

@@ -49,7 +49,6 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoEZ());
         Modules.get().add(new XPautomation());
         Modules.get().add(new ChatControl());
-        Modules.get().add(new stealthMine());
         Modules.get().add(new autoTrap());
         Modules.get().add(new AutoAnchor());
         Modules.get().add(new FOV());
