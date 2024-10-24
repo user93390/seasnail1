@@ -13,20 +13,14 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-import net.minecraft.world.explosion.Explosion;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.extrapolationUtils;
 import org.snail.plus.utils.swapUtils;
@@ -47,7 +41,6 @@ public class AutoAnchor extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacement = settings.createGroup("Placement");
-    private final SettingGroup sgAutomation = settings.createGroup("Automation");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -269,7 +262,6 @@ public class AutoAnchor extends Module {
     private long lastUpdateTime;
     private double selfDamage;
     private double targetDamage;
-    private Explosion explosion;
 
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
@@ -305,7 +297,6 @@ public class AutoAnchor extends Module {
         } catch (Exception e) {
             error("An error occurred while deactivating the module: " + e.getMessage());
         }
-        explosion = null;
     }
 
     public List<BlockPos> positions(PlayerEntity entity, double radius) {
@@ -327,7 +318,8 @@ public class AutoAnchor extends Module {
                             info("min damage required: " + minDamage.get());
                         }
 
-                        if (WorldUtils.hitBoxCheck(entity, pos) && WorldUtils.isAir(pos) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && !CombatUtils.willPop(mc.player, explosion) && BlockUtils.canPlace(pos)) {
+                        if (WorldUtils.hitBoxCheck(entity, pos) && WorldUtils.isAir(pos)) {
+                            if(selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
                             positions.add(pos);
                             if (debugCalculations.get()) info("found pos");
                             if (debugCalculations.get()) {
@@ -337,6 +329,7 @@ public class AutoAnchor extends Module {
                             }
                         } else {
                             if (debugCalculations.get()) warning("failed position");
+                         }
                         }
                     }
                 }

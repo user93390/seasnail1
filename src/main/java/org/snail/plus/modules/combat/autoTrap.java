@@ -17,7 +17,6 @@ import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;

@@ -114,10 +114,25 @@ public class XPautomation extends Module {
         lastPlaceTime = time;
 
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);
-        if (exp.found()) useXP(exp);
-
-        if (rotate.get() == RotateMode.Pitch) {
-            mc.player.setPitch(pitch.get());
+        switch(rotate.get()) {
+            case Packet -> {
+            if(exp.found()) {
+                Rotations.rotate(Rotations.getYaw(mc.player), pitch.get(), () -> useXP(exp));
+            }
+                break;
+        }
+            case Pitch -> {
+                if(exp.found()) {
+                    mc.player.setPitch(pitch.get());
+                }
+                break;
+            }
+            case None -> {
+                if(exp.found()) {
+                    useXP(exp);
+                    break;
+                }  
+            }
         }
     }
 

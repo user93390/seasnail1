@@ -215,7 +215,7 @@ public class webAura extends Module {
         try {
             if (predictMovement.get()) {
                 pos = Collections.singletonList(BlockPos.ofFloored(extrapolationUtils.predictEntityPos(entity, selfExtrapolateTicks.get())));
-                Box box = new Box(pos.get(0));
+                Box box = new Box(pos.getFirst());
                 List<VoxelShape> count = new ArrayList<>();
                 mc.world.getBlockCollisions(entity, box).forEach(count::add);
                 if (!count.isEmpty()) {
@@ -242,11 +242,9 @@ public class webAura extends Module {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
             for (PlayerEntity entity : mc.world.getPlayers()) {
-                if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity))
-                    continue;
+                if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity)) continue;
 
                 List<BlockPos> positions = positions(entity);
-
                 for (BlockPos blockPos : positions) {
                     if(CombatUtils.isBurrowed(entity)) continue;
                     placed = !WorldUtils.isAir(blockPos);
@@ -287,7 +285,7 @@ public class webAura extends Module {
         }
     }
 
-    @SuppressWarnings({"unused", "DuplicatedCode"})
+    @SuppressWarnings({"DuplicatedCode"})
     @EventHandler
     public void onRender(Render3DEvent event) {
         for (PlayerEntity player : mc.world.getPlayers()) {

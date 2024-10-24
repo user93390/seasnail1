@@ -6,7 +6,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.WorldUtils;
+import org.snail.plus.utils.serverUtils;
 
 import java.util.List;
 import java.util.Random;
@@ -70,10 +70,10 @@ public class discordRPC extends Module {
         List<String> messages = message.get();
         String msg = messages.size() > 1 ? messages.get(random.nextInt(messages.size())) : messages.getFirst();
         msg = msg
-                .replace("{server}", mc.isInSingleplayer() ? Utils.getWorldName() : WorldUtils.serverIp())
-                .replace("{players}", String.valueOf(WorldUtils.currentPlayers()))
+                .replace("{server}", mc.isInSingleplayer() ? Utils.getWorldName() : serverUtils.serverIp())
+                .replace("{players}", String.valueOf(serverUtils.currentPlayers()))
                 .replace("{fps}", String.valueOf(mc.getCurrentFps())
-                .replace("{ping}", String.valueOf(WorldUtils.currentPing())));
+                .replace("{ping}", String.valueOf(serverUtils.currentPing())));
         RPC.setDetails(msg);
         DiscordIPC.setActivity(RPC);
         scheduleNextUpdate();

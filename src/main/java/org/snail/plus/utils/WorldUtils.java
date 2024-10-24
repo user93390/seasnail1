@@ -20,8 +20,6 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
-
-import java.util.List;
 import java.util.Objects;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -100,6 +98,7 @@ public class WorldUtils {
                 }
                 mc.player.swingHand(swingHand(hand));
                 }
+        default -> throw new IllegalArgumentException("Unexpected value: " + Mode);
             }
         }
         public static void breakBlock(BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, boolean instant, swapUtils.swapMode Mode, boolean rotate) {
@@ -145,16 +144,7 @@ public class WorldUtils {
             }
         }
 
-        public static Integer currentPlayers() {
-            return mc.world.getPlayers().size();
-        }
 
-        public static String serverIp() {
-            return mc.getCurrentServerEntry().address;
-        }
-        public static int currentPing() {
-            return mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid()).getLatency();
-        }
 
     public static Hand swingHand(HandMode Mode) {
         return switch (Mode) {
