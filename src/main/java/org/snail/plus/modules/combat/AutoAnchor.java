@@ -1,9 +1,11 @@
 package org.snail.plus.modules.combat;
 
+import meteordevelopment.meteorclient.events.render.Render2DEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IBox;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
+import meteordevelopment.meteorclient.renderer.text.TextRenderer;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -11,6 +13,7 @@ import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.render.NametagUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
@@ -18,8 +21,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Vector3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.MathUtils;
 import org.snail.plus.utils.WorldUtils;
@@ -174,6 +177,19 @@ public class AutoAnchor extends Module {
             .name("line color")
             .description("The color of the lines of the rendered anchor box.")
             .defaultValue(new SettingColor(255, 0, 0, 255))
+            .build());
+
+    private final Setting<SettingColor> damageColor = sgRender.add(new ColorSetting.Builder()
+            .name("damage color")
+            .description("The color of the damage text.")
+            .defaultValue(new SettingColor(255, 255, 255, 255))
+            .build());
+
+    private final Setting<Double> damageTextScale = sgRender.add(new DoubleSetting.Builder()
+            .name("damage text scale")
+            .description("The scale of the damage text.")
+            .defaultValue(1.0)
+            .sliderRange(0.1, 2.0)
             .build());
 
     private final Setting<Boolean> swing = sgPlacement.add(new BoolSetting.Builder()
@@ -380,6 +396,8 @@ public class AutoAnchor extends Module {
         }
     }
 
+
+
     @EventHandler
     public void render(Render3DEvent event) {
         try {
@@ -432,6 +450,29 @@ public class AutoAnchor extends Module {
             }
         } catch (Exception e) {
             error("An error occurred while rendering the anchor positions: " + e.getMessage());
+        }
+    }
+
+    @EventHandler
+    public void render2D(Render2DEvent event) {
+        for (BlockPos pos : AnchorPos) {
+            Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
+            if (renderMode.get() == RenderMode.smooth && renderBoxOne != null) {
+                vec.set(renderBoxOne.minX + 0.5, renderBoxOne.minY + 0.5, renderBoxOne.minZ + 0.5);
+            } else {
+                vec.set(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            }
+            if (NametagUtils.to2D(vec, damageTextScale.get())) {
+                NametagUtils.begin(vec);
+                TextRenderer.get().begin(1, false, true);
+
+                String text = String.format("%.1f", targetDamage);
+                double w = TextRenderer.get().getWidth(text) / 2;
+                TextRenderer.get().render(text, -w, 0, damageColor.get(), false);
+
+                TextRenderer.get().end();
+                NametagUtils.end();
+            }
         }
     }
 

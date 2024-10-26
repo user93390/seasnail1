@@ -149,8 +149,6 @@ public class XPautomation extends Module {
     }
 
     private void useXP(FindItemResult exp) {
-        if (!exp.found()) return;
-
         switch (autoSwitch.get()) {
             case Silent:
                 moveXPBottleToHotbar(exp);
@@ -159,6 +157,7 @@ public class XPautomation extends Module {
                 InvUtils.swapBack();
                 break;
             case Normal:
+                moveXPBottleToHotbar(exp);
                 InvUtils.swap(slot.get(), false);
                 mc.interactionManager.interactItem(mc.player, WorldUtils.swingHand(handSwing.get()));
                 if (!exp.isHotbar()) reFill();
