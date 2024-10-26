@@ -11,6 +11,7 @@ import org.snail.plus.Addon;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 public class Welcomer extends Module {
@@ -60,13 +61,13 @@ public class Welcomer extends Module {
 
     @Override
     public void onActivate() {
-        if(mc.getServer().getPlayerManager() != null && mc.getServer() != null) {
+        if (mc.getServer() != null && mc.getServer().getPlayerManager() != null) {
             players = mc.getServer().getPlayerManager().getPlayerList().size();
             playerList = mc.getServer().getPlayerManager().getPlayerList();
-    
-            if(debug.get()) {
+
+            if (debug.get()) {
                 Addon.LOG.info("Players: " + players);
-                for(PlayerEntity player : playerList) {
+                for (PlayerEntity player : playerList) {
                     Addon.LOG.info(player.getName().getString());
                 }
             }
@@ -75,7 +76,7 @@ public class Welcomer extends Module {
 
     /**
      * Handles the Tickevent.Post event to manage player join and leave messages.
-     * 
+     * <p>
      * This method checks the current number of players on the server and compares it 
      * with the previously recorded number of players. If there are more players than 
      * previously recorded, it iterates through the current player list and sends a 
@@ -89,9 +90,9 @@ public class Welcomer extends Module {
     private void onTick(TickEvent.Post event) {
         if(mc.getServer() != null) {
         if (mc.getServer().getPlayerManager().getPlayerList().size() > players) {
-            for (PlayerEntity player : mc.getServer().getPlayerManager().getPlayerList()) {
+            for (ServerPlayerEntity player : mc.getServer().getPlayerManager().getPlayerList()) {
                 if (!playerList.contains(player)) {
-                    playerList.add((ServerPlayerEntity) player);
+                    playerList.add(player);
                     if (join.get()) {
                         String message = joinMessages.get().get(random.nextInt(joinMessages.get().size()));
                         ChatUtils.sendPlayerMsg(String.format(message, player.getName().getString()));

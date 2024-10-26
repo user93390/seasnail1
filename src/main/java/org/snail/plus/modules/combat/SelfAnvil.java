@@ -26,21 +26,16 @@ import org.snail.plus.utils.WorldUtils;
 public class SelfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
-
-    private long lastPlaceTime = 0;
-
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotate")
             .description("Automatically rotates towards the position where the anvil is placed.")
             .defaultValue(true)
             .build());
-
     private final Setting<Boolean> support = sgGeneral.add(new BoolSetting.Builder()
             .name("support")
             .description("Places support blocks (recommended)")
             .defaultValue(true)
             .build());
-
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
             .description("Delay in seconds between each block placement.")
@@ -48,36 +43,32 @@ public class SelfAnvil extends Module {
             .min(0)
             .sliderMax(5)
             .build());
-
     private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
             .name("auto-disable")
             .description("Disables the module when you have placed the anvil.")
             .defaultValue(true)
             .build());
-
     private final Setting<Boolean> autoCenter = sgGeneral.add(new BoolSetting.Builder()
             .name("auto center")
             .description("centers you when placing the anvil")
             .defaultValue(true)
             .build());
-
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side color")
             .description("Side color")
             .defaultValue(new SettingColor(255, 0, 0, 75))
             .build());
-
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("line color")
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
-
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape-mode")
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
+    private long lastPlaceTime = 0;
 
     public SelfAnvil() {
         super(Addon.Snail, "Self Anvil+", "Places an anvil in the air to burrow yourself.");
@@ -92,7 +83,7 @@ public class SelfAnvil extends Module {
         lastPlaceTime = time;
         FindItemResult anvil = InvUtils.findInHotbar(Items.ANVIL);
 
-        if(autoCenter.get() && !CombatUtils.isCentered(mc.player)) {
+        if (autoCenter.get() && !CombatUtils.isCentered(mc.player)) {
             PlayerUtils.centerPlayer();
             info("centered");
             return;
@@ -118,10 +109,10 @@ public class SelfAnvil extends Module {
     }
 
     private void PlaceSupportBlocks(PlayerEntity player, FindItemResult obsidian) {
-        for(int i = 0; i <= 2; i++) {
+        for (int i = 0; i <= 2; i++) {
 
-            BlockPos support = new BlockPos((int) player.getX(), (int)player.getY() + i,(int) player.getZ());
-            if(rotate.get()) Rotations.rotate(Rotations.getYaw(support), Rotations.getPitch(support));
+            BlockPos support = new BlockPos((int) player.getX(), (int) player.getY() + i, (int) player.getZ());
+            if (rotate.get()) Rotations.rotate(Rotations.getYaw(support), Rotations.getPitch(support));
             InvUtils.swap(obsidian.slot(), true);
             mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(support.getX(), support.getY(), support.getZ()), Direction.UP, support, false));
             InvUtils.swapBack();
@@ -129,7 +120,7 @@ public class SelfAnvil extends Module {
     }
 
     private void PlaceAnvil(BlockPos pos) {
-        if(rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos));
+        if (rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos));
         mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.UP, pos, false));
     }
 

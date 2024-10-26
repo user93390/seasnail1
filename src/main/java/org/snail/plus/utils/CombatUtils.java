@@ -8,6 +8,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.explosion.Explosion;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -44,10 +46,17 @@ public class CombatUtils {
         return WorldUtils.isAir(new BlockPos(x, y, z));
     }
 
-    public static boolean willPop(PlayerEntity entity, Explosion explosion) {
-        if(mc.player.getOffHandStack() == Items.TOTEM_OF_UNDYING.getDefaultStack()) {
-            return explosion.getPower() >= entity.getHealth();
+    public static boolean isSurrounded(PlayerEntity player) {
+        BlockPos pos = player.getBlockPos();
+        BlockPos[] blocks = {
+                pos.north(), pos.south(), pos.east(), pos.west()
+        };
+
+        for (BlockPos block : blocks) {
+            if (WorldUtils.isAir(block)) {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 }

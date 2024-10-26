@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.snail.plus.Addon;
+import org.snail.plus.modules.chat.ChatControl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,7 +38,7 @@ public class ModuleMixin {
                 ci.cancel();
             }
         } catch (Exception e) {
-            Addon.LOG.error("Error in sendToggledMsg method: " + e.getMessage());
+            Addon.LOG.error("Error in sendTc xdzzzzzoggledMsg method: {}", e.getMessage());
         }
     }
 
@@ -47,7 +48,7 @@ public class ModuleMixin {
             ChatUtils.sendMsg(Text.of(Formatting.YELLOW + " [!] " + String.format(message, args)));
             ci.cancel();
         } catch (Exception e) {
-            Addon.LOG.error("Error in warning method: " + e.getMessage());
+            Addon.LOG.error("Error in warning method: {}", e.getMessage());
         }
 
     }
@@ -58,7 +59,7 @@ public class ModuleMixin {
             ChatUtils.sendMsg(Text.of(Formatting.RED + " [!] " + String.format(message, args)));
             ci.cancel();
         } catch (Exception e) {
-            Addon.LOG.error("Error in error method: " + e.getMessage());
+            Addon.LOG.error("Error in error method: {}", e.getMessage());
         }
 
     }
@@ -69,7 +70,7 @@ public class ModuleMixin {
             ChatUtils.sendMsg(Text.of(Formatting.GRAY + " [i] " + String.format(message)));
             ci.cancel();
         } catch (Exception e) {
-            Addon.LOG.error("Error in info method: " + e.getMessage());
+            Addon.LOG.error("Error in info method: {}", e.getMessage());
         }
     }
 }

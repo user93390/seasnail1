@@ -108,13 +108,6 @@ public class AutoAnchor extends Module {
             .sliderRange(0.0, 36.0)
             .build());
 
-    private final Setting<Double> lethalHealth = sgDamage.add(new DoubleSetting.Builder()
-            .name("lethal health")
-            .description("overrides pause health if you can pop the player")
-            .defaultValue(0.0)
-            .sliderRange(0.0, 36.0)
-            .build());
-
     private final Setting<Boolean> strictDirection = sgPlacement.add(new BoolSetting.Builder()
             .name("strict direction")
             .description("Only places anchors in the direction you are facing.")
@@ -126,6 +119,20 @@ public class AutoAnchor extends Module {
             .description("The mode used for direction.")
             .defaultValue(WorldUtils.DirectionMode.Up)
             .visible(() -> !strictDirection.get())
+            .build());
+
+    private final Setting<Integer> radiusXZ = sgPlacement.add(new IntSetting.Builder()
+            .name("radius xz")
+            .description("The radius in the x and z axis to search for anchor positions.")
+            .defaultValue(2)
+            .sliderRange(2, 5)
+            .build());
+
+    private final Setting<Integer> radiusY = sgPlacement.add(new IntSetting.Builder()
+            .name("radius y")
+            .description("The radius in the y axis to search for anchor positions.")
+            .defaultValue(3)
+            .sliderRange(1, 5)
             .build());
 
     private final Setting<Boolean> predictMovement = sgExtrapolation.add(new BoolSetting.Builder()
@@ -157,8 +164,6 @@ public class AutoAnchor extends Module {
             .visible(() -> predictMovement.get())
             .build());
 
-
-
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side color")
             .description("The color of the sides of the rendered anchor box.")
@@ -169,20 +174,6 @@ public class AutoAnchor extends Module {
             .name("line color")
             .description("The color of the lines of the rendered anchor box.")
             .defaultValue(new SettingColor(255, 0, 0, 255))
-            .build());
-
-    private final Setting<Integer> RadiusXZ = sgPlacement.add(new IntSetting.Builder()
-            .name("Radius XZ")
-            .description("The radius in the X and Z directions for anchor placement. slider value MUST BE ABOVE 1")
-            .defaultValue(1)
-            .sliderRange(1, 5)
-            .build());
-
-    private final Setting<Integer> RadiusY = sgPlacement.add(new IntSetting.Builder()
-            .name("Radius Y")
-            .description("The radius in the Y direction for anchor placement.")
-            .defaultValue(1)
-            .sliderRange(1, 5)
             .build());
 
     private final Setting<Boolean> swing = sgPlacement.add(new BoolSetting.Builder()
@@ -237,12 +228,6 @@ public class AutoAnchor extends Module {
             .name("shape mode")
             .description("The shape mode used for rendering the anchor box.")
             .defaultValue(ShapeMode.Both)
-            .build());
-
-    private final Setting<Boolean> debugExtrapolation = sgDebug.add(new BoolSetting.Builder()
-            .name("debug extrapolation")
-            .description("Enables debug information for extrapolation.")
-            .defaultValue(false)
             .build());
 
     private final Setting<Boolean> debugCalculations = sgDebug.add(new BoolSetting.Builder()
@@ -302,56 +287,42 @@ public class AutoAnchor extends Module {
         }
     }
 
-    public List<BlockPos> positions(PlayerEntity entity, int xz, int y) {
+    public List<BlockPos> positions(PlayerEntity entity) {
         try {
             ArrayList<BlockPos> positions = new ArrayList<>();
-            for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), xz, y)) {
-                if (debugCalculations.get()) info("found possible position");
-                selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, Vec3d.of(pos));
-                targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, Vec3d.of(pos));
+
+            for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), radiusXZ.get(), radiusY.get())) {
+                Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+                selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, vec);
+                targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, vec);
 
                 if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
                     if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                        if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
                         positions.add(pos);
-                        if (debugCalculations.get()) info("added position");
-                    } else {
-                        if (debugCalculations.get()) warning("failed position");
                     }
                 }
             }
+
             if (positions.isEmpty()) {
-                for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), xz, y)) {
+                for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), radiusXZ.get(), radiusY.get())) {
                     if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
                         positions.add(pos);
-                        if (debugCalculations.get()) info("added fallback position");
                         break;
                     }
                 }
             }
-            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.getFirst());
+            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.get(0));
         } catch (Exception e) {
             error("An error occurred while finding positions: " + e.getMessage());
             return Collections.emptyList();
         }
     }
 
-    /**
-     * Predicts the future position of a player entity based on extrapolation ticks.
-     *
-     * @param player             The player entity whose movement is to be predicted.
-     * @param extrapolationTicks The number of ticks to extrapolate the player's movement.
-     * @return A Vec3d object representing the predicted position of the player.
-     */
-    private Vec3d predictMovement(PlayerEntity player, Integer extrapolationTicks) {
-        if (debugExtrapolation.get()) info("predicting movement for: " + player);
+    private Vec3d predictMovement(PlayerEntity player, int extrapolationTicks) {
         return extrapolationUtils.predictEntityPos(player, extrapolationTicks);
     }
 
-    /**
-     * Event handler for the tick event. This method is called every tick to perform the main logic of the AutoAnchor module.
-     *
-     * @param event The tick event.
-     */
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
@@ -366,12 +337,7 @@ public class AutoAnchor extends Module {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
 
-                AnchorPos = positions(player, RadiusXZ.get(), RadiusY.get());
-                for (BlockPos pos : AnchorPos) {
-                    for (Direction dir : Direction.values()) {
-                        if (strictDirection.get() && WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite())) continue;
-                    }
-                }
+                AnchorPos = positions(player);
                 lock.lock();
                 try {
                     for (BlockPos pos : AnchorPos) {
@@ -404,6 +370,9 @@ public class AutoAnchor extends Module {
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
             }
             lastPlacedTime = currentTime;
+
+            selfDamage = 0;
+            targetDamage = 0;
         } catch (Exception e) {
             error("An error occurred while breaking anchors: " + e.getMessage());
         } finally {
@@ -411,66 +380,61 @@ public class AutoAnchor extends Module {
         }
     }
 
-    /**
-     * Event handler for rendering 3D events. This method is called to render the anchor positions.
-     *
-     * @param event The Render3DEvent that contains rendering information.
-     */
-    @SuppressWarnings("Duplicates")
     @EventHandler
     public void render(Render3DEvent event) {
         try {
-        for (BlockPos pos : AnchorPos) {
-            for (PlayerEntity player : mc.world.getPlayers()) {
-                if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
-                    continue;
-                if (renderExtrapolation.get() && predictMovement.get()) {
-                    Vec3d extrapolatedPos = predictMovement(player, extrapolationTicks.get());
-                    Box playerBox = new Box(
-                            extrapolatedPos.x - player.getWidth() / 2,
-                            extrapolatedPos.y,
-                            extrapolatedPos.z - player.getWidth() / 2,
-                            extrapolatedPos.x + player.getWidth() / 2,
-                            extrapolatedPos.y + player.getHeight(),
-                            extrapolatedPos.z + player.getWidth() / 2
-                    );
-                    event.renderer.box(playerBox, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                }
-
-                switch (renderMode.get()) {
-                    case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                    case fading -> {
-                        boolean shouldShrink = player.isDead() && shrink.get();
-                        RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, shouldShrink);
-                    }
-                    case smooth -> {
-                        if (renderBoxOne == null) renderBoxOne = new Box(pos);
-                        if (renderBoxTwo == null) renderBoxTwo = new Box(pos);
-
-                        if (renderBoxTwo instanceof IBox) {
-                            ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
-                        }
-
-                        double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
-                        double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
-                        double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
-                        ((IBox) renderBoxOne).set(
-                                renderBoxOne.minX + offsetX,
-                                renderBoxOne.minY + offsetY,
-                                renderBoxOne.minZ + offsetZ,
-                                renderBoxOne.maxX + offsetX,
-                                renderBoxOne.maxY + offsetY,
-                                renderBoxOne.maxZ + offsetZ
+            for (BlockPos pos : AnchorPos) {
+                for (PlayerEntity player : mc.world.getPlayers()) {
+                    if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
+                        continue;
+                    if (renderExtrapolation.get() && predictMovement.get()) {
+                        Vec3d extrapolatedPos = predictMovement(player, extrapolationTicks.get());
+                        Box playerBox = new Box(
+                                extrapolatedPos.x - player.getWidth() / 2,
+                                extrapolatedPos.y,
+                                extrapolatedPos.z - player.getWidth() / 2,
+                                extrapolatedPos.x + player.getWidth() / 2,
+                                extrapolatedPos.y + player.getHeight(),
+                                extrapolatedPos.z + player.getWidth() / 2
                         );
-                        event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                        event.renderer.box(playerBox, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    }
+
+                    switch (renderMode.get()) {
+                        case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                        case fading -> {
+                            boolean shouldShrink = player.isDead() && shrink.get();
+                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, shouldShrink);
+                        }
+                        case smooth -> {
+                            if (renderBoxOne == null) renderBoxOne = new Box(pos);
+                            if (renderBoxTwo == null) renderBoxTwo = new Box(pos);
+
+                            if (renderBoxTwo instanceof IBox) {
+                                ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
+                            }
+
+                            double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
+                            double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
+                            double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
+                            ((IBox) renderBoxOne).set(
+                                    renderBoxOne.minX + offsetX,
+                                    renderBoxOne.minY + offsetY,
+                                    renderBoxOne.minZ + offsetZ,
+                                    renderBoxOne.maxX + offsetX,
+                                    renderBoxOne.maxY + offsetY,
+                                    renderBoxOne.maxZ + offsetZ
+                            );
+                            event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                        }
                     }
                 }
             }
-        }
         } catch (Exception e) {
             error("An error occurred while rendering the anchor positions: " + e.getMessage());
         }
     }
+
     @Override
     public String getInfoString() {
         if (mc.world == null) return null;

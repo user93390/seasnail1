@@ -97,6 +97,12 @@ public class webAura extends Module {
             .visible(() -> !strictDirection.get())
             .build());
 
+    private final Setting<Boolean> onlySurround = sgPlace.add(new BoolSetting.Builder()
+            .name("only surrounded")
+            .description("Only targets players that are surrounded by blocks.")
+            .defaultValue(false)
+            .build());
+
     private final Setting<Boolean> predictMovement = sgExtrapolation.add(new BoolSetting.Builder()
             .name("predict movement")
             .description("Predicts the movement of players for more accurate web placement.")
@@ -243,7 +249,7 @@ public class webAura extends Module {
             if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
             for (PlayerEntity entity : mc.world.getPlayers()) {
                 if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity)) continue;
-
+                if(onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
                 List<BlockPos> positions = positions(entity);
                 for (BlockPos blockPos : positions) {
                     if(CombatUtils.isBurrowed(entity)) continue;
@@ -270,7 +276,7 @@ public class webAura extends Module {
         lock.lock();
         try {
             long currentTime = System.currentTimeMillis();
-            if (currentTime - lastUpdateTime < (1000 / speed.get())) return;
+            if (currentTime - lastPlacedTime < (1000 / speed.get())) return;
             if (!placed ) {
                 FindItemResult web = InvUtils.findInHotbar(Items.COBWEB);
                 if(web.found()) {
@@ -328,12 +334,11 @@ public class webAura extends Module {
                                 renderBoxOne.maxZ + offsetZ
                         );
                         event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                        break;
+
                     }
                     case fade -> {
-                        boolean shouldShrink = pos != this.pos.getFirst() || player.isDead();
-                        RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, fadeTimer.get(), true, shouldShrink);
-                        break;
+                        boolean shouldFade = pos != this.pos.getFirst() || player.isDead() || WorldUtils.isAir(pos);
+                        RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, fadeTimer.get(), shouldFade, false);
                     }
                 }
             }

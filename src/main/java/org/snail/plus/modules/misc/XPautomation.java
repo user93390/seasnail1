@@ -11,7 +11,6 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.TPSSyncUtil;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
@@ -118,20 +117,17 @@ public class XPautomation extends Module {
             case Packet -> {
             if(exp.found()) {
                 Rotations.rotate(Rotations.getYaw(mc.player), pitch.get(), () -> useXP(exp));
+                }
             }
-                break;
-        }
             case Pitch -> {
                 if(exp.found()) {
                     mc.player.setPitch(pitch.get());
                 }
-                break;
             }
             case None -> {
                 if(exp.found()) {
                     useXP(exp);
-                    break;
-                }  
+                }
             }
         }
     }
@@ -195,8 +191,7 @@ public class XPautomation extends Module {
     }
 
     private boolean isArmorFullDurability() {
-        return StreamSupport.stream(Objects.requireNonNull(mc.player).getArmorItems().spliterator(), false)
-                .allMatch(itemStack -> itemStack.getDamage() == 0);
+        return StreamSupport.stream(Objects.requireNonNull(mc.player).getArmorItems().spliterator(), false).allMatch(itemStack -> itemStack.getDamage() == 0);
     }
 
     private void reFill() {
