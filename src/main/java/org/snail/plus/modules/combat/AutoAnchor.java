@@ -21,6 +21,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
+import org.snail.plus.utils.MathUtils;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.extrapolationUtils;
 import org.snail.plus.utils.swapUtils;
@@ -156,12 +157,7 @@ public class AutoAnchor extends Module {
             .visible(() -> predictMovement.get())
             .build());
 
-    private final Setting<Integer> RadiusX = sgPlacement.add(new IntSetting.Builder()
-            .name("Radius X")
-            .description("The radius in the X direction for anchor placement.")
-            .defaultValue(1)
-            .sliderRange(1, 5)
-            .build());
+
 
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side color")
@@ -175,9 +171,16 @@ public class AutoAnchor extends Module {
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
 
-    private final Setting<Integer> RadiusZ = sgPlacement.add(new IntSetting.Builder()
-            .name("Radius Z")
-            .description("The radius in the Z direction for anchor placement.")
+    private final Setting<Integer> RadiusXZ = sgPlacement.add(new IntSetting.Builder()
+            .name("Radius XZ")
+            .description("The radius in the X and Z directions for anchor placement. slider value MUST BE ABOVE 1")
+            .defaultValue(1)
+            .sliderRange(1, 5)
+            .build());
+
+    private final Setting<Integer> RadiusY = sgPlacement.add(new IntSetting.Builder()
+            .name("Radius Y")
+            .description("The radius in the Y direction for anchor placement.")
             .defaultValue(1)
             .sliderRange(1, 5)
             .build());
@@ -299,48 +302,38 @@ public class AutoAnchor extends Module {
         }
     }
 
-    public List<BlockPos> positions(PlayerEntity entity, double radius) {
+    public List<BlockPos> positions(PlayerEntity entity, int xz, int y) {
         try {
             ArrayList<BlockPos> positions = new ArrayList<>();
-            int Radius = (int) Math.ceil(radius);
-            if (debugCalculations.get()) info("found radius " + Radius);
-            for (int x = -Radius; x <= Radius; x++) {
-                for (int y = -Radius; y <= Radius; y++) {
-                    for (int z = -Radius; z <= Radius; z++) {
-                        BlockPos pos = entity.getBlockPos().add(x, y, z);
-                        if (debugCalculations.get()) info("found possible position");
-                        selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, Vec3d.of(pos));
-                        targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, Vec3d.of(pos));
+            for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), xz, y)) {
+                if (debugCalculations.get()) info("found possible position");
+                selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, Vec3d.of(pos));
+                targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, Vec3d.of(pos));
 
-                        if (debugCalculations.get()) {
-                            info("self damage: " + selfDamage);
-                            info("target damage: " + targetDamage);
-                            info("min damage required: " + minDamage.get());
-                        }
-
-                        if (WorldUtils.hitBoxCheck(entity, pos) && WorldUtils.isAir(pos)) {
-                            if(selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
-                            positions.add(pos);
-                            if (debugCalculations.get()) info("found pos");
-                            if (debugCalculations.get()) {
-                                info("found position: " + pos);
-                                info("self damage: " + selfDamage);
-                                info("target damage: " + targetDamage);
-                            }
-                        } else {
-                            if (debugCalculations.get()) warning("failed position");
-                         }
-                        }
+                if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
+                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
+                        positions.add(pos);
+                        if (debugCalculations.get()) info("added position");
+                    } else {
+                        if (debugCalculations.get()) warning("failed position");
                     }
                 }
             }
-            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.get(0));
+            if (positions.isEmpty()) {
+                for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), xz, y)) {
+                    if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
+                        positions.add(pos);
+                        if (debugCalculations.get()) info("added fallback position");
+                        break;
+                    }
+                }
+            }
+            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.getFirst());
         } catch (Exception e) {
             error("An error occurred while finding positions: " + e.getMessage());
             return Collections.emptyList();
         }
     }
-
 
     /**
      * Predicts the future position of a player entity based on extrapolation ticks.
@@ -373,7 +366,7 @@ public class AutoAnchor extends Module {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
 
-                AnchorPos = positions(player, Math.max(RadiusX.get(), RadiusZ.get()));
+                AnchorPos = positions(player, RadiusXZ.get(), RadiusY.get());
                 for (BlockPos pos : AnchorPos) {
                     for (Direction dir : Direction.values()) {
                         if (strictDirection.get() && WorldUtils.strictDirection(pos.offset(dir), dir.getOpposite())) continue;

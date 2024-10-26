@@ -94,9 +94,9 @@ public class autoTrap extends Module {
 
     private final ReentrantLock lock = new ReentrantLock();
     ExecutorService executor = Executors.newSingleThreadExecutor();
-    private Long lastPlaceTime = 0L;
-    private Long lastUpdateTime = 0L;
-    private Long currentTime = System.currentTimeMillis();
+    private long lastPlaceTime = 0L;
+    private long lastUpdateTime = 0L;
+    private long currentTime = System.currentTimeMillis();
 
     public autoTrap() {
         super(Addon.Snail, "auto-trap+", "Automatically places blocks around players to trap them.");
@@ -123,25 +123,20 @@ public class autoTrap extends Module {
         currentTime = System.currentTimeMillis();
     }
 
-    public List<BlockPos> getFindingPositions(@NotNull PlayerEntity entity) {
+    private List<BlockPos> positions(PlayerEntity entity) {
         BlockPos basePos = entity.getBlockPos().up(1);
+
+        List<BlockPos> face = List.of(basePos.north(), basePos.south(), basePos.east(), basePos.west());
+        List<BlockPos> top = List.of(basePos.up(1));
+        List<BlockPos> full = List.of(basePos.north(), basePos.south(), basePos.east(), basePos.west(), basePos.up(1));
+
         return switch (mode.get()) {
-            case top -> Collections.singletonList(basePos.up(1));
-            case face -> List.of(
-                    basePos.north(),
-                    basePos.south(),
-                    basePos.east(),
-                    basePos.west()
-            );
-            case full -> List.of(
-                    basePos.north(),
-                    basePos.south(),
-                    basePos.east(),
-                    basePos.west(),
-                    basePos.up(1)
-            );
+            case top -> top;
+            case full -> full;
+            case face -> face;
         };
     }
+
     @EventHandler
     public void onTick(TickEvent.Post event) {
         try {
@@ -149,12 +144,10 @@ public class autoTrap extends Module {
                 if (mc.player.distanceTo(entity) > range.get()) continue;
                 if (entity == mc.player || Friends.get().isFriend(entity)) continue;
                 if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
-                List<BlockPos> positions = getFindingPositions(entity);
-
                 lock.lock();
                 try {
-                    for (BlockPos pos : positions) {
-                        if (rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
+                    for (BlockPos pos : positions(entity)) {
+                        if (rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos),  100);
                         doPlace(pos);
                     }
                 } finally {

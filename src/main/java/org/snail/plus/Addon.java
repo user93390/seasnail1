@@ -19,7 +19,6 @@ import org.snail.plus.modules.combat.*;
 import org.snail.plus.modules.misc.*;
 import org.snail.plus.modules.render.*;
 
-
 public class Addon extends MeteorAddon {
     private final MinecraftClient mc = MinecraftClient.getInstance();
     public static final Logger LOG = LoggerFactory.getLogger("Snail++");
@@ -45,13 +44,20 @@ public class Addon extends MeteorAddon {
 
     // Load modules
     public void loadModules() {
-        for(Module module : Modules.get().getAll()) {
-            Modules.get().add(module);
-            LOG.info("Module " + module.name.toLowerCase() + " loaded");
-        }
+        Modules.get().add(new BurrowEsp());
+        Modules.get().add(new FOV());
+        Modules.get().add(new discordRPC());
+        Modules.get().add(new AutoAnchor());
+        Modules.get().add(new XPautomation());
+        Modules.get().add(new autoTrap());
+        Modules.get().add(new webAura());
+        Modules.get().add(new antiAim());
+        Modules.get().add(new SelfAnvil());
+        Modules.get().add(new ChatControl());
+        Modules.get().add(new AutoEZ());
+
         Hud.get().register(Watermark.INFO);
     }
-
 
     @Override
     public String getPackage() {

@@ -41,7 +41,7 @@ public class WorldUtils {
         };
     }
 
-    public static boolean hitBoxCheck(PlayerEntity player, BlockPos pos) {
+    public static boolean hitBoxCheck(BlockPos pos) {
         return !EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity));
     }
 
