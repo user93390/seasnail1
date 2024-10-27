@@ -22,6 +22,7 @@ import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
+import org.snail.plus.utils.swapUtils;
 
 public class SelfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -92,17 +93,14 @@ public class SelfAnvil extends Module {
         if (mc.world.getBlockState(mc.player.getBlockPos().up(2)).isAir()) {
             if (anvil.found()) {
                 if (WorldUtils.isAir(mc.player.getBlockPos().up(2))) {
-                    InvUtils.swap(anvil.slot(), true);
-                    PlaceAnvil(mc.player.getBlockPos().up(2));
-                    InvUtils.swapBack();
+                    if (support.get()) {
+                        PlaceSupportBlocks(mc.player, InvUtils.findInHotbar(Items.OBSIDIAN));
+                    }
+
+                    WorldUtils.placeBlock(anvil, mc.player.getBlockPos().up(2), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
                 }
             }
         }
-
-        if (support.get()) {
-            PlaceSupportBlocks(mc.player, InvUtils.findInHotbar(Items.OBSIDIAN));
-        }
-
         if (autoDisable.get() && mc.world.getBlockState(mc.player.getBlockPos().up(2)).getBlock().equals(Blocks.ANVIL)) {
             toggle();
         }
@@ -110,18 +108,8 @@ public class SelfAnvil extends Module {
 
     private void PlaceSupportBlocks(PlayerEntity player, FindItemResult obsidian) {
         for (int i = 0; i <= 2; i++) {
-
-            BlockPos support = new BlockPos((int) player.getX(), (int) player.getY() + i, (int) player.getZ());
-            if (rotate.get()) Rotations.rotate(Rotations.getYaw(support), Rotations.getPitch(support));
-            InvUtils.swap(obsidian.slot(), true);
-            mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(support.getX(), support.getY(), support.getZ()), Direction.UP, support, false));
-            InvUtils.swapBack();
+            WorldUtils.placeBlock(obsidian,  player.getBlockPos().north(1).up(i), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
         }
-    }
-
-    private void PlaceAnvil(BlockPos pos) {
-        if (rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos));
-        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.UP, pos, false));
     }
 
     @EventHandler

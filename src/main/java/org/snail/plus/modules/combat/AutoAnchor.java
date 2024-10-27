@@ -124,20 +124,6 @@ public class AutoAnchor extends Module {
             .visible(() -> !strictDirection.get())
             .build());
 
-    private final Setting<Integer> radiusXZ = sgPlacement.add(new IntSetting.Builder()
-            .name("radius xz")
-            .description("The radius in the x and z axis to search for anchor positions.")
-            .defaultValue(2)
-            .sliderRange(2, 5)
-            .build());
-
-    private final Setting<Integer> radiusY = sgPlacement.add(new IntSetting.Builder()
-            .name("radius y")
-            .description("The radius in the y axis to search for anchor positions.")
-            .defaultValue(3)
-            .sliderRange(1, 5)
-            .build());
-
     private final Setting<Boolean> predictMovement = sgExtrapolation.add(new BoolSetting.Builder()
             .name("predict movement")
             .description("Predicts the movement of players for more accurate anchor placement.")
@@ -217,13 +203,6 @@ public class AutoAnchor extends Module {
             .description("The mode used for swinging your hand.")
             .defaultValue(WorldUtils.HandMode.MainHand)
             .visible(() -> swing.get())
-            .build());
-
-    private final Setting<Boolean> shrink = sgRender.add(new BoolSetting.Builder()
-            .name("fade shrink")
-            .description("Enables shrinking of the anchor box during fading render mode.")
-            .defaultValue(true)
-            .visible(() -> renderMode.get() == RenderMode.fading)
             .build());
 
     private final Setting<Integer> Smoothness = sgRender.add(new IntSetting.Builder()
@@ -306,8 +285,7 @@ public class AutoAnchor extends Module {
     public List<BlockPos> positions(PlayerEntity entity) {
         try {
             ArrayList<BlockPos> positions = new ArrayList<>();
-
-            for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), radiusXZ.get(), radiusY.get())) {
+            for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))) {
                 Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
                 selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, vec);
                 targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, vec);
@@ -321,7 +299,7 @@ public class AutoAnchor extends Module {
             }
 
             if (positions.isEmpty()) {
-                for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), radiusXZ.get(), radiusY.get())) {
+                for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))) {
                     if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
                         positions.add(pos);
                         break;
@@ -342,7 +320,7 @@ public class AutoAnchor extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
-            if (pauseUse.get() && (mc.player != null && mc.player.isUsingItem())) return;
+            if (pauseUse.get() && mc.player != null && mc.player.isUsingItem()) return;
             if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
                 warning("You are in the wrong dimension!");
                 return;
@@ -358,7 +336,7 @@ public class AutoAnchor extends Module {
                 try {
                     for (BlockPos pos : AnchorPos) {
                         if (rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
-                        breakAnchor();
+                        executor.submit(this::breakAnchor);
                     }
                 } finally {
                     lock.unlock();
@@ -380,7 +358,7 @@ public class AutoAnchor extends Module {
                 FindItemResult anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
                 if (!stone.found() || !anchor.found()) continue;
                 if (mc.player.getHealth() <= pauseHealth.get()) continue;
-                if (debugBreak.get()) info("breaking anchor at: " + pos);
+                if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
@@ -396,15 +374,12 @@ public class AutoAnchor extends Module {
         }
     }
 
-
-
     @EventHandler
     public void render(Render3DEvent event) {
         try {
             for (BlockPos pos : AnchorPos) {
                 for (PlayerEntity player : mc.world.getPlayers()) {
-                    if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
-                        continue;
+                    if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
                     if (renderExtrapolation.get() && predictMovement.get()) {
                         Vec3d extrapolatedPos = predictMovement(player, extrapolationTicks.get());
                         Box playerBox = new Box(
@@ -421,8 +396,8 @@ public class AutoAnchor extends Module {
                     switch (renderMode.get()) {
                         case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                         case fading -> {
-                            boolean shouldShrink = player.isDead() && shrink.get();
-                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, shouldShrink);
+                            boolean shouldFade = player.isDead();
+                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), shouldFade, false);
                         }
                         case smooth -> {
                             if (renderBoxOne == null) renderBoxOne = new Box(pos);
@@ -478,7 +453,6 @@ public class AutoAnchor extends Module {
 
     @Override
     public String getInfoString() {
-        if (mc.world == null) return null;
         for (PlayerEntity player : mc.world.getPlayers()) {
             if (player != mc.player && !Friends.get().isFriend(player) && mc.player.distanceTo(player) < range.get()) {
                 return player.getDisplayName().getString();
@@ -486,6 +460,7 @@ public class AutoAnchor extends Module {
         }
         return null;
     }
+
     public enum RenderMode {
         fading,
         normal,
