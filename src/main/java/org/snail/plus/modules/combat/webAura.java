@@ -25,6 +25,7 @@ import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.extrapolationUtils;
 import org.snail.plus.utils.swapUtils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -125,7 +126,6 @@ public class webAura extends Module {
             .visible(() -> predictMovement.get())
             .build());
 
-
     private final Setting<Boolean> renderExtrapolation = sgRender.add(new BoolSetting.Builder()
             .name("render extrapolation")
             .description("Renders the extrapolated position of the player.")
@@ -199,7 +199,7 @@ public class webAura extends Module {
             }
             executor.submit(() -> onTick(null));
         } catch (Exception e) {
-            e.printStackTrace();
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
         }
     }
 
@@ -212,7 +212,7 @@ public class webAura extends Module {
             lastPlacedTime = 0;
             lastUpdateTime = 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
         }
     }
 
@@ -225,16 +225,16 @@ public class webAura extends Module {
                 List<VoxelShape> count = new ArrayList<>();
                 mc.world.getBlockCollisions(entity, box).forEach(count::add);
                 if (!count.isEmpty()) {
-                    return Collections.singletonList(mc.player.getBlockPos());
+                    return Collections.singletonList(entity.getBlockPos());
                 } else {
                     return pos;
                 }
 
             } else {
-                return Collections.singletonList(mc.player.getBlockPos());
+                return Collections.singletonList(entity.getBlockPos());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
             return Collections.emptyList();
         } finally {
             lock.unlock();
@@ -266,7 +266,7 @@ public class webAura extends Module {
             }
             lastUpdateTime = currentTime;
         } catch (Exception e) {
-            e.printStackTrace();
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
         } finally {
             lock.unlock();
         }
@@ -285,7 +285,7 @@ public class webAura extends Module {
             }
             lastPlacedTime = currentTime;
         } catch (Exception e) {
-            e.printStackTrace();
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
         } finally {
             lock.unlock();
         }
@@ -294,54 +294,58 @@ public class webAura extends Module {
     @SuppressWarnings({"DuplicatedCode"})
     @EventHandler
     public void onRender(Render3DEvent event) {
-        for (PlayerEntity player : mc.world.getPlayers()) {
-            if(CombatUtils.isBurrowed(player)) continue;
-        for (BlockPos pos : positions(player)) {
-                if(player == mc.player || player.isDead() || Friends.get().isFriend(player)) continue;
-                if (predictMovement.get() && renderExtrapolation.get()) {
-                    Vec3d extrapolatedPos = extrapolationUtils.predictEntityPos(player, extrapolationTicks.get());
-                    Box playerBox = new Box(
-                            extrapolatedPos.x - player.getWidth() / 2,
-                            extrapolatedPos.y,
-                            extrapolatedPos.z - player.getWidth() / 2,
-                            extrapolatedPos.x + player.getWidth() / 2,
-                            extrapolatedPos.y + player.getHeight(),
-                            extrapolatedPos.z + player.getWidth() / 2
-                    );
-                    event.renderer.box(playerBox, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
-                }
-
-                switch (mode.get()) {
-                    case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
-
-                    case smooth -> {
-                        if (renderBoxOne == null) renderBoxOne = new Box(pos);
-                        if (renderBoxTwo == null) renderBoxTwo = new Box(pos);
-
-                        if (renderBoxTwo instanceof IBox) {
-                            ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
-                        }
-
-                        double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
-                        double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
-                        double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
-                        ((IBox) renderBoxOne).set(
-                                renderBoxOne.minX + offsetX,
-                                renderBoxOne.minY + offsetY,
-                                renderBoxOne.minZ + offsetZ,
-                                renderBoxOne.maxX + offsetX,
-                                renderBoxOne.maxY + offsetY,
-                                renderBoxOne.maxZ + offsetZ
+        try {
+            for (PlayerEntity player : mc.world.getPlayers()) {
+                if (CombatUtils.isBurrowed(player)) continue;
+                for (BlockPos pos : positions(player)) {
+                    if (player == mc.player || player.isDead() || Friends.get().isFriend(player)) continue;
+                    if (predictMovement.get() && renderExtrapolation.get()) {
+                        Vec3d extrapolatedPos = extrapolationUtils.predictEntityPos(player, extrapolationTicks.get());
+                        Box playerBox = new Box(
+                                extrapolatedPos.x - player.getWidth() / 2,
+                                extrapolatedPos.y,
+                                extrapolatedPos.z - player.getWidth() / 2,
+                                extrapolatedPos.x + player.getWidth() / 2,
+                                extrapolatedPos.y + player.getHeight(),
+                                extrapolatedPos.z + player.getWidth() / 2
                         );
-                        event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-
+                        event.renderer.box(playerBox, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
                     }
-                    case fade -> {
-                        boolean shouldFade = pos != this.pos.getFirst() || player.isDead() || WorldUtils.isAir(pos);
-                        RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, fadeTimer.get(), shouldFade, false);
+
+                    switch (mode.get()) {
+                        case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
+
+                        case smooth -> {
+                            if (renderBoxOne == null) renderBoxOne = new Box(pos);
+                            if (renderBoxTwo == null) renderBoxTwo = new Box(pos);
+
+                            if (renderBoxTwo instanceof IBox) {
+                                ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
+                            }
+
+                            double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
+                            double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
+                            double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
+                            ((IBox) renderBoxOne).set(
+                                    renderBoxOne.minX + offsetX,
+                                    renderBoxOne.minY + offsetY,
+                                    renderBoxOne.minZ + offsetZ,
+                                    renderBoxOne.maxX + offsetX,
+                                    renderBoxOne.maxY + offsetY,
+                                    renderBoxOne.maxZ + offsetZ
+                            );
+                            event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+
+                        }
+                        case fade -> {
+                            boolean shouldFade = player.isDead() || WorldUtils.isAir(pos);
+                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, fadeTimer.get(), shouldFade, false);
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
         }
     }
 

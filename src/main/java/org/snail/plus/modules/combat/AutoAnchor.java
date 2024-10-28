@@ -354,10 +354,15 @@ public class AutoAnchor extends Module {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) return;
             for (BlockPos pos : AnchorPos) {
+                if (mc.player.getHealth() <= pauseHealth.get()) continue;
+
                 FindItemResult stone = InvUtils.find(Items.GLOWSTONE);
                 FindItemResult anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
-                if (!stone.found() || !anchor.found()) continue;
-                if (mc.player.getHealth() <= pauseHealth.get()) continue;
+                if (!stone.found() || !anchor.found()) {
+                    error("invalid items in inventory");
+                    continue;
+                }
+
                 if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
