@@ -1,19 +1,14 @@
 package org.snail.plus.modules.combat;
 
-import meteordevelopment.meteorclient.events.render.Render2DEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IBox;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.renderer.text.TextRenderer;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.player.Rotations;
-import meteordevelopment.meteorclient.utils.render.NametagUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
@@ -22,111 +17,96 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3d;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.World;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.MathUtils;
+import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.extrapolationUtils;
 import org.snail.plus.utils.swapUtils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * @author seasnail1
- */
-
-public class AutoAnchor extends Module {
-
+public class webAura extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgPlacement = settings.createGroup("Placement");
+    private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
-    private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
-    private final SettingGroup sgDebug = settings.createGroup("Debug");
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("range")
-            .description("The maximum distance to target players for anchor placement.")
-            .defaultValue(3.0)
-            .sliderRange(1.0, 10.0)
+            .description("The radius in which to target players.")
+            .sliderRange(0, 10)
+            .defaultValue(4.5)
             .build());
 
-    private final Setting<Boolean> packetPlace = sgGeneral.add(new BoolSetting.Builder()
-            .name("packet place")
-            .description("Uses packets to place the anchors.")
+    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
+            .name("rotate")
+            .description("Automatically faces the target.")
             .defaultValue(true)
             .build());
 
-    private final Setting<Double> updateSpeed = sgGeneral.add(new DoubleSetting.Builder()
-            .name("update speed")
-            .description("The speed at which the module updates, in ticks. (Higher values may cause lag)")
-            .defaultValue(1.0)
-            .sliderRange(0.1, 10.0)
+    private final Setting<Double> updateTime = sgGeneral.add(new DoubleSetting.Builder()
+            .name("update-time")
+            .description("The time in seconds between each update. Higher values may cause lag.")
+            .defaultValue(1)
+            .sliderRange(0, 100)
             .build());
 
-    private final Setting<Boolean> rotate = sgPlacement.add(new BoolSetting.Builder()
-            .name("rotation")
-            .description("Enables rotation towards the block when placing anchors.")
+    private final Setting<Boolean> doublePlace = sgPlace.add(new BoolSetting.Builder()
+            .name("double-place")
+            .description("Places two webs instead of one.")
+            .defaultValue(true)
+            .build());
+
+    private final Setting<Boolean> airPlace = sgPlace.add(new BoolSetting.Builder()
+            .name("air-place")
+            .description("Places webs in the air.")
             .defaultValue(false)
             .build());
 
-    private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
-            .name("anchor speed")
-            .description("The speed at which anchors are placed, in anchors per second.")
-            .defaultValue(1.0)
-            .sliderRange(0.1, 10.0)
+    private final Setting<swapUtils.swapMode> swapMode = sgPlace.add(new EnumSetting.Builder<swapUtils.swapMode>()
+            .name("swap-mode")
+            .description("The mode to use when swapping items.")
+            .defaultValue(swapUtils.swapMode.silent)
             .build());
 
-    private final Setting<swapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<swapUtils.swapMode>()
-            .name("swap mode")
-            .description("The mode used for swapping items when placing anchors.")
-            .defaultValue(swapUtils.swapMode.Inventory)
+    private final Setting<Double> speed = sgPlace.add(new DoubleSetting.Builder()
+            .name("speed")
+            .description("The speed at which to place webs.")
+            .defaultValue(10)
+            .sliderRange(0, 100)
             .build());
 
-    private final Setting<Double> maxSelfDamage = sgDamage.add(new DoubleSetting.Builder()
-            .name("max self damage")
-            .description("The maximum amount of damage you can take from your own anchors.")
-            .defaultValue(3.0)
-            .sliderRange(0.0, 36.0)
-            .build());
-
-    private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder()
-            .name("min damage")
-            .description("The minimum amount of damage that should be dealt to the target.")
-            .defaultValue(3.0)
-            .sliderRange(0.0, 36.0)
-            .build());
-
-    private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
-            .name("pause health")
-            .description("Pauses the module when your health is below this value.")
-            .defaultValue(0.0)
-            .sliderRange(0.0, 36.0)
-            .build());
-
-    private final Setting<Boolean> strictDirection = sgPlacement.add(new BoolSetting.Builder()
-            .name("strict direction")
-            .description("Only places anchors in the direction you are facing.")
+    private final Setting<Boolean> strictDirection = sgPlace.add(new BoolSetting.Builder()
+            .name("strict-direction")
+            .description("Only places webs in the direction you're facing.")
             .defaultValue(false)
             .build());
 
-    private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
+    private final Setting<WorldUtils.DirectionMode> direction = sgPlace.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
             .name("direction")
-            .description("The mode used for direction.")
-            .defaultValue(WorldUtils.DirectionMode.Up)
+            .description("The direction to place webs.")
+            .defaultValue(WorldUtils.DirectionMode.Down)
             .visible(() -> !strictDirection.get())
+            .build());
+
+    private final Setting<Boolean> onlySurround = sgPlace.add(new BoolSetting.Builder()
+            .name("only surrounded")
+            .description("Only targets players that are surrounded by blocks.")
+            .defaultValue(false)
             .build());
 
     private final Setting<Boolean> predictMovement = sgExtrapolation.add(new BoolSetting.Builder()
             .name("predict movement")
-            .description("Predicts the movement of players for more accurate anchor placement.")
+            .description("Predicts the movement of players for more accurate web placement.")
             .defaultValue(true)
             .build());
 
@@ -147,247 +127,180 @@ public class AutoAnchor extends Module {
             .build());
 
     private final Setting<Boolean> renderExtrapolation = sgRender.add(new BoolSetting.Builder()
-            .name("render Extrapolation")
-            .description("Renders the Extrapolation of target.")
+            .name("render extrapolation")
+            .description("Renders the extrapolated position of the player.")
             .defaultValue(true)
             .visible(() -> predictMovement.get())
             .build());
 
-    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
-            .name("side color")
-            .description("The color of the sides of the rendered anchor box.")
-            .defaultValue(new SettingColor(255, 0, 0, 75))
-            .build());
-
-    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
-            .name("line color")
-            .description("The color of the lines of the rendered anchor box.")
-            .defaultValue(new SettingColor(255, 0, 0, 255))
-            .build());
-
-    private final Setting<SettingColor> damageColor = sgRender.add(new ColorSetting.Builder()
-            .name("damage color")
-            .description("The color of the damage text.")
-            .defaultValue(new SettingColor(255, 255, 255, 255))
-            .build());
-
-    private final Setting<Double> damageTextScale = sgRender.add(new DoubleSetting.Builder()
-            .name("damage text scale")
-            .description("The scale of the damage text.")
-            .defaultValue(1.0)
-            .sliderRange(0.1, 2.0)
-            .build());
-
-    private final Setting<Boolean> swing = sgPlacement.add(new BoolSetting.Builder()
-            .name("swing")
-            .description("Swings your hand.")
-            .defaultValue(true)
-            .build());
-
-    private final Setting<RenderMode> renderMode = sgRender.add(new EnumSetting.Builder<RenderMode>()
-            .name("render mode")
-            .description("The mode used for rendering the anchor box.")
-            .defaultValue(RenderMode.smooth)
-            .build());
-
-    private final Setting<Integer> rendertime = sgRender.add(new IntSetting.Builder()
-            .name("render time")
-            .description("The duration for which the anchor box is rendered, in ticks.")
-            .defaultValue(3)
-            .sliderRange(1, 100)
-            .visible(() -> renderMode.get() == RenderMode.fading)
-            .build());
-
-    private final Setting<WorldUtils.HandMode> swingMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.HandMode>()
-            .name("swing mode")
-            .description("The mode used for swinging your hand.")
-            .defaultValue(WorldUtils.HandMode.MainHand)
-            .visible(() -> swing.get())
+    private final Setting<renderMode> mode = sgRender.add(new EnumSetting.Builder<renderMode>()
+            .name("mode")
+            .description("The render mode of the web.")
+            .defaultValue(renderMode.smooth)
             .build());
 
     private final Setting<Integer> Smoothness = sgRender.add(new IntSetting.Builder()
             .name("smoothness")
-            .description("The smoothness of the anchor box rendering in smooth mode.")
-            .defaultValue(3)
-            .sliderRange(1, 100)
-            .visible(() -> renderMode.get() == RenderMode.smooth)
+            .description("The smoothness of the web.")
+            .defaultValue(10)
+            .sliderRange(0, 20)
+            .visible(() -> mode.get() == renderMode.smooth)
             .build());
 
-    private final Setting<Boolean> pauseUse = sgMisc.add(new BoolSetting.Builder()
-            .name("pause on use")
-            .description("Pauses the module when you are using an item.")
-            .defaultValue(false)
+    private final Setting<Integer> fadeTimer = sgRender.add(new IntSetting.Builder()
+            .name("fade-timer")
+            .description("The time in ticks before the web fades.")
+            .defaultValue(10)
+            .sliderRange(0, 20)
+            .visible(() -> mode.get() == renderMode.fade)
+            .build());
+
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
+            .name("side-color")
+            .description("The side color of the web.")
+            .defaultValue(new SettingColor(0, 255, 0, 50))
+            .build());
+
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
+            .name("line-color")
+            .description("The line color of the web.")
+            .defaultValue(new SettingColor(0, 255, 0, 255))
             .build());
 
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
-            .name("shape mode")
-            .description("The shape mode used for rendering the anchor box.")
+            .name("shape-mode")
+            .description("How the shape is rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
 
-    private final Setting<Boolean> debugCalculations = sgDebug.add(new BoolSetting.Builder()
-            .name("debug calculations")
-            .description("Enables debug information for calculations.")
-            .defaultValue(false)
-            .build());
-
-    private final Setting<Boolean> debugBreak = sgDebug.add(new BoolSetting.Builder()
-            .name("debug break")
-            .description("Enables debug information for breaking anchors.")
-            .defaultValue(false)
+    private final Setting<WorldUtils.HandMode> hand = sgMisc.add(new EnumSetting.Builder<WorldUtils.HandMode>()
+            .name("hand")
+            .description("The hand to place webs with.")
+            .defaultValue(WorldUtils.HandMode.MainHand)
             .build());
 
     private final ReentrantLock lock = new ReentrantLock();
-    ExecutorService executor = Executors.newSingleThreadExecutor();
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private List<BlockPos> pos = new ArrayList<>();
+    private boolean placed;
     private Box renderBoxOne, renderBoxTwo;
-    private List<BlockPos> AnchorPos = new ArrayList<>();
     private long lastPlacedTime;
     private long lastUpdateTime;
-    private double selfDamage;
-    private double targetDamage;
 
-    public AutoAnchor() {
-        super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
+    public webAura() {
+        super(Addon.Snail, "web Aura+", "uses webs to slow down enemies");
     }
 
     @Override
     public void onActivate() {
         try {
-            selfDamage = 0;
-            targetDamage = 0;
-            AnchorPos = new ArrayList<>();
             if (executor == null || executor.isShutdown() || executor.isTerminated()) {
                 executor = Executors.newSingleThreadExecutor();
             }
             executor.submit(() -> onTick(null));
         } catch (Exception e) {
-            error("An error occurred while activating the module: " + e.getMessage());
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
         }
     }
 
     @Override
     public void onDeactivate() {
         try {
-            selfDamage = 0;
-            targetDamage = 0;
-            if (executor != null) {
+            if (executor != null && !executor.isShutdown()) {
                 executor.shutdown();
             }
-            if (AnchorPos != null) {
-                AnchorPos = new ArrayList<>(AnchorPos);
-                AnchorPos.clear();
-            }
+            lastPlacedTime = 0;
+            lastUpdateTime = 0;
         } catch (Exception e) {
-            error("An error occurred while deactivating the module: " + e.getMessage());
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
         }
     }
 
-    public List<BlockPos> positions(PlayerEntity entity) {
-        try {
-            ArrayList<BlockPos> positions = new ArrayList<>();
-            for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))) {
-                Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-                selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, vec);
-                targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, vec);
-
-                if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
-                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
-                        if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
-                        positions.add(pos);
-                    }
-                }
-            }
-
-            if (positions.isEmpty()) {
-                for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))) {
-                    if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
-                        positions.add(pos);
-                        break;
-                    }
-                }
-            }
-            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.get(0));
-        } catch (Exception e) {
-            error("An error occurred while finding positions: " + e.getMessage());
-            return Collections.emptyList();
-        }
-    }
-
-    private Vec3d predictMovement(PlayerEntity player, int extrapolationTicks) {
-        return extrapolationUtils.predictEntityPos(player, extrapolationTicks);
-    }
-
-    @EventHandler
-    private void onTick(TickEvent.Post event) {
-        try {
-            if (pauseUse.get() && mc.player != null && mc.player.isUsingItem()) return;
-            if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
-                warning("You are in the wrong dimension!");
-                return;
-            }
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
-
-            for (PlayerEntity player : mc.world.getPlayers()) {
-                if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
-
-                AnchorPos = positions(player);
-                lock.lock();
-                try {
-                    for (BlockPos pos : AnchorPos) {
-                        if (rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
-                        executor.submit(this::breakAnchor);
-                    }
-                } finally {
-                    lock.unlock();
-                }
-                lastUpdateTime = currentTime;
-            }
-        } catch (Exception e) {
-            error("An error occurred while processing the tick event: " + e.getMessage());
-        }
-    }
-
-    public void breakAnchor() {
+    protected List<BlockPos> positions(PlayerEntity entity) {
         lock.lock();
         try {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) return;
-            for (BlockPos pos : AnchorPos) {
-                if (mc.player.getHealth() <= pauseHealth.get()) continue;
-
-                FindItemResult stone = InvUtils.find(Items.GLOWSTONE);
-                FindItemResult anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
-                if (!stone.found() || !anchor.found()) {
-                    error("invalid items in inventory");
-                    continue;
+            if (predictMovement.get()) {
+                pos = Collections.singletonList(BlockPos.ofFloored(extrapolationUtils.predictEntityPos(entity, selfExtrapolateTicks.get())));
+                Box box = new Box(pos.getFirst());
+                List<VoxelShape> count = new ArrayList<>();
+                mc.world.getBlockCollisions(entity, box).forEach(count::add);
+                if (!count.isEmpty()) {
+                    return Collections.singletonList(entity.getBlockPos());
+                } else {
+                    return pos;
                 }
 
-
-                if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
-                WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
-                WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
-                WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
+            } else {
+                return Collections.singletonList(entity.getBlockPos());
             }
-            lastPlacedTime = currentTime;
-
-            selfDamage = 0;
-            targetDamage = 0;
         } catch (Exception e) {
-            error("An error occurred while breaking anchors: " + e.getMessage());
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
+            return Collections.emptyList();
         } finally {
             lock.unlock();
         }
     }
 
     @EventHandler
-    public void render(Render3DEvent event) {
+    public void onTick(TickEvent.Post event) {
+        lock.lock();
         try {
-            for (BlockPos pos : AnchorPos) {
-                for (PlayerEntity player : mc.world.getPlayers()) {
-                    if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
-                    if (renderExtrapolation.get() && predictMovement.get()) {
-                        Vec3d extrapolatedPos = predictMovement(player, extrapolationTicks.get());
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
+            for (PlayerEntity entity : mc.world.getPlayers()) {
+                if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity)) continue;
+                if(onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
+                List<BlockPos> positions = positions(entity);
+                for (BlockPos blockPos : positions) {
+                    if(CombatUtils.isBurrowed(entity)) continue;
+                    placed = !WorldUtils.isAir(blockPos);
+                    if (blockPos == null) continue;
+                    if (WorldUtils.isAir(blockPos.down(1)) && !airPlace.get()) continue;
+
+                    placeWeb(blockPos);
+
+                    if (doublePlace.get()) {
+                        placeWeb(blockPos.up(1));
+                    }
+                }
+            }
+            lastUpdateTime = currentTime;
+        } catch (Exception e) {
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void placeWeb(BlockPos pos) {
+        lock.lock();
+        try {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastPlacedTime < (1000 / speed.get())) return;
+            if (!placed ) {
+                FindItemResult web = InvUtils.findInHotbar(Items.COBWEB);
+                if(web.found()) {
+                    WorldUtils.placeBlock(web, pos, hand.get(), direction.get(), true, swapMode.get(), rotate.get());
+                }
+            }
+            lastPlacedTime = currentTime;
+        } catch (Exception e) {
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @SuppressWarnings({"DuplicatedCode"})
+    @EventHandler
+    public void onRender(Render3DEvent event) {
+        try {
+            for (PlayerEntity player : mc.world.getPlayers()) {
+                if (CombatUtils.isBurrowed(player)) continue;
+                for (BlockPos pos : positions(player)) {
+                    if (player == mc.player || player.isDead() || Friends.get().isFriend(player)) continue;
+                    if (predictMovement.get() && renderExtrapolation.get()) {
+                        Vec3d extrapolatedPos = extrapolationUtils.predictEntityPos(player, extrapolationTicks.get());
                         Box playerBox = new Box(
                                 extrapolatedPos.x - player.getWidth() / 2,
                                 extrapolatedPos.y,
@@ -396,15 +309,12 @@ public class AutoAnchor extends Module {
                                 extrapolatedPos.y + player.getHeight(),
                                 extrapolatedPos.z + player.getWidth() / 2
                         );
-                        event.renderer.box(playerBox, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                        event.renderer.box(playerBox, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
                     }
 
-                    switch (renderMode.get()) {
-                        case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                        case fading -> {
-                            boolean shouldFade = player.isDead();
-                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), shouldFade, false);
-                        }
+                    switch (mode.get()) {
+                        case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
+
                         case smooth -> {
                             if (renderBoxOne == null) renderBoxOne = new Box(pos);
                             if (renderBoxTwo == null) renderBoxTwo = new Box(pos);
@@ -425,51 +335,23 @@ public class AutoAnchor extends Module {
                                     renderBoxOne.maxZ + offsetZ
                             );
                             event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+
+                        }
+                        case fade -> {
+                            boolean shouldFade = player.isDead() || WorldUtils.isAir(pos);
+                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, fadeTimer.get(), shouldFade, false);
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            error("An error occurred while rendering the anchor positions: " + e.getMessage());
+            Addon.LOG.error(List.of(e.getStackTrace()).toString());
         }
     }
 
-    @EventHandler
-    public void render2D(Render2DEvent event) {
-        for (BlockPos pos : AnchorPos) {
-            Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
-            if (renderMode.get() == RenderMode.smooth && renderBoxOne != null) {
-                vec.set(renderBoxOne.minX + 0.5, renderBoxOne.minY + 0.5, renderBoxOne.minZ + 0.5);
-            } else {
-                vec.set(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-            }
-            if (NametagUtils.to2D(vec, damageTextScale.get())) {
-                NametagUtils.begin(vec);
-                TextRenderer.get().begin(1, false, true);
-
-                String text = String.format("%.1f", targetDamage);
-                double w = TextRenderer.get().getWidth(text) / 2;
-                TextRenderer.get().render(text, -w, 0, damageColor.get(), false);
-
-                TextRenderer.get().end();
-                NametagUtils.end();
-            }
-        }
-    }
-
-    @Override
-    public String getInfoString() {
-        for (PlayerEntity player : mc.world.getPlayers()) {
-            if (player != mc.player && !Friends.get().isFriend(player) && mc.player.distanceTo(player) < range.get()) {
-                return player.getDisplayName().getString();
-            }
-        }
-        return null;
-    }
-
-    public enum RenderMode {
-        fading,
+    public enum renderMode {
         normal,
-        smooth
+        smooth,
+        fade
     }
 }
