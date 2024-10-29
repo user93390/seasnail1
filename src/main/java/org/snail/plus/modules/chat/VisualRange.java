@@ -3,6 +3,7 @@ package org.snail.plus.modules.chat;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.entity.Entity;
@@ -93,7 +94,7 @@ public class VisualRange extends Module {
         List<SoundEvent> soundList = sounds.get();
         for (Entity entity : mc.world.getEntities()) {
             if (entity == mc.player) continue;
-            if (mc.player.distanceTo(entity) <= viewDistance * 16) {
+            if (EntityUtils.isInRenderDistance(entity)) {
                 if (entities.get().contains(entity.getType()) && !players.contains(entity)) {
                     if (checkUuid.get() && entity.getUuid() != null) {
                         PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(entity.getUuid());
@@ -108,7 +109,7 @@ public class VisualRange extends Module {
                         warning("Entity spotted %s", entity.getName().getString() + " at " + x + " " + y + " " + z);
                     }
                 }
-            } else if (entities.get().contains(entity.getType()) && players.contains(entity)) {
+            } else {
                 if (checkUuid.get() && entity.getUuid() != null) {
                     PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(entity.getUuid());
                     if (!ignoreInvalid.get() && (playerListEntry == null || playerListEntry.getLatency() < 1)) continue;
