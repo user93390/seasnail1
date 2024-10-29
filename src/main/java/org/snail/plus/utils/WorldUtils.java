@@ -1,13 +1,16 @@
 package org.snail.plus.utils;
 
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
@@ -45,15 +48,8 @@ public class WorldUtils {
         return !EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity));
     }
 
-    public static boolean canSeePos(Vec3d pos) {
-        Vec3d playerEyes = mc.player.getCameraPosVec(1.0F);
-        HitResult hitResult = mc.world.raycast(new RaycastContext(playerEyes, pos, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player));
-        return hitResult.getType() == HitResult.Type.MISS || hitResult.getPos().equals(pos);
-    }
-
-    public static SoundInstance playSound(SoundEvent sound, float Pitch) {
-        mc.getSoundManager().play(PositionedSoundInstance.master(sound, Pitch));
-        return (SoundInstance) sound;
+    public static void playSound(SoundEvent sound, float pitch) {
+        mc.getSoundManager().play(PositionedSoundInstance.master(sound, pitch));
     }
 
     public static String getName(PlayerEntity entity) {

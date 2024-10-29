@@ -1,13 +1,15 @@
 package org.snail.plus.utils;
 
-import net.minecraft.client.MinecraftClient;
-
-import java.util.Objects;
-import java.util.function.Supplier;
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class TPSSyncUtil {
-    private static MinecraftClient mc = MinecraftClient.getInstance();
-    public static Float getTPS() {
-        return Objects.requireNonNull(mc.getServer()).getAverageTickTime();
+
+    public static double getSync(long time, java.util.concurrent.TimeUnit unit) {
+        int count;
+        long millis = unit.toMillis(time);
+        synchronized (TPSSyncUtil.class) {
+            count = (int) (millis / mc.getServer().getAverageTickTime());
+        }
+        return count;
     }
 }

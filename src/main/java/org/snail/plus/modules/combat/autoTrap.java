@@ -156,7 +156,6 @@ public class autoTrap extends Module {
                 lastUpdateTime = currentTime;
             }
         } catch (Exception e) {
-            Addon.LOG.error("An error occurred while running auto-trap+.", e);
             error("unknown error occurred" + String.format("Error: %s", e.getMessage()));
         }
     }

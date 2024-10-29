@@ -13,14 +13,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.WorldUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BurrowEsp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    
+
     private final Setting<Boolean> ignoreFriends = sgGeneral.add(new BoolSetting.Builder()
             .name("ignore-friends")
             .description("Ignores friends.")
@@ -29,9 +28,17 @@ public class BurrowEsp extends Module {
 
     private final Setting<Boolean> performance = sgGeneral.add(new BoolSetting.Builder()
             .name("performance")
-            .description("Improves performance by only rendering burrowed players within a certain range.")
+            .description("Improves performance")
             .defaultValue(true)
             .build());
+
+    private final Setting<Integer> maxPlayers = sgGeneral.add(new IntSetting.Builder()
+            .name("max-players")
+            .description("The maximum amount of burrowed players to render.")
+            .sliderRange(1, 10)
+            .visible(performance::get)
+            .build());
+
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("range")
@@ -81,6 +88,8 @@ public class BurrowEsp extends Module {
             if (ignoreFriends.get() && Friends.get().isFriend(player)) continue;
             if (CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get()) {
                 burrowedPlayers.add(player);
+
+                if (burrowedPlayers.size() >= maxPlayers.get()) break;
             }
         }
     }
@@ -89,13 +98,7 @@ public class BurrowEsp extends Module {
     public void onRender3D(Render3DEvent event) {
         for (PlayerEntity player : burrowedPlayers) {
             Vec3d pos = new Vec3d(player.getX(), player.getY() + 0.4, player.getZ());
-
-            if(performance.get()) {
-                if(!WorldUtils.canSeePos(pos)) continue;
-                event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-            } else {
-                event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-            }
+            event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
         }
     }
 }

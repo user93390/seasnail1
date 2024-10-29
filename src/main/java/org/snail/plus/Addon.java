@@ -1,5 +1,6 @@
 package org.snail.plus;
 
+import com.google.gson.internal.JsonReaderInternalAccess;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.hud.Hud;
@@ -7,6 +8,7 @@ import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.fabricmc.loader.impl.lib.gson.JsonReader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.tutorial.TutorialStep;
 
@@ -44,6 +46,7 @@ public class Addon extends MeteorAddon {
 
     // Load modules
     public void loadModules() {
+        Modules.get().add(new VisualRange());
         Modules.get().add(new BurrowEsp());
         Modules.get().add(new FOV());
         Modules.get().add(new discordRPC());
@@ -55,7 +58,6 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new SelfAnvil());
         Modules.get().add(new ChatControl());
         Modules.get().add(new AutoEZ());
-        Modules.get().add(new Welcomer());
 
         Hud.get().register(Watermark.INFO);
     }

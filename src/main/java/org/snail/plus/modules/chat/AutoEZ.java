@@ -32,26 +32,6 @@ public class AutoEZ extends Module {
             .defaultValue(true)
             .build());
 
-    private final Setting<Boolean> autoglaze = sgGeneral.add(new BoolSetting.Builder()
-            .name("auto-glaze")
-            .description("Automatically glazes the player that killed the victim.")
-            .defaultValue(true)
-            .build());
-
-    private final Setting<List<String>> glazeMsg = sgGeneral.add(new StringListSetting.Builder()
-            .name("glaze message")
-            .description("Custom message to send.")
-            .defaultValue("good job {attacker} you killed {victim}!")
-            .visible(autoglaze::get)
-            .build());
-
-    private final Setting<Boolean> onlyFriends = sgGeneral.add(new BoolSetting.Builder()
-            .name("only-friends")
-            .description("Only glazes friends.")
-            .defaultValue(false)
-            .visible(autoglaze::get)
-            .build());
-
     private final Setting<Boolean> requireLastAttacker = sgGeneral.add(new BoolSetting.Builder()
             .name("require-last-attacker")
             .description("Requires the last attacker to be the player.")
@@ -59,7 +39,6 @@ public class AutoEZ extends Module {
             .build());
 
     private int ezMsg;
-    private int glazeMsgIndex;
 
     public AutoEZ() {
         super(Addon.Snail, "Auto EZ+", "Sends a custom message when a player dies");
@@ -68,13 +47,11 @@ public class AutoEZ extends Module {
     @Override
     public void onActivate() {
         ezMsg = -1;
-        glazeMsgIndex = -1;
     }
 
     @Override
     public void onDeactivate() {
         ezMsg = -1;
-        glazeMsgIndex = -1;
     }
 
     @EventHandler
@@ -82,9 +59,6 @@ public class AutoEZ extends Module {
         for (PlayerEntity player : Objects.requireNonNull(mc.world).getPlayers()) {
             if (player.isDead() && (!requireLastAttacker.get() || player.getLastAttacker() == mc.player)) {
                 sendEzMessage(player);
-            }
-            if (autoglaze.get()) {
-                shouldGlaze(player);
             }
         }
     }
@@ -104,25 +78,5 @@ public class AutoEZ extends Module {
         } else {
             mc.player.networkHandler.sendChatMessage(msg);
         }
-    }
-
-    private boolean shouldGlaze(PlayerEntity player) {
-        if (player.isDead() && (!requireLastAttacker.get() || player.getLastAttacker() != mc.player)) {
-            if (onlyFriends.get() && Friends.get().isFriend(player) && Friends.get().isFriend((PlayerEntity) player.getLastAttacker())) {
-                sendGlazeMessage(player);
-            } else if (!onlyFriends.get()) {
-                sendGlazeMessage(player);
-            }
-        }
-        return true;
-    }
-
-    private void sendGlazeMessage(PlayerEntity player) {
-        glazeMsgIndex = new Random().nextInt(glazeMsg.get().size());
-        String msg = glazeMsg.get().get(glazeMsgIndex)
-                .replace("{victim}", WorldUtils.getName(player))
-                .replace("{coords}", WorldUtils.getCoords(player))
-                .replace("{attacker}", WorldUtils.getName((PlayerEntity) player.getLastAttacker()));
-        sendMsg(msg, false);
     }
 }

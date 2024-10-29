@@ -11,10 +11,12 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import org.snail.plus.Addon;
+import org.snail.plus.utils.TPSSyncUtil;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
 public class XPautomation extends Module {
@@ -110,6 +112,9 @@ public class XPautomation extends Module {
 
         long time = System.currentTimeMillis();
         if ((time - lastPlaceTime) < delay.get() * 1000) return;
+        if(sync.get()) {
+            if ((time - lastPlaceTime) < TPSSyncUtil.getSync((long) (delay.get() * 1000), TimeUnit.MILLISECONDS)) return;
+        }
         lastPlaceTime = time;
 
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);

@@ -77,11 +77,6 @@ public class SelfAnvil extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (mc.player == null || mc.world == null) return;
-
-        long time = System.currentTimeMillis();
-        if ((time - lastPlaceTime) < delay.get() * 1000) return;
-        lastPlaceTime = time;
         FindItemResult anvil = InvUtils.findInHotbar(Items.ANVIL);
 
         if (autoCenter.get() && !CombatUtils.isCentered(mc.player)) {
@@ -97,6 +92,9 @@ public class SelfAnvil extends Module {
                         PlaceSupportBlocks(mc.player, InvUtils.findInHotbar(Items.OBSIDIAN));
                     }
 
+                    long time = System.currentTimeMillis();
+                    if ((time - lastPlaceTime) < delay.get() * 1000) return;
+                    lastPlaceTime = time;
                     WorldUtils.placeBlock(anvil, mc.player.getBlockPos().up(2), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
                 }
             }
