@@ -88,8 +88,7 @@ public class BurrowEsp extends Module {
             if (ignoreFriends.get() && Friends.get().isFriend(player)) continue;
             if (CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get()) {
                 burrowedPlayers.add(player);
-
-                if (burrowedPlayers.size() >= maxPlayers.get()) break;
+                if (performance.get() && burrowedPlayers.size() >= maxPlayers.get()) break;
             }
         }
     }

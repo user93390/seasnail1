@@ -77,6 +77,14 @@ public class AutoAnchor extends Module {
             .defaultValue(false)
             .build());
 
+    private final Setting<Integer> rotationSteps = sgPlacement.add(new IntSetting.Builder()
+            .name("rotation steps")
+            .description("The amount of steps to rotate.")
+            .defaultValue(1)
+            .sliderRange(1, 35)
+            .visible(() -> rotate.get())
+            .build());
+
     private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
             .name("anchor speed")
             .description("The speed at which anchors are placed, in anchors per second.")
@@ -114,6 +122,11 @@ public class AutoAnchor extends Module {
     private final Setting<Boolean> strictDirection = sgPlacement.add(new BoolSetting.Builder()
             .name("strict direction")
             .description("Only places anchors in the direction you are facing.")
+            .defaultValue(false)
+            .build());
+
+    private final Setting<Boolean> rayCast = sgPlacement.add(new BoolSetting.Builder()
+            .name("rayCast")
             .defaultValue(false)
             .build());
 
@@ -292,7 +305,8 @@ public class AutoAnchor extends Module {
 
                 if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
                     if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
-                        if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
+                        if (debugCalculations.get())
+                            info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
                         positions.add(pos);
                     }
                 }
@@ -306,7 +320,7 @@ public class AutoAnchor extends Module {
                     }
                 }
             }
-            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.get(0));
+            return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.getFirst());
         } catch (Exception e) {
             error("An error occurred while finding positions: " + e.getMessage());
             return Collections.emptyList();
@@ -329,13 +343,18 @@ public class AutoAnchor extends Module {
             if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
 
             for (PlayerEntity player : mc.world.getPlayers()) {
-                if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
+                if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
+                    continue;
 
                 AnchorPos = positions(player);
                 lock.lock();
                 try {
                     for (BlockPos pos : AnchorPos) {
-                        if (rotate.get()) Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
+                        if (rotate.get()) {
+                            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
+
+                            MathUtils.updateRotation(rotationSteps.get());
+                        }
                         executor.submit(this::breakAnchor);
                     }
                 } finally {
@@ -362,7 +381,11 @@ public class AutoAnchor extends Module {
                     error("invalid items in inventory");
                     continue;
                 }
+                if (rayCast.get()) {
+                    MathUtils.rayCast(pos, rotationSteps.get());
 
+                    MathUtils.updateRotation(rotationSteps.get());
+                }
 
                 if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
@@ -385,7 +408,8 @@ public class AutoAnchor extends Module {
         try {
             for (BlockPos pos : AnchorPos) {
                 for (PlayerEntity player : mc.world.getPlayers()) {
-                    if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get()) continue;
+                    if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
+                        continue;
                     if (renderExtrapolation.get() && predictMovement.get()) {
                         Vec3d extrapolatedPos = predictMovement(player, extrapolationTicks.get());
                         Box playerBox = new Box(

@@ -112,9 +112,8 @@ public class XPautomation extends Module {
 
         long time = System.currentTimeMillis();
         if ((time - lastPlaceTime) < delay.get() * 1000) return;
-        if(sync.get()) {
-            if ((time - lastPlaceTime) < TPSSyncUtil.getSync((long) (delay.get() * 1000), TimeUnit.MILLISECONDS)) return;
-        }
+        if(sync.get() && (time - lastPlaceTime) < TPSSyncUtil.getSync((long) (delay.get() * 1000), TimeUnit.MILLISECONDS)) return;
+
         lastPlaceTime = time;
 
         FindItemResult exp = InvUtils.find(Items.EXPERIENCE_BOTTLE);

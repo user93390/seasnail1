@@ -94,6 +94,15 @@ public class WorldUtils {
                 }
                 mc.player.swingHand(swingHand(hand));
                 }
+
+            case none -> {
+                if (!packet) {
+                    BlockUtils.place(pos, item, rotate, 100, true);
+                } else {
+                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), directionMode(directionMode), pos, false));
+                }
+                mc.player.swingHand(swingHand(hand));
+            }
         default -> throw new IllegalArgumentException("Unexpected value: " + Mode);
             }
         }

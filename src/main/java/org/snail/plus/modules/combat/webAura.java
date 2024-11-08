@@ -229,7 +229,6 @@ public class webAura extends Module {
                 } else {
                     return pos;
                 }
-
             } else {
                 return Collections.singletonList(entity.getBlockPos());
             }
