@@ -1,8 +1,11 @@
 package org.snail.plus.utils;
 
+
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +18,6 @@ public class MathUtils {
     private static float currentPitch;
     private static float targetYaw;
     private static float targetPitch;
-    private static int rotationSteps;
     private static int currentStep;
 
     public static List<BlockPos> getSphere(BlockPos pos, double radius) {
@@ -55,17 +57,16 @@ public class MathUtils {
         float yaw = (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90;
         float pitch = (float) -Math.toDegrees(Math.atan2(diffY, diffXZ));
 
-        Rotations.rotate(yaw, pitch);
-        updateRotation(rotationSteps);
-    }
-
-    public static void smoothRotate(float yaw, float pitch, int steps) {
-        currentYaw = mc.player.getYaw();
-        currentPitch = mc.player.getPitch();
-        targetYaw = yaw;
-        targetPitch = pitch;
-        rotationSteps = steps;
-        currentStep = 0;
+        if (mc.world.raycast(new RaycastContext(playerPos, blockTopCenter, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player)).getType() != HitResult.Type.MISS) {
+            if (WorldUtils.isAir(mc.player.getBlockPos().up(2))) {
+                pitch = -90;
+                Rotations.rotate(yaw, pitch);
+                updateRotation(rotationSteps);
+            }
+        } else {
+            Rotations.rotate(yaw, pitch);
+            updateRotation(rotationSteps);
+        }
     }
 
     public static void updateRotation(int steps) {

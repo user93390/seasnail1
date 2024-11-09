@@ -47,6 +47,7 @@ public class AutoAnchor extends Module {
     private final SettingGroup sgPlacement = settings.createGroup("Placement");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
+    private final SettingGroup sgAntiCheat = settings.createGroup("Anti-Cheat");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
@@ -75,14 +76,6 @@ public class AutoAnchor extends Module {
             .name("rotation")
             .description("Enables rotation towards the block when placing anchors.")
             .defaultValue(false)
-            .build());
-
-    private final Setting<Integer> rotationSteps = sgPlacement.add(new IntSetting.Builder()
-            .name("rotation steps")
-            .description("The amount of steps to rotate.")
-            .defaultValue(1)
-            .sliderRange(1, 35)
-            .visible(() -> rotate.get())
             .build());
 
     private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
@@ -119,15 +112,42 @@ public class AutoAnchor extends Module {
             .sliderRange(0.0, 36.0)
             .build());
 
-    private final Setting<Boolean> strictDirection = sgPlacement.add(new BoolSetting.Builder()
+    private final Setting<Boolean> strictDirection = sgAntiCheat.add(new BoolSetting.Builder()
             .name("strict direction")
             .description("Only places anchors in the direction you are facing.")
             .defaultValue(false)
             .build());
 
-    private final Setting<Boolean> rayCast = sgPlacement.add(new BoolSetting.Builder()
-            .name("rayCast")
+    private final Setting<Boolean> rayCast = sgAntiCheat.add(new BoolSetting.Builder()
+            .name("raytrace")
             .defaultValue(false)
+            .build());
+
+    private final Setting<Integer> rotationSteps = sgAntiCheat.add(new IntSetting.Builder()
+            .name("rotation steps")
+            .description("The amount of steps to rotate.")
+            .sliderRange(1, 25)
+            .visible(() -> rotate.get())
+            .build());
+
+    private final Setting<Boolean> alwaysLook = sgAntiCheat.add(new BoolSetting.Builder()
+            .name("always look")
+            .description("Always looks at the block being placed.")
+            .defaultValue(false)
+            .build());
+
+    private final Setting<Integer> maxBlocks = sgAntiCheat.add(new IntSetting.Builder()
+            .name("max blocks")
+            .description("The maximum amount of blocks to look at.")
+            .sliderRange(1, 10)
+            .visible(() -> alwaysLook.get())
+            .build());
+
+    private final Setting<Boolean> smartLook = sgAntiCheat.add(new BoolSetting.Builder()
+            .name("smart look")
+            .description("predicts if the current block you're looking at will be considered a valid block.")
+            .defaultValue(false)
+            .visible(() -> alwaysLook.get())
             .build());
 
     private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
@@ -300,6 +320,16 @@ public class AutoAnchor extends Module {
             ArrayList<BlockPos> positions = new ArrayList<>();
             for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))) {
                 Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+                if (alwaysLook.get() && !smartLook.get()) {
+                    Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
+                    MathUtils.updateRotation(rotationSteps.get());
+
+                    if (maxBlocks.get() >= MathUtils.getSphere(entity.getBlockPos(),
+                            MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get()))).size())
+                        break;
+
+                    if(strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) continue;
+                }
                 selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, vec);
                 targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, vec);
 
@@ -308,15 +338,10 @@ public class AutoAnchor extends Module {
                         if (debugCalculations.get())
                             info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
                         positions.add(pos);
-                    }
-                }
-            }
-
-            if (positions.isEmpty()) {
-                for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))) {
-                    if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
-                        positions.add(pos);
-                        break;
+                        if (smartLook.get()) {
+                            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
+                            MathUtils.updateRotation(rotationSteps.get());
+                        }
                     }
                 }
             }
@@ -333,38 +358,39 @@ public class AutoAnchor extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        try {
-            if (pauseUse.get() && mc.player != null && mc.player.isUsingItem()) return;
-            if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
-                warning("You are in the wrong dimension!");
-                return;
-            }
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
-
-            for (PlayerEntity player : mc.world.getPlayers()) {
-                if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
-                    continue;
-
-                AnchorPos = positions(player);
-                lock.lock();
-                try {
-                    for (BlockPos pos : AnchorPos) {
-                        if (rotate.get()) {
-                            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
-
-                            MathUtils.updateRotation(rotationSteps.get());
-                        }
-                        executor.submit(this::breakAnchor);
-                    }
-                } finally {
-                    lock.unlock();
+        executor.submit(() -> {
+            try {
+                if (pauseUse.get() && mc.player != null && mc.player.isUsingItem()) return;
+                if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
+                    warning("You are in the wrong dimension!");
+                    return;
                 }
-                lastUpdateTime = currentTime;
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
+
+                for (PlayerEntity player : mc.world.getPlayers()) {
+                    if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
+                        continue;
+
+                    AnchorPos = positions(player);
+                    lock.lock();
+                    try {
+                        for (BlockPos pos : AnchorPos) {
+                            if (rotate.get()) {
+                                Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
+                                MathUtils.updateRotation(rotationSteps.get());
+                            }
+                            executor.submit(this::breakAnchor);
+                        }
+                    } finally {
+                        lock.unlock();
+                    }
+                    lastUpdateTime = currentTime;
+                }
+            } catch (Exception e) {
+                error("An error occurred while processing the tick event: " + e.getMessage());
             }
-        } catch (Exception e) {
-            error("An error occurred while processing the tick event: " + e.getMessage());
-        }
+        });
     }
 
     public void breakAnchor() {
@@ -383,7 +409,6 @@ public class AutoAnchor extends Module {
                 }
                 if (rayCast.get()) {
                     MathUtils.rayCast(pos, rotationSteps.get());
-
                     MathUtils.updateRotation(rotationSteps.get());
                 }
 
@@ -396,6 +421,7 @@ public class AutoAnchor extends Module {
 
             selfDamage = 0;
             targetDamage = 0;
+            if (debugBreak.get()) info("resetting damage values %s %s", selfDamage, targetDamage);
         } catch (Exception e) {
             error("An error occurred while breaking anchors: " + e.getMessage());
         } finally {

@@ -22,7 +22,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
 import java.util.Objects;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -36,11 +35,11 @@ public class WorldUtils {
         return Objects.requireNonNull(mc.world).isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK || mc.world.getBlockState(position).getBlock() == Blocks.BARRIER;
     }
 
-    public static boolean strictDirection(BlockPos position, Direction Direction) {
+    public static boolean strictDirection(BlockPos position, DirectionMode Direction) {
         return switch (Direction) {
-            case DOWN, UP -> Objects.requireNonNull(mc.player).getEyePos().y <= position.getY() + 0.5;
-            case NORTH, WEST -> Objects.requireNonNull(mc.player).getZ() < position.getZ();
-            case EAST, SOUTH -> Objects.requireNonNull(mc.player).getX() >= position.getX() + 1;
+            case Down, Up -> Objects.requireNonNull(mc.player).getEyePos().y <= position.getY() + 0.5;
+            case North, West -> Objects.requireNonNull(mc.player).getZ() < position.getZ();
+            case East, South -> Objects.requireNonNull(mc.player).getX() >= position.getX() + 1;
         };
     }
 
