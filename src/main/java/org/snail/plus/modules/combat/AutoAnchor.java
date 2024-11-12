@@ -32,7 +32,6 @@ import org.snail.plus.utils.swapUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
@@ -77,86 +76,56 @@ public class AutoAnchor extends Module {
             .description("Enables rotation towards the block when placing anchors.")
             .defaultValue(false)
             .build());
-
-    private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
-            .name("anchor speed")
-            .description("The speed at which anchors are placed, in anchors per second.")
-            .defaultValue(1.0)
-            .sliderRange(0.1, 10.0)
-            .build());
-
-    private final Setting<swapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<swapUtils.swapMode>()
-            .name("swap mode")
-            .description("The mode used for swapping items when placing anchors.")
-            .defaultValue(swapUtils.swapMode.Inventory)
-            .build());
-
-    private final Setting<Double> maxSelfDamage = sgDamage.add(new DoubleSetting.Builder()
-            .name("max self damage")
-            .description("The maximum amount of damage you can take from your own anchors.")
-            .defaultValue(3.0)
-            .sliderRange(0.0, 36.0)
-            .build());
-
-    private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder()
-            .name("min damage")
-            .description("The minimum amount of damage that should be dealt to the target.")
-            .defaultValue(3.0)
-            .sliderRange(0.0, 36.0)
-            .build());
-
-    private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
-            .name("pause health")
-            .description("Pauses the module when your health is below this value.")
-            .defaultValue(0.0)
-            .sliderRange(0.0, 36.0)
-            .build());
-
-    private final Setting<Boolean> strictDirection = sgAntiCheat.add(new BoolSetting.Builder()
-            .name("strict direction")
-            .description("Only places anchors in the direction you are facing.")
-            .defaultValue(false)
-            .build());
-
-    private final Setting<Boolean> rayCast = sgAntiCheat.add(new BoolSetting.Builder()
-            .name("raytrace")
-            .defaultValue(false)
-            .build());
-
     private final Setting<Integer> rotationSteps = sgAntiCheat.add(new IntSetting.Builder()
             .name("rotation steps")
             .description("The amount of steps to rotate.")
             .sliderRange(1, 25)
             .visible(() -> rotate.get())
             .build());
-
-    private final Setting<Boolean> alwaysLook = sgAntiCheat.add(new BoolSetting.Builder()
-            .name("always look")
-            .description("Always looks at the block being placed.")
+    private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
+            .name("anchor speed")
+            .description("The speed at which anchors are placed, in anchors per second.")
+            .defaultValue(1.0)
+            .sliderRange(0.1, 10.0)
+            .build());
+    private final Setting<swapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<swapUtils.swapMode>()
+            .name("swap mode")
+            .description("The mode used for swapping items when placing anchors.")
+            .defaultValue(swapUtils.swapMode.Inventory)
+            .build());
+    private final Setting<Double> maxSelfDamage = sgDamage.add(new DoubleSetting.Builder()
+            .name("max self damage")
+            .description("The maximum amount of damage you can take from your own anchors.")
+            .defaultValue(3.0)
+            .sliderRange(0.0, 36.0)
+            .build());
+    private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder()
+            .name("min damage")
+            .description("The minimum amount of damage that should be dealt to the target.")
+            .defaultValue(3.0)
+            .sliderRange(0.0, 36.0)
+            .build());
+    private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
+            .name("pause health")
+            .description("Pauses the module when your health is below this value.")
+            .defaultValue(0.0)
+            .sliderRange(0.0, 36.0)
+            .build());
+    private final Setting<Boolean> strictDirection = sgAntiCheat.add(new BoolSetting.Builder()
+            .name("strict direction")
+            .description("Only places anchors in the direction you are facing.")
             .defaultValue(false)
             .build());
-
-    private final Setting<Integer> maxBlocks = sgAntiCheat.add(new IntSetting.Builder()
-            .name("max blocks")
-            .description("The maximum amount of blocks to look at.")
-            .sliderRange(1, 10)
-            .visible(() -> alwaysLook.get())
-            .build());
-
-    private final Setting<Boolean> smartLook = sgAntiCheat.add(new BoolSetting.Builder()
-            .name("smart look")
-            .description("predicts if the current block you're looking at will be considered a valid block.")
-            .defaultValue(false)
-            .visible(() -> alwaysLook.get())
-            .build());
-
     private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
             .name("direction")
             .description("The mode used for direction.")
             .defaultValue(WorldUtils.DirectionMode.Up)
             .visible(() -> !strictDirection.get())
             .build());
-
+    private final Setting<Boolean> rayCast = sgAntiCheat.add(new BoolSetting.Builder()
+            .name("raytrace")
+            .defaultValue(false)
+            .build());
     private final Setting<Boolean> predictMovement = sgExtrapolation.add(new BoolSetting.Builder()
             .name("predict movement")
             .description("Predicts the movement of players for more accurate anchor placement.")
@@ -216,13 +185,17 @@ public class AutoAnchor extends Module {
             .description("Swings your hand.")
             .defaultValue(true)
             .build());
-
+    private final Setting<WorldUtils.HandMode> swingMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.HandMode>()
+            .name("swing mode")
+            .description("The mode used for swinging your hand.")
+            .defaultValue(WorldUtils.HandMode.MainHand)
+            .visible(() -> swing.get())
+            .build());
     private final Setting<RenderMode> renderMode = sgRender.add(new EnumSetting.Builder<RenderMode>()
             .name("render mode")
             .description("The mode used for rendering the anchor box.")
             .defaultValue(RenderMode.smooth)
             .build());
-
     private final Setting<Integer> rendertime = sgRender.add(new IntSetting.Builder()
             .name("render time")
             .description("The duration for which the anchor box is rendered, in ticks.")
@@ -230,14 +203,6 @@ public class AutoAnchor extends Module {
             .sliderRange(1, 100)
             .visible(() -> renderMode.get() == RenderMode.fading)
             .build());
-
-    private final Setting<WorldUtils.HandMode> swingMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.HandMode>()
-            .name("swing mode")
-            .description("The mode used for swinging your hand.")
-            .defaultValue(WorldUtils.HandMode.MainHand)
-            .visible(() -> swing.get())
-            .build());
-
     private final Setting<Integer> Smoothness = sgRender.add(new IntSetting.Builder()
             .name("smoothness")
             .description("The smoothness of the anchor box rendering in smooth mode.")
@@ -278,6 +243,7 @@ public class AutoAnchor extends Module {
     private long lastUpdateTime;
     private double selfDamage;
     private double targetDamage;
+    private double damageValue;
 
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
@@ -288,11 +254,11 @@ public class AutoAnchor extends Module {
         try {
             selfDamage = 0;
             targetDamage = 0;
+            damageValue = 0;
             AnchorPos = new ArrayList<>();
             if (executor == null || executor.isShutdown() || executor.isTerminated()) {
                 executor = Executors.newSingleThreadExecutor();
             }
-            executor.submit(() -> onTick(null));
         } catch (Exception e) {
             error("An error occurred while activating the module: " + e.getMessage());
         }
@@ -303,6 +269,7 @@ public class AutoAnchor extends Module {
         try {
             selfDamage = 0;
             targetDamage = 0;
+            damageValue = 0;
             if (executor != null) {
                 executor.shutdown();
             }
@@ -320,28 +287,19 @@ public class AutoAnchor extends Module {
             ArrayList<BlockPos> positions = new ArrayList<>();
             for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))) {
                 Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-                if (alwaysLook.get() && !smartLook.get()) {
-                    Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
-                    MathUtils.updateRotation(rotationSteps.get());
 
-                    if (maxBlocks.get() >= MathUtils.getSphere(entity.getBlockPos(),
-                            MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get()))).size())
-                        break;
+                if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) continue;
 
-                    if(strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) continue;
-                }
-                selfDamage = predictMovement.get() ? DamageUtils.anchorDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.anchorDamage(mc.player, vec);
-                targetDamage = predictMovement.get() ? DamageUtils.anchorDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.anchorDamage(entity, vec);
+                selfDamage = predictMovement.get() ? DamageUtils.bedDamage(mc.player, predictMovement(entity, selfExtrapolateTicks.get())) : DamageUtils.bedDamage(mc.player, vec);
+                targetDamage = predictMovement.get() ? DamageUtils.bedDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.bedDamage(entity, vec);
 
                 if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
                     if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
                         if (debugCalculations.get())
                             info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
+
+                        damageValue = targetDamage;
                         positions.add(pos);
-                        if (smartLook.get()) {
-                            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
-                            MathUtils.updateRotation(rotationSteps.get());
-                        }
                     }
                 }
             }
@@ -358,11 +316,15 @@ public class AutoAnchor extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
+        targetDamage = 0;
+        selfDamage = 0;
+        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
+            executor = Executors.newSingleThreadExecutor();
+        }
         executor.submit(() -> {
             try {
-                if (pauseUse.get() && mc.player != null && mc.player.isUsingItem()) return;
-                if (Objects.requireNonNull(mc.world).getDimension().respawnAnchorWorks()) {
-                    warning("You are in the wrong dimension!");
+                if (mc.world.getDimension().respawnAnchorWorks()) {
+                    error("You are in the wrong dimension!");
                     return;
                 }
                 long currentTime = System.currentTimeMillis();
@@ -377,10 +339,15 @@ public class AutoAnchor extends Module {
                     try {
                         for (BlockPos pos : AnchorPos) {
                             if (rotate.get()) {
-                                Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
-                                MathUtils.updateRotation(rotationSteps.get());
+
+                                Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, ()
+                                        -> MathUtils.updateRotation(rotationSteps.get()));
+                                executor.submit(this::breakAnchor);
+
+                            } else {
+
+                                executor.submit(this::breakAnchor);
                             }
-                            executor.submit(this::breakAnchor);
                         }
                     } finally {
                         lock.unlock();
@@ -396,6 +363,8 @@ public class AutoAnchor extends Module {
     public void breakAnchor() {
         lock.lock();
         try {
+            if (pauseUse.get() && mc.player.isUsingItem()) return;
+
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) return;
             for (BlockPos pos : AnchorPos) {
@@ -414,14 +383,10 @@ public class AutoAnchor extends Module {
 
                 if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
-                WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
+                WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), true, swap.get(), rotate.get());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
             }
             lastPlacedTime = currentTime;
-
-            selfDamage = 0;
-            targetDamage = 0;
-            if (debugBreak.get()) info("resetting damage values %s %s", selfDamage, targetDamage);
         } catch (Exception e) {
             error("An error occurred while breaking anchors: " + e.getMessage());
         } finally {
@@ -429,9 +394,15 @@ public class AutoAnchor extends Module {
         }
     }
 
+    private boolean updateEat() {
+        return pauseUse.get() && mc.player.isUsingItem();
+    }
+
     @EventHandler
+    @SuppressWarnings("all")
     public void render(Render3DEvent event) {
         try {
+            if (updateEat()) return;
             for (BlockPos pos : AnchorPos) {
                 for (PlayerEntity player : mc.world.getPlayers()) {
                     if (player == mc.player || Friends.get().isFriend(player) || mc.player.distanceTo(player) > range.get())
@@ -459,9 +430,9 @@ public class AutoAnchor extends Module {
                             if (renderBoxOne == null) renderBoxOne = new Box(pos);
                             if (renderBoxTwo == null) renderBoxTwo = new Box(pos);
 
-                            if (renderBoxTwo instanceof IBox) {
+                            if (renderBoxTwo instanceof IBox)
                                 ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
-                            }
+
 
                             double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
                             double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
@@ -497,7 +468,7 @@ public class AutoAnchor extends Module {
                 NametagUtils.begin(vec);
                 TextRenderer.get().begin(1, false, true);
 
-                String text = String.format("%.1f", targetDamage);
+                String text = String.format("%.1f", damageValue);
                 double w = TextRenderer.get().getWidth(text) / 2;
                 TextRenderer.get().render(text, -w, 0, damageColor.get(), false);
 
@@ -509,9 +480,11 @@ public class AutoAnchor extends Module {
 
     @Override
     public String getInfoString() {
-        for (PlayerEntity player : mc.world.getPlayers()) {
-            if (player != mc.player && !Friends.get().isFriend(player) && mc.player.distanceTo(player) < range.get()) {
-                return player.getDisplayName().getString();
+        if (mc.world != null) {
+            for (PlayerEntity player : mc.world.getPlayers()) {
+                if (player != mc.player && !Friends.get().isFriend(player) && mc.player.distanceTo(player) < range.get()) {
+                    return player.getDisplayName().getString();
+                }
             }
         }
         return null;
