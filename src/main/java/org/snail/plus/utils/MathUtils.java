@@ -48,14 +48,23 @@ public class MathUtils {
         Vec3d playerPos = mc.player.getPos().add(0, mc.player.getEyeHeight(mc.player.getPose()), 0);
         Vec3d blockTopCenter = new Vec3d(blockPos.getX() + 0.5, blockPos.getY() + 1, blockPos.getZ() + 0.5);
 
-        if(mc.world.raycast(new RaycastContext(playerPos, blockTopCenter, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player)).getType() == HitResult.Type.MISS) {
-            Vec3d blockCenter = new Vec3d(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5);
-            Vec3d playerToBlock = blockCenter.subtract(playerPos);
-            double horizontalDistance = Math.sqrt(playerToBlock.x * playerToBlock.x + playerToBlock.z * playerToBlock.z);
-            double yaw = Math.toDegrees(Math.atan2(playerToBlock.z, playerToBlock.x)) - 90;
-            double pitch = -Math.toDegrees(Math.atan2(playerToBlock.y, horizontalDistance));
-            Rotations.rotate(yaw, pitch, rotationSteps);
+        double diffX = blockTopCenter.x - playerPos.x;
+        double diffY = blockTopCenter.y - playerPos.y;
+        double diffZ = blockTopCenter.z - playerPos.z;
 
+        double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
+
+        float yaw = (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90;
+        float pitch = (float) -Math.toDegrees(Math.atan2(diffY, diffXZ));
+
+        if (mc.world.raycast(new RaycastContext(playerPos, blockTopCenter, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player)).getType() != HitResult.Type.MISS) {
+            if (WorldUtils.isAir(mc.player.getBlockPos().up(2))) {
+                pitch = -90;
+                Rotations.rotate(yaw, pitch);
+                updateRotation(rotationSteps);
+            }
+        } else {
+            Rotations.rotate(yaw, pitch);
             updateRotation(rotationSteps);
         }
     }
