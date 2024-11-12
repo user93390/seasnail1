@@ -19,8 +19,4 @@ public class serverUtils {
     public static int currentPing() {
         return mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid()).getLatency();
     }
-
-    public static String serverName() {
-        return mc.getCurrentServerEntry().name;
-    }
 }
