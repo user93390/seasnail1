@@ -54,18 +54,12 @@ public class MathUtils {
 
         double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
 
-        float yaw = (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90;
+        float initialYaw = (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90;
         float pitch = (float) -Math.toDegrees(Math.atan2(diffY, diffXZ));
 
+
         if (mc.world.raycast(new RaycastContext(playerPos, blockTopCenter, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player)).getType() != HitResult.Type.MISS) {
-            if (WorldUtils.isAir(mc.player.getBlockPos().up(2))) {
-                pitch = -90;
-                Rotations.rotate(yaw, pitch);
-                updateRotation(rotationSteps);
-            }
-        } else {
-            Rotations.rotate(yaw, pitch);
-            updateRotation(rotationSteps);
+            Rotations.rotate(initialYaw, pitch);
         }
     }
 
