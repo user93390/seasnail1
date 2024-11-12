@@ -2,12 +2,14 @@ package org.snail.plus.modules.chat;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
@@ -67,7 +69,7 @@ public class VisualRange extends Module {
     private int viewDistance;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private Random random = new Random();
-
+    public double x, y, z;
     public VisualRange() {
         super(Addon.Snail, "Visual Range", "Notifies you when a player is in your visual range.");
     }
@@ -99,14 +101,16 @@ public class VisualRange extends Module {
                     if (checkUuid.get() && entity.getUuid() != null) {
                         PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(entity.getUuid());
                         if (!ignoreInvalid.get() && (playerListEntry == null || playerListEntry.getLatency() < 1)) continue;
-                        players.add(entity);
-                        double x = Math.round(entity.getX());
-                        double y = Math.round(entity.getY());
-                        double z = Math.round(entity.getZ());
-                        if (!soundList.isEmpty()) {
-                            WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
+                        if(players.size() < maxAmount.get() && !ignoreFriends.get() || !ignoreFriends.get() && !Friends.get().isFriend((PlayerEntity) entity)) {
+                            players.add(entity);
+                             x = Math.round(entity.getX());
+                             y = Math.round(entity.getY());
+                             z = Math.round(entity.getZ());
+                            if (!soundList.isEmpty()) {
+                                WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
+                            }
+                            warning("Entity spotted %s", entity.getName().getString() + " at " + x + " " + y + " " + z);
                         }
-                        warning("Entity spotted %s", entity.getName().getString() + " at " + x + " " + y + " " + z);
                     }
                 }
             } else {

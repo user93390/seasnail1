@@ -1,31 +1,33 @@
 package org.snail.plus;
 
-import com.google.gson.internal.JsonReaderInternalAccess;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import net.fabricmc.loader.impl.lib.gson.JsonReader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.tutorial.TutorialStep;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.snail.plus.hud.*;
-import org.snail.plus.modules.chat.*;
-import org.snail.plus.modules.combat.*;
-import org.snail.plus.modules.misc.*;
-import org.snail.plus.modules.render.*;
+import org.snail.plus.hud.Watermark;
+import org.snail.plus.modules.chat.AutoEZ;
+import org.snail.plus.modules.chat.ChatControl;
+import org.snail.plus.modules.chat.VisualRange;
+import org.snail.plus.modules.combat.AutoAnchor;
+import org.snail.plus.modules.combat.SelfAnvil;
+import org.snail.plus.modules.combat.webAura;
+import org.snail.plus.modules.misc.XPautomation;
+import org.snail.plus.modules.misc.antiAim;
+import org.snail.plus.modules.misc.discordRPC;
+import org.snail.plus.modules.render.BurrowEsp;
+import org.snail.plus.modules.render.FOV;
 
 public class Addon extends MeteorAddon {
-    private final MinecraftClient mc = MinecraftClient.getInstance();
     public static final Logger LOG = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
+    private final MinecraftClient mc = MinecraftClient.getInstance();
 
     @Override
     public void onInitialize() {
@@ -52,7 +54,6 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new discordRPC());
         Modules.get().add(new AutoAnchor());
         Modules.get().add(new XPautomation());
-        Modules.get().add(new autoTrap());
         Modules.get().add(new webAura());
         Modules.get().add(new antiAim());
         Modules.get().add(new SelfAnvil());
