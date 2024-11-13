@@ -220,7 +220,7 @@ public class webAura extends Module {
         lock.lock();
         try {
             if (predictMovement.get()) {
-                pos = Collections.singletonList(BlockPos.ofFloored(extrapolationUtils.predictEntityPos(entity, selfExtrapolateTicks.get())));
+               // pos = Collections.singletonList(BlockPos.ofFloored(extrapolationUtils.predictEntityPos(entity, selfExtrapolateTicks.get())));
                 Box box = new Box(pos.getFirst());
                 List<VoxelShape> count = new ArrayList<>();
                 mc.world.getBlockCollisions(entity, box).forEach(count::add);
@@ -299,7 +299,7 @@ public class webAura extends Module {
                 for (BlockPos pos : positions(player)) {
                     if (player == mc.player || player.isDead() || Friends.get().isFriend(player)) continue;
                     if (predictMovement.get() && renderExtrapolation.get()) {
-                        Vec3d extrapolatedPos = extrapolationUtils.predictEntityPos(player, extrapolationTicks.get());
+                        Vec3d extrapolatedPos = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
                         Box playerBox = new Box(
                                 extrapolatedPos.x - player.getWidth() / 2,
                                 extrapolatedPos.y,

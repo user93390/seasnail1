@@ -2,13 +2,11 @@ package org.snail.plus.utils;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.explosion.Explosion;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -39,11 +37,47 @@ public class CombatUtils {
         return target.getY() == target.prevY && IsValidBlock(BlockPos.ofFloored(pos));
     }
 
-    public static boolean isTrapped(PlayerEntity player) {
-        int x = player.getBlockZ();
-        int y = (player.getBlockZ() + 2);
-        int z = player.getBlockZ();
-        return WorldUtils.isAir(new BlockPos(x, y, z));
+    public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode Mode) {
+        PlayerEntity target = null;
+        double distance = 0;
+        double health = 0;
+
+        playerEntities.remove(mc.player);
+        playerEntities.removeAll(WorldUtils.getAllFriends());
+
+
+        for (PlayerEntity player : playerEntities) {
+            double currentDistance = mc.player.distanceTo(player);
+            double currentHealth = player.getHealth();
+
+            switch (Mode) {
+                case Closet -> {
+                    if (distance == 0 || currentDistance < distance) {
+                        distance = currentDistance;
+                        target = player;
+                    }
+                }
+                case Furthest -> {
+                    if (distance == 0 || currentDistance > distance) {
+                        distance = currentDistance;
+                        target = player;
+                    }
+                }
+                case LowestHealth -> {
+                    if (health == 0 || currentHealth < health) {
+                        health = currentHealth;
+                        target = player;
+                    }
+                }
+                case HighestHealth -> {
+                    if (health == 0 || currentHealth > health) {
+                        health = currentHealth;
+                        target = player;
+                    }
+                }
+            }
+        }
+        return target;
     }
 
     public static boolean isSurrounded(PlayerEntity player) {
@@ -58,5 +92,17 @@ public class CombatUtils {
             }
         }
         return true;
+    }
+
+    public enum DmgTye {
+        Bed,
+        crystal,
+    }
+
+    public enum filterMode {
+        Closet,
+        Furthest,
+        LowestHealth,
+        HighestHealth,
     }
 }
