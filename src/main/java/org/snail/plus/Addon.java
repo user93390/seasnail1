@@ -10,18 +10,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.tutorial.TutorialStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snail.plus.hud.Watermark;
-import org.snail.plus.modules.chat.AutoEZ;
-import org.snail.plus.modules.chat.ChatControl;
-import org.snail.plus.modules.chat.VisualRange;
-import org.snail.plus.modules.combat.AutoAnchor;
-import org.snail.plus.modules.combat.SelfAnvil;
-import org.snail.plus.modules.combat.webAura;
-import org.snail.plus.modules.misc.XPautomation;
-import org.snail.plus.modules.misc.antiAim;
-import org.snail.plus.modules.misc.discordRPC;
-import org.snail.plus.modules.render.BurrowEsp;
-import org.snail.plus.modules.render.FOV;
+import org.snail.plus.hud.*;
+
+import org.snail.plus.modules.chat.*;
+import org.snail.plus.modules.combat.*;
+import org.snail.plus.modules.misc.*;
+import org.snail.plus.modules.render.*;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Snail++");
@@ -33,12 +27,11 @@ public class Addon extends MeteorAddon {
     public void onInitialize() {
         loadModules();
         Config.get().load();
-        LOG.info("Loaded config");
 
         mc.getTutorialManager().setStep(TutorialStep.NONE);
         mc.options.skipMultiplayerWarning = true;
         mc.options.advancedItemTooltips = true;
-        LOG.info("Snail++ loaded! join the discord at " + "https://discord.gg/nh9pjVhsVb");
+        LOG.info("Snail++ loaded! Join the discord at " + "https://discord.gg/nh9pjVhsVb");
     }
 
     @Override

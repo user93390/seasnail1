@@ -1,16 +1,15 @@
 package org.snail.plus.utils;
 
+import java.util.List;
+import java.util.Objects;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-
-import java.util.List;
-import java.util.Objects;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class CombatUtils {
 
@@ -37,7 +36,7 @@ public class CombatUtils {
         return target.getY() == target.prevY && IsValidBlock(BlockPos.ofFloored(pos));
     }
 
-    public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode Mode) {
+    public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode Mode, double range) {
         PlayerEntity target = null;
         double distance = 0;
         double health = 0;
@@ -47,7 +46,9 @@ public class CombatUtils {
 
 
         for (PlayerEntity player : playerEntities) {
+        
             double currentDistance = mc.player.distanceTo(player);
+            if(currentDistance > range) continue;
             double currentHealth = player.getHealth();
 
             switch (Mode) {
@@ -93,12 +94,7 @@ public class CombatUtils {
         }
         return true;
     }
-
-    public enum DmgTye {
-        Bed,
-        crystal,
-    }
-
+    
     public enum filterMode {
         Closet,
         Furthest,
