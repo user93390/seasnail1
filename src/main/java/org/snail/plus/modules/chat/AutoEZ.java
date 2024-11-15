@@ -1,29 +1,30 @@
 package org.snail.plus.modules.chat;
 
+import java.util.List;
+import java.util.Random;
+
+import org.snail.plus.Addon;
+import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.WorldUtils;
+
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.StringListSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
-import org.snail.plus.Addon;
-import org.snail.plus.utils.WorldUtils;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
 
 public class AutoEZ extends Module {
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<List<String>> messageSetting = sgGeneral.add(new StringListSetting.Builder()
             .name("message")
             .description("Custom message to send.")
-            .defaultValue("LMAO {victim} just died at {coords}! go get his shitty loot",
-                    "looks like {victim} doesn't have snail++",
-                    "I play fortnite duos with your mom {victim}")
+            .defaultValue("")
             .build());
 
     private final Setting<Boolean> dm = sgGeneral.add(new BoolSetting.Builder()
@@ -32,13 +33,7 @@ public class AutoEZ extends Module {
             .defaultValue(true)
             .build());
 
-    private final Setting<Boolean> requireLastAttacker = sgGeneral.add(new BoolSetting.Builder()
-            .name("require-last-attacker")
-            .description("Requires the last attacker to be the player.")
-            .defaultValue(true)
-            .build());
-
-    private int ezMsg;
+    private boolean sent = false;
 
     public AutoEZ() {
         super(Addon.Snail, "Auto EZ+", "Sends a custom message when a player dies");
@@ -46,27 +41,32 @@ public class AutoEZ extends Module {
 
     @Override
     public void onActivate() {
-        ezMsg = -1;
+        sent = false;
     }
 
     @Override
     public void onDeactivate() {
-        ezMsg = -1;
+        sent = false;
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        for (PlayerEntity player : Objects.requireNonNull(mc.world).getPlayers()) {
-            if (player.isDead() && (!requireLastAttacker.get() || player.getLastAttacker() == mc.player)) {
+        if (sent) {
+            return;
+        }
+
+        for (PlayerEntity player : mc.world.getPlayers()) {
+            if (CombatUtils.getLastAttacker(player) == mc.player) {
                 sendEzMessage(player);
+                sent = true;
+                break;
             }
         }
     }
 
     private void sendEzMessage(PlayerEntity player) {
         List<String> messages = messageSetting.get();
-        ezMsg = new Random().nextInt(messages.size());
-        String msg = messages.get(ezMsg)
+        String msg = messages.get(new Random().nextInt(messages.size()))
                 .replace("{victim}", WorldUtils.getName(player))
                 .replace("{coords}", WorldUtils.getCoords(player));
         sendMsg(msg, dm.get());
@@ -79,4 +79,5 @@ public class AutoEZ extends Module {
             mc.player.networkHandler.sendChatMessage(msg);
         }
     }
+
 }
