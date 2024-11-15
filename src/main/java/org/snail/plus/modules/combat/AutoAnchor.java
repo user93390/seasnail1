@@ -268,7 +268,7 @@ public class AutoAnchor extends Module {
 
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
-    }
+        }
 
     @Override
     public void onActivate() {
@@ -301,39 +301,34 @@ public class AutoAnchor extends Module {
         } catch (Exception e) {
             error("An error occurred while deactivating the module: " + e.getMessage());
         }
-
-        
-
-    
-
-    private List<BlockPos> positions(PlayerEntity entity) {
-        List<BlockPos> positions = new ArrayList<>();
-        for (BlockPos pos : MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))) {
-            Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-
-            if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) {
-                continue;
-            }
-
-            selfDamage = predictMovement.get() ? DamageUtils.bedDamage(mc.player, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.bedDamage(mc.player, vec);
-            targetDamage = predictMovement.get() ? DamageUtils.bedDamage(entity, predictMovement(entity, extrapolationTicks.get())) : DamageUtils.bedDamage(entity, vec);
-
-            if (selfDamage > maxSelfDamage.get() && targetDamage < minDamage.get()) {
-                continue;
-            }
-
-            if (WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos) && selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get()) {
-                if (debugCalculations.get()) {
-                    info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
-                }
-                damageValue = targetDamage;
-                positions.add(pos);
-            }
-        }
-        return positions.isEmpty() ? Collections.emptyList() : Collections.singletonList(positions.get(0));
     }
+    
+        private List<BlockPos> positions(PlayerEntity entity) {
+            return MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))
+            .stream()
+            .filter(pos -> {
+                Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
 
-    private Vec3d predictMovement(PlayerEntity entity, int extrapolationTicks) {
+                if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) {
+                return false;
+                }
+
+                selfDamage = DamageUtils.bedDamage(mc.player, predictMovement.get() ? predictMovement(entity, extrapolationTicks.get()) : vec);
+                targetDamage = DamageUtils.bedDamage(entity, predictMovement.get() ? predictMovement(entity, extrapolationTicks.get()) : vec);
+
+                if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
+                if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
+                damageValue = targetDamage;
+                return true;
+                }
+                return false;
+            })
+            .findFirst()
+            .map(Collections::singletonList)
+            .orElse(Collections.emptyList());
+        }
+
+        private Vec3d predictMovement(PlayerEntity entity, int extrapolationTicks) {
         return extrapolationUtils.predictEntityVe3d(entity, extrapolationTicks);
     }
 
@@ -402,7 +397,7 @@ public class AutoAnchor extends Module {
                     error("invalid items in inventory");
                     continue;
                 }
-                if (rayCast.get() && MathUtils.rayCast(pos)) {
+                if (rayCast.get() && MathUtils.rayCast(new Vec3d(pos.getX(), pos.getY(), pos.getZ()))) {
                     continue;
                 }
 
@@ -483,6 +478,7 @@ public class AutoAnchor extends Module {
             if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > range.get()) {
                 continue;
             }
+
             Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
             if (renderMode.get() == RenderMode.smooth && renderBoxOne != null) {
                 vec.set(renderBoxOne.minX + 0.5, renderBoxOne.minY + 0.5, renderBoxOne.minZ + 0.5);
@@ -505,15 +501,7 @@ public class AutoAnchor extends Module {
 
     @Override
     public String getInfoString() {
-        if (mc.world != null) {
-            for (PlayerEntity player : mc.world.getPlayers()) {
-                if (player != mc.player && !Friends.get().isFriend(player)
-                        && mc.player.distanceTo(player) < range.get()) {
-                    return player.getDisplayName().getString();
-                }
-            }
-        }
-        return null;
+        return BestTarget != null ? BestTarget.getName().getString() : null;
     }
 
     public enum RenderMode {

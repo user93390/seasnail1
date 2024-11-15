@@ -41,8 +41,8 @@ public class MathUtils {
         return Math.sqrt(zx * zx + y * y);
     }
 
-    public static boolean rayCast(BlockPos blockPos) {
-        HitResult hitResult = mc.world.raycast(new RaycastContext(new Vec3d(mc.player.getX(), mc.player.getEyeY(), mc.player.getZ()), new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player));
+    public static boolean rayCast(Vec3d blockPos) {
+        HitResult hitResult = mc.world.raycast(new RaycastContext(new Vec3d(mc.player.getX(), mc.player.getEyeY(), mc.player.getZ()), blockPos, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player));
         return hitResult.getType() != HitResult.Type.MISS;
     }
 

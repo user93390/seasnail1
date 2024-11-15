@@ -16,17 +16,15 @@ public class CombatUtils {
 
     private static boolean isValidBlock(BlockPos pos) {
         Block block = mc.world.getBlockState(pos).getBlock();
-        return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK || block == Blocks.REINFORCED_DEEPSLATE || block == Blocks.NETHERITE_BLOCK || block == Blocks.CRYING_OBSIDIAN || block == Blocks.ENDER_CHEST || block == Blocks.ANVIL;
+        return block.equals(Blocks.OBSIDIAN) || block.equals(Blocks.BEDROCK) || block.equals(Blocks.REINFORCED_DEEPSLATE) || block.equals(Blocks.NETHERITE_BLOCK) || block.equals(Blocks.CRYING_OBSIDIAN) || block.equals(Blocks.ENDER_CHEST) || block.equals(Blocks.ANVIL);
     }
 
     public static boolean isCentered(PlayerEntity target) {
         BlockPos blockPos = target.getBlockPos();
         double centerX = blockPos.getX() + 0.5;
         double centerZ = blockPos.getZ() + 0.5;
-        double playerX = target.getX();
-        double playerZ = target.getZ();
         double threshold = 0.2;
-        return Math.abs(playerX - centerX) < threshold && Math.abs(playerZ - centerZ) < threshold;
+        return Math.abs(target.getX() - centerX) < threshold && Math.abs(target.getZ() - centerZ) < threshold;
     }
 
     public static boolean isBurrowed(PlayerEntity target) {
@@ -38,21 +36,20 @@ public class CombatUtils {
         playerEntities.remove(mc.player);
         playerEntities.removeAll(WorldUtils.getAllFriends());
         return playerEntities.stream()
-            .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range)
-            .min((player1, player2) -> {
-                double distance1 = mc.player != null ? mc.player.distanceTo(player1) : Double.MAX_VALUE;
-                double distance2 = mc.player != null ? mc.player.distanceTo(player2) : Double.MAX_VALUE;
-                double health1 = player1.getHealth();
-                double health2 = player2.getHealth();
+                .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range)
+                .min((player1, player2) -> {
+                    double distance1 = mc.player.distanceTo(player1);
+                    double distance2 = mc.player.distanceTo(player2);
+                    double health1 = player1.getHealth();
+                    double health2 = player2.getHealth();
 
-                return switch (mode) {
-                    case Closet -> Double.compare(distance1, distance2);
-                    case Furthest -> Double.compare(distance2, distance1);
-                    case LowestHealth -> Double.compare(health1, health2);
-                    case HighestHealth -> Double.compare(health2, health1);
-                };
-            })
-            .orElse(null);
+                    return switch (mode) {
+                        case Closet -> Double.compare(distance1, distance2);
+                        case Furthest -> Double.compare(distance2, distance1);
+                        case LowestHealth -> Double.compare(health1, health2);
+                        case HighestHealth -> Double.compare(health2, health1);
+                    };
+                }).orElse(null);
     }
 
     public static PlayerEntity getLastAttacker(Entity entity) {
@@ -60,6 +57,11 @@ public class CombatUtils {
             return (PlayerEntity) livingEntity.getAttacker();
         }
         return null;
+    }
+
+    public static boolean isSurrounded(PlayerEntity target) {
+        BlockPos blockPos = target.getBlockPos();
+        return isValidBlock(blockPos.north()) && isValidBlock(blockPos.south()) && isValidBlock(blockPos.east()) && isValidBlock(blockPos.west());
     }
 
     public enum filterMode {

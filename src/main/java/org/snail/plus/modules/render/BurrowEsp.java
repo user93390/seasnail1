@@ -1,9 +1,22 @@
 package org.snail.plus.modules.render;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.snail.plus.Addon;
+import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.MathUtils;
+
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.EnumSetting;
+import meteordevelopment.meteorclient.settings.IntSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -11,11 +24,6 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class BurrowEsp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -39,7 +47,6 @@ public class BurrowEsp extends Module {
             .visible(performance::get)
             .build());
 
-
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
             .name("range")
             .description("The range to render burrowed players.")
@@ -48,27 +55,27 @@ public class BurrowEsp extends Module {
             .build());
 
     private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
-            .name("shape Mode")
-            .description("the shape mode of the box")
+            .name("shape-mode")
+            .description("The shape mode of the box.")
             .defaultValue(ShapeMode.Both)
             .build());
 
     private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
-            .name("side color")
-            .description("Side color")
+            .name("side-color")
+            .description("Side color.")
             .defaultValue(new SettingColor(255, 0, 0, 75))
             .build());
 
     private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
-            .name("line color")
-            .description("Line color")
+            .name("line-color")
+            .description("Line color.")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
 
     private final List<PlayerEntity> burrowedPlayers = new ArrayList<>();
 
     public BurrowEsp() {
-        super(Addon.Snail, "Burrow esp", "highlights burrowed players");
+        super(Addon.Snail, "Burrow ESP", "Highlights burrowed players.");
     }
 
     @Override
@@ -84,20 +91,19 @@ public class BurrowEsp extends Module {
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         burrowedPlayers.clear();
-        for (PlayerEntity player : mc.world.getPlayers()) {
-            if (ignoreFriends.get() && Friends.get().isFriend(player)) continue;
-            if (CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get()) {
-                burrowedPlayers.add(player);
-                if (performance.get() && burrowedPlayers.size() >= maxPlayers.get()) break;
-            }
-        }
+        mc.world.getPlayers().stream()
+                .filter(player -> !(ignoreFriends.get() && Friends.get().isFriend(player)))
+                .filter(player -> CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get())
+                .limit(performance.get() ? maxPlayers.get() : Long.MAX_VALUE)
+                .forEach(burrowedPlayers::add);
     }
 
     @EventHandler
     public void onRender3D(Render3DEvent event) {
-        for (PlayerEntity player : burrowedPlayers) {
+        burrowedPlayers.forEach(player -> {
             Vec3d pos = new Vec3d(player.getX(), player.getY() + 0.4, player.getZ());
+            if(performance.get() && !MathUtils.rayCast(pos)) return;
             event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-        }
+        });
     }
 }
