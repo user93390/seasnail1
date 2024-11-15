@@ -264,6 +264,7 @@ public class AutoAnchor extends Module {
     private double selfDamage;
     private double targetDamage;
     private double damageValue;
+    private double selfDamageValue;
     private PlayerEntity BestTarget;
 
     public AutoAnchor() {
@@ -276,6 +277,7 @@ public class AutoAnchor extends Module {
             selfDamage = 0;
             targetDamage = 0;
             damageValue = 0;
+            selfDamageValue = 0;
             AnchorPos = new ArrayList<>();
             if (executor == null || executor.isShutdown() || executor.isTerminated()) {
                 executor = Executors.newSingleThreadExecutor();
@@ -291,6 +293,7 @@ public class AutoAnchor extends Module {
             selfDamage = 0;
             targetDamage = 0;
             damageValue = 0;
+            selfDamageValue = 0;
             if (executor != null) {
                 executor.shutdown();
             }
@@ -317,6 +320,7 @@ public class AutoAnchor extends Module {
                 if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
                 if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
                 damageValue = targetDamage;
+                selfDamageValue = selfDamage;
                 return true;
                 }
                 return false;
@@ -484,7 +488,7 @@ public class AutoAnchor extends Module {
                 NametagUtils.begin(vec);
                 TextRenderer.get().begin(1, false, true);
 
-                String text = String.format("%.1f / %.1f", damageValue, selfDamage);
+                String text = String.format("%.1f / %.1f", damageValue, selfDamageValue);
                 double w = TextRenderer.get().getWidth(text) / 2;
                 TextRenderer.get().render(text, -w, 0, damageColor.get(), false);
 
