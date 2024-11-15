@@ -36,7 +36,7 @@ public class AutoEZ extends Module {
     private boolean sent = false;
 
     public AutoEZ() {
-        super(Addon.Snail, "Auto EZ+", "Sends a custom message when a player dies");
+        super(Addon.Snail, "Auto EZ+", "Sends a message when a player dies");
     }
 
     @Override
