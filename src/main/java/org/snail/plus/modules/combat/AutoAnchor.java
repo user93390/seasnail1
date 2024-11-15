@@ -313,8 +313,8 @@ public class AutoAnchor extends Module {
                 return false;
                 }
 
-                selfDamage = DamageUtils.bedDamage(mc.player, predictMovement.get() ? predictMovement(entity, extrapolationTicks.get()) : vec);
-                targetDamage = DamageUtils.bedDamage(entity, predictMovement.get() ? predictMovement(entity, extrapolationTicks.get()) : vec);
+                selfDamage = DamageUtils.bedDamage(mc.player,vec);
+                targetDamage = DamageUtils.bedDamage(entity,vec);
 
                 if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
                 if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
@@ -330,79 +330,80 @@ public class AutoAnchor extends Module {
 
         private Vec3d predictMovement(PlayerEntity entity, int extrapolationTicks) {
         return extrapolationUtils.predictEntityVe3d(entity, extrapolationTicks);
-    }
+        }
 
-    @EventHandler
-    private void onTick(TickEvent.Post event) {
+        @EventHandler
+        private void onTick(TickEvent.Post event) {
         try {
             if (updateEat()) {
-                return;
+            return;
             }
 
             targetDamage = 0;
             selfDamage = 0;
             if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-                executor = Executors.newSingleThreadExecutor();
+            executor = Executors.newSingleThreadExecutor();
             }
             executor.submit(() -> {
-                if (mc.world.getDimension().respawnAnchorWorks()) {
-                    error("You are in the wrong dimension!");
-                    return;
-                }
-                long currentTime = System.currentTimeMillis();
-                if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) {
-                    return;
-                }
+            if (mc.world.getDimension().respawnAnchorWorks()) {
+                error("You are in the wrong dimension!");
+                return;
+            }
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) {
+                return;
+            }
 
-                PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), range.get());
-                AnchorPos = positions(player);
+            PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), range.get());
+            AnchorPos = positions(player);
 
-                BestTarget = player;
+            BestTarget = player;
 
-                lock.lock();
-                try {
-                    for (BlockPos pos : AnchorPos) {
-                        if (rotate.get()) {
-                            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, () -> MathUtils.updateRotation(rotationSteps.get()));
-                            executor.submit(this::breakAnchor);
-                        } else {
-                            executor.submit(this::breakAnchor);
-                        }
-                    }
-                } finally {
-                    lock.unlock();
+            lock.lock();
+            try {
+                for (BlockPos pos : AnchorPos) {
+                if (rotate.get()) {
+                    Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, () -> MathUtils.updateRotation(rotationSteps.get()));
+                    breakAnchor();
+                } else {
+                    breakAnchor();
                 }
-                lastUpdateTime = currentTime;
+            }
+        } finally {
+                lock.unlock();
+            }
+            lastUpdateTime = currentTime;
             });
         } catch (Exception e) {
             error("An error occurred while updating the module: " + e.getMessage());
         }
     }
 
-    public void breakAnchor() {
-        lock.lock();
-        try {
+        public void breakAnchor() {
+            lock.lock();
+            try {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) {
                 return;
             }
-            for (BlockPos pos : AnchorPos) {
-                if (mc.player.getHealth() <= pauseHealth.get()) {
-                    continue;
-                }
+            if (mc.player.getHealth() <= pauseHealth.get()) {
+                return;
+            }
 
-                FindItemResult stone = InvUtils.find(Items.GLOWSTONE);
-                FindItemResult anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
-                if (!stone.found() || !anchor.found()) {
-                    error("invalid items in inventory");
-                    continue;
-                }
+            FindItemResult stone = InvUtils.find(Items.GLOWSTONE);
+            FindItemResult anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
+            if (!stone.found() || !anchor.found()) {
+                error("Invalid items in inventory");
+                return;
+            }
+
+            for (BlockPos pos : AnchorPos) {
                 if (rayCast.get() && MathUtils.rayCast(new Vec3d(pos.getX(), pos.getY(), pos.getZ()))) {
-                    continue;
+                continue;
                 }
 
                 if (debugBreak.get()) {
-                    info("breaking anchor at: " + pos.toShortString());
+                info("Breaking anchor at: " + pos.toShortString());
                 }
 
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
@@ -489,7 +490,7 @@ public class AutoAnchor extends Module {
                 NametagUtils.begin(vec);
                 TextRenderer.get().begin(1, false, true);
 
-                String text = String.format("%.1f", damageValue);
+                String text = String.format("%.1f / %.1f", damageValue, selfDamage);
                 double w = TextRenderer.get().getWidth(text) / 2;
                 TextRenderer.get().render(text, -w, 0, damageColor.get(), false);
 

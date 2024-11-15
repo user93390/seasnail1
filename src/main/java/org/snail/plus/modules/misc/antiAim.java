@@ -1,13 +1,19 @@
 package org.snail.plus.modules.misc;
 
+import org.snail.plus.Addon;
+import org.snail.plus.utils.MathUtils;
+
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.EnumSetting;
+import meteordevelopment.meteorclient.settings.ItemSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import org.snail.plus.Addon;
 
 public class antiAim extends Module {
     SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -51,15 +57,17 @@ public class antiAim extends Module {
     public void onTick(TickEvent.Post event) {
         float yaw = (float) this.yaw.get().doubleValue();
         float pitch = (float) this.pitch.get().doubleValue();
-        if (mc.player == null) return;
+        
         if (mc.player.getMainHandStack().getItem() == item.get() || mc.player.getOffHandStack().getItem() == item.get()) return;
         switch(Mode.get()) {
             case fake:
                 Rotations.rotate(yaw, pitch);
+                MathUtils.updateRotation(5);
                 break;
             case real:
                 mc.player.setYaw(yaw);
                 mc.player.setPitch(pitch);
+                MathUtils.updateRotation(5);
                 break;
 
             case null, default:
