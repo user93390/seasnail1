@@ -53,6 +53,7 @@ public class MathUtils {
             mc.player.setYaw(interpolatedYaw);
             mc.player.setPitch(interpolatedPitch);
             currentStep++;
+
         }
     }
 }
