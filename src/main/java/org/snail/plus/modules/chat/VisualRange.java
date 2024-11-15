@@ -36,7 +36,7 @@ public class VisualRange extends Module {
 
     private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
             .name("check-uuid")
-            .description("Toggle checking player UUIDs.")
+            .description("Toggle checking player UUIDs. (only works on players)")
             .defaultValue(true)
             .visible(() -> entities.get().contains(EntityType.PLAYER))
             .build());

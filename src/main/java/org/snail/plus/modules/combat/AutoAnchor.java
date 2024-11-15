@@ -309,9 +309,7 @@ public class AutoAnchor extends Module {
             .filter(pos -> {
                 Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
 
-                if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) {
-                return false;
-                }
+                if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) return false;
 
                 selfDamage = DamageUtils.bedDamage(mc.player,vec);
                 targetDamage = DamageUtils.bedDamage(entity,vec);
@@ -329,11 +327,12 @@ public class AutoAnchor extends Module {
         }
 
         private Vec3d predictMovement(PlayerEntity entity, int extrapolationTicks) {
-        return extrapolationUtils.predictEntityVe3d(entity, extrapolationTicks);
+            return extrapolationUtils.predictEntityVe3d(entity, extrapolationTicks);
         }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
+        try {
         if (updateEat()) return;
 
         targetDamage = 0;
@@ -374,13 +373,12 @@ public class AutoAnchor extends Module {
         }
     }
 
-        public void breakAnchor() {
-            lock.lock();
-            try {
+    public void breakAnchor() {
+        lock.lock();
+        try {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) return;
-            for (BlockPos pos : AnchorPos) {
-                if (mc.player.getHealth() <= pauseHealth.get()) continue;
+            if (mc.player == null || mc.player.getHealth() <= pauseHealth.get()) return;
 
             FindItemResult stone = InvUtils.find(Items.GLOWSTONE);
             FindItemResult anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
@@ -394,7 +392,7 @@ public class AutoAnchor extends Module {
                     continue;
                 }
                 if (rayCast.get()) {
-                    MathUtils.rayCast(pos, rotationSteps.get());
+                    MathUtils.rayCast(new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
                     MathUtils.updateRotation(rotationSteps.get());
                 }
 
@@ -410,6 +408,7 @@ public class AutoAnchor extends Module {
             lock.unlock();
         }
     }
+
     
     private boolean updateEat() {
         return pauseUse.get() && mc.player.isUsingItem();
