@@ -79,5 +79,4 @@ public class AutoEZ extends Module {
             mc.player.networkHandler.sendChatMessage(msg);
         }
     }
-
 }
