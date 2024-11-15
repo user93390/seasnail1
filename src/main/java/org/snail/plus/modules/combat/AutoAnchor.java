@@ -311,7 +311,6 @@ public class AutoAnchor extends Module {
 
                 if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) {
                 return false;
-<<<<<<< HEAD
                 }
 
                 selfDamage = DamageUtils.bedDamage(mc.player,vec);
