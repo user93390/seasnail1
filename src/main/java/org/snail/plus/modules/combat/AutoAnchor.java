@@ -332,27 +332,22 @@ public class AutoAnchor extends Module {
         return extrapolationUtils.predictEntityVe3d(entity, extrapolationTicks);
         }
 
-        @EventHandler
-        private void onTick(TickEvent.Post event) {
-             try {
-            if (updateEat()) {
-                return;
-            }
+    @EventHandler
+    private void onTick(TickEvent.Post event) {
+        if (updateEat()) return;
 
-            targetDamage = 0;
-            selfDamage = 0;
-            if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-                executor = Executors.newSingleThreadExecutor();
-            }
-            executor.submit(() -> {
+        targetDamage = 0;
+        selfDamage = 0;
+        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
+            executor = Executors.newSingleThreadExecutor();
+        }
+        executor.submit(() -> {
                 if (mc.world.getDimension().respawnAnchorWorks()) {
                     error("You are in the wrong dimension!");
                     return;
                 }
                 long currentTime = System.currentTimeMillis();
-                if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) {
-                    return;
-                }
+                if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
 
                 PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), range.get());
                 AnchorPos = positions(player);
@@ -378,18 +373,14 @@ public class AutoAnchor extends Module {
             error("An error occurred while updating the module: " + e.getMessage());
         }
     }
-    
-    private void breakAnchor() {
-        lock.lock();
-        try {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) {
-                return;
-            }
 
-            if (mc.player != null && mc.player.getHealth() <= pauseHealth.get()) {
-                return;
-            }
+        public void breakAnchor() {
+            lock.lock();
+            try {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) return;
+            for (BlockPos pos : AnchorPos) {
+                if (mc.player.getHealth() <= pauseHealth.get()) continue;
 
             FindItemResult stone = InvUtils.find(Items.GLOWSTONE);
             FindItemResult anchor = InvUtils.find(Items.RESPAWN_ANCHOR);
@@ -402,11 +393,12 @@ public class AutoAnchor extends Module {
                 if (rayCast.get() && MathUtils.rayCast(new Vec3d(pos.getX(), pos.getY(), pos.getZ()))) {
                     continue;
                 }
-
-                if (debugBreak.get()) {
-                    info("Breaking anchor at: " + pos.toShortString());
+                if (rayCast.get()) {
+                    MathUtils.rayCast(pos, rotationSteps.get());
+                    MathUtils.updateRotation(rotationSteps.get());
                 }
 
+                if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), true, swap.get(), rotate.get());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
