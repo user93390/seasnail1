@@ -10,6 +10,7 @@
   },
   "mixins": [
     "ChatUtilsMixin",
+    "FakePlayerMixin",
     "ModuleMixin"
   ]
 }

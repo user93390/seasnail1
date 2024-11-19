@@ -1,11 +1,14 @@
 package org.snail.plus.modules.render;
 
 
+import org.snail.plus.Addon;
+
 import meteordevelopment.meteorclient.events.render.GetFovEvent;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.IntSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
-import org.snail.plus.Addon;
 
 public class FOV extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

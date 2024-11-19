@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
+import meteordevelopment.meteorclient.utils.render.WireframeEntityRenderer;
+import net.minecraft.entity.Entity;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
@@ -89,12 +91,20 @@ public class AutoAnchor extends Module {
             .description("Enables rotation towards the block when placing anchors.")
             .defaultValue(false)
             .build());
+
     private final Setting<Integer> rotationSteps = sgAntiCheat.add(new IntSetting.Builder()
             .name("rotation steps")
             .description("The amount of steps to rotate.")
             .sliderRange(1, 25)
             .visible(() -> rotate.get())
             .build());
+
+    private final Setting<Boolean> airPlace = sgPlacement.add(new BoolSetting.Builder()
+            .name("air place")
+            .description("Allows placing anchors in the air.")
+            .defaultValue(false)
+            .build());
+
     private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
             .name("anchor speed")
             .description("The speed at which anchors are placed, in anchors per second.")
@@ -151,14 +161,6 @@ public class AutoAnchor extends Module {
     private final Setting<Integer> extrapolationTicks = sgExtrapolation.add(new IntSetting.Builder()
             .name("extrapolation ticks")
             .description("The amount of ticks to extrapolate player movement.")
-            .defaultValue(1)
-            .sliderRange(0, 20)
-            .visible(() -> predictMovement.get())
-            .build());
-
-    private final Setting<Integer> selfExtrapolateTicks = sgExtrapolation.add(new IntSetting.Builder()
-            .name("self extrapolation ticks")
-            .description("The amount of ticks to extrapolate your movement.")
             .defaultValue(1)
             .sliderRange(0, 20)
             .visible(() -> predictMovement.get())
@@ -269,7 +271,7 @@ public class AutoAnchor extends Module {
 
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
-        }
+    }
 
     @Override
     public void onActivate() {
@@ -305,46 +307,48 @@ public class AutoAnchor extends Module {
             error("An error occurred while deactivating the module: " + e.getMessage());
         }
     }
-    
-        private List<BlockPos> positions(PlayerEntity entity) {
-            return MathUtils.getSphere(entity.getBlockPos(), MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))
-            .stream()
-            .filter(pos -> {
-                Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
 
-                if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) return false;
+    private List<BlockPos> positions(PlayerEntity entity, BlockPos start) {
+        return MathUtils.getSphere(start, MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))
+                .stream()
+                .filter(pos -> {
+                    Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
 
-                selfDamage = DamageUtils.bedDamage(mc.player,vec);
-                targetDamage = DamageUtils.bedDamage(entity,vec);
+                    if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) return false;
 
-                if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
-                if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
-                damageValue = targetDamage;
-                selfDamageValue = selfDamage;
-                return true;
-                }
-                return false;
-            })
-            .findFirst()
-            .map(Collections::singletonList)
-            .orElse(Collections.emptyList());
-        }
+                    selfDamage = DamageUtils.bedDamage(mc.player,vec);
+                    targetDamage = DamageUtils.bedDamage(entity,vec);
 
-        private Vec3d predictMovement(PlayerEntity entity, int extrapolationTicks) {
-            return extrapolationUtils.predictEntityVe3d(entity, extrapolationTicks);
-        }
+                    if(!airPlace.get() && WorldUtils.isAir(pos.down(1))) return false;
+
+                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
+                        if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
+                        damageValue = targetDamage;
+                        selfDamageValue = selfDamage;
+                        return true;
+                    }
+                    return false;
+                })
+                .findFirst()
+                .map(Collections::singletonList)
+                .orElse(Collections.emptyList());
+    }
+
+    private Vec3d predictMovement(PlayerEntity entity, int extrapolationTicks) {
+        return extrapolationUtils.predictEntityVe3d(entity, extrapolationTicks);
+    }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
-        if (updateEat()) return;
+            if (updateEat()) return;
 
-        targetDamage = 0;
-        selfDamage = 0;
-        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-            executor = Executors.newSingleThreadExecutor();
-        }
-        executor.submit(() -> {
+            targetDamage = 0;
+            selfDamage = 0;
+            if (executor == null || executor.isShutdown() || executor.isTerminated()) {
+                executor = Executors.newSingleThreadExecutor();
+            }
+            executor.submit(() -> {
                 if (mc.world.getDimension().respawnAnchorWorks()) {
                     error("You are in the wrong dimension!");
                     return;
@@ -353,7 +357,7 @@ public class AutoAnchor extends Module {
                 if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
 
                 PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), range.get());
-                AnchorPos = positions(player);
+                AnchorPos = positions(player, predictMovement.get() ? BlockPos.ofFloored(predictMovement(player, extrapolationTicks.get())) : player.getBlockPos());
 
                 BestTarget = player;
 
@@ -413,7 +417,7 @@ public class AutoAnchor extends Module {
         }
     }
 
-    
+
     private boolean updateEat() {
         return pauseUse.get() && mc.player.isUsingItem();
     }
@@ -427,17 +431,14 @@ public class AutoAnchor extends Module {
                 }
 
                 if (renderExtrapolation.get() && predictMovement.get()) {
-                    event.renderer.box(extrapolationUtils.predictEntityBox(BestTarget, extrapolationTicks.get(), true),
-                            sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    WireframeEntityRenderer.render(event, BestTarget, extrapolationTicks.get(), sideColor.get(), lineColor.get(), shapeMode.get());
                 }
 
                 switch (renderMode.get()) {
                     case normal ->
-                        event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                    case fading -> {
-                        RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0,
-                                rendertime.get(), true, false);
-                    }
+                            event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    case fading ->
+                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0,rendertime.get(), true, false);
                     case smooth -> {
                         if (renderBoxOne == null) {
                             renderBoxOne = new Box(pos);

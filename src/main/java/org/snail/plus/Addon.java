@@ -46,7 +46,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new FOV());
         Modules.get().add(new discordRPC());
         Modules.get().add(new AutoAnchor());
-        Modules.get().add(new XPautomation());
+        Modules.get().add(new autoXP());
         Modules.get().add(new webAura());
         Modules.get().add(new antiAim());
         Modules.get().add(new SelfAnvil());

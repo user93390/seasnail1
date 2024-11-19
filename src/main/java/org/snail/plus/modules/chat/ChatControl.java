@@ -1,14 +1,19 @@
 package org.snail.plus.modules.chat;
 
+import org.snail.plus.Addon;
+
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.StringSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import org.snail.plus.Addon;
 
 public class ChatControl extends Module {
 
@@ -22,7 +27,7 @@ public class ChatControl extends Module {
             .build());
 
     public final Setting<SettingColor> color = sgClient.add(new ColorSetting.Builder()
-            .name("color")
+            .name("prefix color")
             .description("The color of the prefix.")
             .build());
 
@@ -33,7 +38,7 @@ public class ChatControl extends Module {
             .build());
 
     private final Setting<Boolean> prefix = sgChat.add(new BoolSetting.Builder()
-            .name("prefix")
+            .name("chat prefix")
             .description("Adds a prefix to your chat messages.")
             .defaultValue(true)
             .build());

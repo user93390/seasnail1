@@ -19,6 +19,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
@@ -220,7 +221,7 @@ public class webAura extends Module {
         lock.lock();
         try {
             if (predictMovement.get()) {
-               // pos = Collections.singletonList(BlockPos.ofFloored(extrapolationUtils.predictEntityPos(entity, selfExtrapolateTicks.get())));
+                pos = Collections.singletonList(BlockPos.ofFloored(extrapolationUtils.predictEntityVe3d(entity, selfExtrapolateTicks.get())));
                 Box box = new Box(pos.getFirst());
                 List<VoxelShape> count = new ArrayList<>();
                 mc.world.getBlockCollisions(entity, box).forEach(count::add);
@@ -253,7 +254,7 @@ public class webAura extends Module {
                 for (BlockPos blockPos : positions) {
                     if(CombatUtils.isBurrowed(entity)) continue;
                     placed = !WorldUtils.isAir(blockPos);
-                    if (blockPos == null) continue;
+
                     if (WorldUtils.isAir(blockPos.down(1)) && !airPlace.get()) continue;
 
                     placeWeb(blockPos);
@@ -299,15 +300,7 @@ public class webAura extends Module {
                 for (BlockPos pos : positions(player)) {
                     if (player == mc.player || player.isDead() || Friends.get().isFriend(player)) continue;
                     if (predictMovement.get() && renderExtrapolation.get()) {
-                        Vec3d extrapolatedPos = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-                        Box playerBox = new Box(
-                                extrapolatedPos.x - player.getWidth() / 2,
-                                extrapolatedPos.y,
-                                extrapolatedPos.z - player.getWidth() / 2,
-                                extrapolatedPos.x + player.getWidth() / 2,
-                                extrapolatedPos.y + player.getHeight(),
-                                extrapolatedPos.z + player.getWidth() / 2
-                        );
+                        Box playerBox = getBox(player, pos);
                         event.renderer.box(playerBox, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
                     }
 
@@ -346,6 +339,18 @@ public class webAura extends Module {
         } catch (Exception e) {
             Addon.LOG.error(List.of(e.getStackTrace()).toString());
         }
+    }
+
+    private static @NotNull Box getBox(PlayerEntity player, BlockPos pos) {
+        Vec3d extrapolatedPos = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+        return  new Box(
+                extrapolatedPos.x - player.getWidth() / 2,
+                extrapolatedPos.y,
+                extrapolatedPos.z - player.getWidth() / 2,
+                extrapolatedPos.x + player.getWidth() / 2,
+                extrapolatedPos.y + player.getHeight(),
+                extrapolatedPos.z + player.getWidth() / 2
+        );
     }
 
     public enum renderMode {

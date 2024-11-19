@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "snailplus",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "name": "snail++",
   "description": "meteor client addon",
   "authors": [

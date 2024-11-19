@@ -41,23 +41,10 @@ public class VisualRange extends Module {
             .visible(() -> entities.get().contains(EntityType.PLAYER))
             .build());
 
-    private final Setting<Boolean> ignoreInvalid = sgVisualRange.add(new BoolSetting.Builder()
-            .name("ignore-invalid")
-            .description("Ignores invalid players. (bots)")
-            .defaultValue(true)
-            .visible(() -> entities.get().contains(EntityType.PLAYER))
-            .build());
-
     private final Setting<Integer> maxAmount = sgVisualRange.add(new IntSetting.Builder()
             .name("max-amount")
             .description("The cap of how many players the visual range notifies.")
             .defaultValue(3)
-            .build());
-
-    private final Setting<Boolean> ignoreFriends = sgVisualRange.add(new BoolSetting.Builder()
-            .name("ignore-friends")
-            .description("Ignores friends.")
-            .defaultValue(true)
             .build());
 
     private final Setting<List<SoundEvent>> sounds = sgVisualRange.add(new SoundEventListSetting.Builder()
@@ -66,7 +53,6 @@ public class VisualRange extends Module {
             .build());
 
     private List<Entity> players;
-    private int viewDistance;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private Random random = new Random();
     public double x, y, z;
@@ -77,7 +63,6 @@ public class VisualRange extends Module {
     @Override
     public void onActivate() {
         players = new ArrayList<>();
-        viewDistance = mc.options.getViewDistance().getValue();
         if (executor.isShutdown() || executor.isTerminated()) {
             executor = Executors.newSingleThreadExecutor();
         }
@@ -99,9 +84,7 @@ public class VisualRange extends Module {
             if (EntityUtils.isInRenderDistance(entity)) {
                 if (entities.get().contains(entity.getType()) && !players.contains(entity)) {
                     if (checkUuid.get() && entity.getUuid() != null) {
-                        PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(entity.getUuid());
-                        if (!ignoreInvalid.get() && (playerListEntry == null || playerListEntry.getLatency() < 1)) continue;
-                        if(players.size() < maxAmount.get() && !ignoreFriends.get() || !ignoreFriends.get() && !Friends.get().isFriend((PlayerEntity) entity)) {
+                        if(players.size() < maxAmount.get()) {
                             players.add(entity);
                              x = Math.round(entity.getX());
                              y = Math.round(entity.getY());
@@ -115,8 +98,6 @@ public class VisualRange extends Module {
                 }
             } else {
                 if (checkUuid.get() && entity.getUuid() != null) {
-                    PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(entity.getUuid());
-                    if (!ignoreInvalid.get() && (playerListEntry == null || playerListEntry.getLatency() < 1)) continue;
                     double x = Math.round(entity.getX());
                     double y = Math.round(entity.getY());
                     double z = Math.round(entity.getZ());
