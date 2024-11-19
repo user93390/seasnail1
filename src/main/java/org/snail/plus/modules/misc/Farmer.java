@@ -145,5 +145,4 @@ public class Farmer extends Module {
             event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
         }
     }
-
 }

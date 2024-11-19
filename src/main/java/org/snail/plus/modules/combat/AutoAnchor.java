@@ -50,7 +50,6 @@ import net.minecraft.util.math.Vec3d;
  * @author seasnail1
  */
 public class AutoAnchor extends Module {
-
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacement = settings.createGroup("Placement");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
@@ -111,29 +110,34 @@ public class AutoAnchor extends Module {
             .defaultValue(1.0)
             .sliderRange(0.1, 10.0)
             .build());
+
     private final Setting<swapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<swapUtils.swapMode>()
             .name("swap mode")
             .description("The mode used for swapping items when placing anchors.")
             .defaultValue(swapUtils.swapMode.Inventory)
             .build());
+
     private final Setting<Double> maxSelfDamage = sgDamage.add(new DoubleSetting.Builder()
             .name("max self damage")
             .description("The maximum amount of damage you can take from your own anchors.")
             .defaultValue(3.0)
             .sliderRange(0.0, 36.0)
             .build());
+
     private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder()
             .name("min damage")
             .description("The minimum amount of damage that should be dealt to the target.")
             .defaultValue(3.0)
             .sliderRange(0.0, 36.0)
             .build());
+
     private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
             .name("pause health")
             .description("Pauses the module when your health is below this value.")
             .defaultValue(0.0)
             .sliderRange(0.0, 36.0)
             .build());
+
     private final Setting<Boolean> strictDirection = sgAntiCheat.add(new BoolSetting.Builder()
             .name("strict direction")
             .description("Only places anchors in the direction you are facing.")

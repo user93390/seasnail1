@@ -134,6 +134,6 @@ public class autoXP extends Module {
 
     private boolean isArmorFullDurability() {
         return StreamSupport.stream(Objects.requireNonNull(mc.player).getArmorItems().spliterator(), false)
-                .allMatch(itemStack -> itemStack.getDamage() == 0 || itemStack.getDamage() / itemStack.getMaxDamage() > armorDurabilityThreshold.get());
+                .allMatch(itemStack -> itemStack.getDamage() == 0 || (double) itemStack.getDamage() / itemStack.getMaxDamage() > armorDurabilityThreshold.get());
     }
 }

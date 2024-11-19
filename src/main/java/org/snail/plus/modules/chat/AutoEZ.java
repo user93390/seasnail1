@@ -69,12 +69,12 @@ public class AutoEZ extends Module {
         String msg = messages.get(new Random().nextInt(messages.size()))
                 .replace("{victim}", WorldUtils.getName(player))
                 .replace("{coords}", WorldUtils.getCoords(player));
-        sendMsg(msg, dm.get());
+        sendMsg(msg, dm.get(), player);
     }
 
-    private void sendMsg(String msg, boolean dm) {
+    private void sendMsg(String msg, boolean dm, PlayerEntity player) {
         if (dm) {
-            ChatUtils.sendPlayerMsg("/msg " + WorldUtils.getName(mc.player) + " " + msg);
+            ChatUtils.sendPlayerMsg("/msg " + WorldUtils.getName(player) + " " + msg);
         } else {
             mc.player.networkHandler.sendChatMessage(msg);
         }
