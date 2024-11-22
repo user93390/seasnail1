@@ -1,12 +1,5 @@
 package org.snail.plus.modules.chat;
 
-import java.util.List;
-import java.util.Random;
-
-import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.WorldUtils;
-
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -16,6 +9,12 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.CombatUtils;
+import org.snail.plus.utils.WorldUtils;
+
+import java.util.List;
+import java.util.Random;
 
 public class AutoEZ extends Module {
 
@@ -36,7 +35,7 @@ public class AutoEZ extends Module {
     private boolean sent = false;
 
     public AutoEZ() {
-        super(Addon.Snail, "Auto EZ+", "Sends a message when a player dies");
+        super(Addon.Snail, "Auto EZ+", "sends a custom message when a player you've killed dies");
     }
 
     @Override

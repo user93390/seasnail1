@@ -75,7 +75,7 @@ public class autoXP extends Module {
     private long lastUseTime = 0;
 
     public autoXP() {
-        super(Addon.Snail, "Auto-XP+", "Better auto-XP");
+        super(Addon.Snail, "Auto-XP+", "Automatically interacts with xp bottles to repair armour");
     }
 
     @Override

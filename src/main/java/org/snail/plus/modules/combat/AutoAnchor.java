@@ -1,35 +1,12 @@
 package org.snail.plus.modules.combat;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.locks.ReentrantLock;
-
-import meteordevelopment.meteorclient.utils.render.WireframeEntityRenderer;
-import net.minecraft.entity.Entity;
-import org.joml.Vector3d;
-import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.MathUtils;
-import org.snail.plus.utils.WorldUtils;
-import org.snail.plus.utils.extrapolationUtils;
-import org.snail.plus.utils.swapUtils;
-
 import meteordevelopment.meteorclient.events.render.Render2DEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IBox;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.renderer.text.TextRenderer;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.EnumSetting;
-import meteordevelopment.meteorclient.settings.IntSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
@@ -38,6 +15,7 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.NametagUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.WireframeEntityRenderer;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
@@ -45,6 +23,16 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Vector3d;
+import org.snail.plus.Addon;
+import org.snail.plus.utils.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author seasnail1
@@ -274,7 +262,7 @@ public class AutoAnchor extends Module {
     private PlayerEntity BestTarget;
 
     public AutoAnchor() {
-        super(Addon.Snail, "Anchor Aura+", "places and breaks respawn anchors around players");
+        super(Addon.Snail, "Anchor Aura+", "blows up respawn anchors to damage enemies");
     }
 
     @Override
@@ -318,15 +306,18 @@ public class AutoAnchor extends Module {
                 .filter(pos -> {
                     Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
 
+                    //Anti-cheat checks
                     if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) return false;
+                    if (rayCast.get() && MathUtils.rayCast(new Vec3d(pos.getX(), pos.getY(), pos.getZ()))) return false;
 
-                    selfDamage = DamageUtils.bedDamage(mc.player,vec);
-                    targetDamage = DamageUtils.bedDamage(entity,vec);
+                    selfDamage = DamageUtils.bedDamage(mc.player, vec);
+                    targetDamage = DamageUtils.bedDamage(entity, vec);
 
-                    if(!airPlace.get() && WorldUtils.isAir(pos.down(1))) return false;
+                    if (!airPlace.get() && WorldUtils.isAir(pos.down(1))) return false;
 
-                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos) && WorldUtils.isAir(pos)) {
-                        if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
+                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos, true) && WorldUtils.isAir(pos)) {
+                        if (debugCalculations.get())
+                            info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
                         damageValue = targetDamage;
                         selfDamageValue = selfDamage;
                         return true;
@@ -346,7 +337,6 @@ public class AutoAnchor extends Module {
     private void onTick(TickEvent.Post event) {
         try {
             if (updateEat()) return;
-
             targetDamage = 0;
             selfDamage = 0;
             if (executor == null || executor.isShutdown() || executor.isTerminated()) {
@@ -400,14 +390,6 @@ public class AutoAnchor extends Module {
             }
 
             for (BlockPos pos : AnchorPos) {
-                if (rayCast.get() && MathUtils.rayCast(new Vec3d(pos.getX(), pos.getY(), pos.getZ()))) {
-                    continue;
-                }
-                if (rayCast.get()) {
-                    MathUtils.rayCast(new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
-                    MathUtils.updateRotation(rotationSteps.get());
-                }
-
                 if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), true, swap.get(), rotate.get());
@@ -439,10 +421,9 @@ public class AutoAnchor extends Module {
                 }
 
                 switch (renderMode.get()) {
-                    case normal ->
-                            event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                     case fading ->
-                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0,rendertime.get(), true, false);
+                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
                     case smooth -> {
                         if (renderBoxOne == null) {
                             renderBoxOne = new Box(pos);

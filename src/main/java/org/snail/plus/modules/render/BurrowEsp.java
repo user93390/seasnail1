@@ -75,7 +75,7 @@ public class BurrowEsp extends Module {
     private final List<PlayerEntity> burrowedPlayers = new ArrayList<>();
 
     public BurrowEsp() {
-        super(Addon.Snail, "Burrow ESP", "Highlights burrowed players.");
+        super(Addon.Snail, "Burrow ESP", "Highlights players that are in burrows (inside blocks)");
     }
 
     @Override

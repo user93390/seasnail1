@@ -1,5 +1,7 @@
 package org.snail.plus.utils;
 
+import net.minecraft.entity.player.PlayerEntity;
+
 public class PlayerMovement {
     public double x;
     public double y;

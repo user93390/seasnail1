@@ -2,14 +2,11 @@ package org.snail.plus.modules.chat;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
@@ -20,8 +17,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class VisualRange extends Module {
 
@@ -51,13 +46,13 @@ public class VisualRange extends Module {
             .name("sounds")
             .description("Sounds to play when a player is spotted")
             .build());
-
+    public double x, y, z;
     private List<Entity> players;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-    private Random random = new Random();
-    public double x, y, z;
+    private final Random random = new Random();
+
     public VisualRange() {
-        super(Addon.Snail, "Visual Range", "Notifies you when a player is in your visual range.");
+        super(Addon.Snail, "Visual Range", "warns you when certain entities are within render distance");
     }
 
     @Override
@@ -84,11 +79,11 @@ public class VisualRange extends Module {
             if (EntityUtils.isInRenderDistance(entity)) {
                 if (entities.get().contains(entity.getType()) && !players.contains(entity)) {
                     if (checkUuid.get() && entity.getUuid() != null) {
-                        if(players.size() < maxAmount.get()) {
+                        if (players.size() < maxAmount.get()) {
                             players.add(entity);
-                             x = Math.round(entity.getX());
-                             y = Math.round(entity.getY());
-                             z = Math.round(entity.getZ());
+                            x = Math.round(entity.getX());
+                            y = Math.round(entity.getY());
+                            z = Math.round(entity.getZ());
                             if (!soundList.isEmpty()) {
                                 WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
                             }

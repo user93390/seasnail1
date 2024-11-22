@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static net.minecraft.block.Blocks.FARMLAND;
+
 public class Farmer extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -43,6 +45,13 @@ public class Farmer extends Module {
             .name("harvest")
             .description("Automatically harvests crops.")
             .defaultValue(true)
+            .build());
+
+    private final Setting<Boolean> replant = sgGeneral.add(new BoolSetting.Builder()
+            .name("replant")
+            .description("Automatically replants crops.")
+            .defaultValue(true)
+            .visible(harvest::get)
             .build());
 
     private final Setting<Integer> minAge = sgGeneral.add(new IntSetting.Builder()
@@ -74,7 +83,7 @@ public class Farmer extends Module {
     private List<BlockPos> cropsList = new ArrayList<>();
 
     public Farmer() {
-        super(Addon.Snail, "Auto farmer", "Automatically harvests and replants crops.");
+        super(Addon.Snail, "Auto farmer", "Automatically breaks crop blocks");
     }
 
     @Override
@@ -116,8 +125,7 @@ public class Farmer extends Module {
     private void onTick(TickEvent.Post event) {
         executor.submit(() -> {
             for (BlockPos pos : findCrops(mc.player.getBlockPos())) {
-                if (pos.isWithinDistance(mc.player.getPos(), range.get()))
-                    cropsList.add(pos);
+                if (pos.isWithinDistance(mc.player.getPos(), range.get())) cropsList.add(pos);
 
                 FindItemResult tool = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof HoeItem);
 

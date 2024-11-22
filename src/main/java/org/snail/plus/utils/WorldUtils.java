@@ -27,31 +27,27 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class WorldUtils {
     public static boolean isAir(BlockPos position) {
-        return Objects.requireNonNull(mc.world).isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.FIRE;
+        return mc.world.isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.FIRE;
     }
 
     public static boolean isBreakable(BlockPos position) {
-        return Objects.requireNonNull(mc.world).isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK || mc.world.getBlockState(position).getBlock() == Blocks.BARRIER;
+        return mc.world.isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK || mc.world.getBlockState(position).getBlock() == Blocks.BARRIER;
     }
 
     public static boolean strictDirection(BlockPos position, DirectionMode Direction) {
         return switch (Direction) {
-            case Down, Up -> Objects.requireNonNull(mc.player).getEyePos().y <= position.getY() + 0.5;
-            case North, West -> Objects.requireNonNull(mc.player).getZ() < position.getZ();
-            case East, South -> Objects.requireNonNull(mc.player).getX() >= position.getX() + 1;
+            case Down, Up -> mc.player.getEyePos().y <= position.getY() + 0.5;
+            case North, West -> mc.player.getZ() < position.getZ();
+            case East, South -> mc.player.getX() >= position.getX() + 1;
         };
     }
 
-    public static boolean hitBoxCheck(BlockPos pos) {
-        return !EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity));
+    public static boolean hitBoxCheck(BlockPos pos, boolean ignoreItem) {
+        return !EntityUtils.intersectsWithEntity(new Box(pos), ignoreItem ? entity -> !(entity instanceof ItemEntity) : entity -> true);
     }
 
     public static List<AbstractClientPlayerEntity> getAllFriends() {
-        return mc.world.getPlayers().stream().filter(player -> Friends.get().isFriend(player)).toList();
-    }
-
-    public static List<AbstractClientPlayerEntity> getPlayers() {
-        return mc.world.getPlayers();
+        return mc.world.getPlayers().stream().filter(Friends.get()::isFriend).toList();
     }
 
     public static void playSound(SoundEvent sound, float pitch) {
@@ -70,45 +66,36 @@ public class WorldUtils {
         if (rotate) {
             Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
         }
+        Runnable placeAction = () -> {
+            if (!packet) {
+                BlockUtils.place(pos, item, rotate, 100, true);
+            } else {
+                mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), directionMode(directionMode), pos, false));
+            }
+            mc.player.swingHand(swingHand(hand));
+        };
+
         switch (Mode) {
             case Inventory -> {
                 swapUtils.pickSwitch(item.slot());
-                if (!packet) {
-                    BlockUtils.place(pos, item, rotate, 100, true);
-                } else {
-                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), directionMode(directionMode), pos, false));
-                }
+                placeAction.run();
                 swapUtils.pickSwapBack();
-                mc.player.swingHand(swingHand(hand));
             }
             case silent -> {
                 InvUtils.swap(item.slot(), true);
-                if (!packet) {
-                    BlockUtils.place(pos, item, rotate, 100, true);
-                } else {
-                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), directionMode(directionMode), pos, false));
-                }
+                placeAction.run();
                 InvUtils.swapBack();
-                mc.player.swingHand(swingHand(hand));
             }
             case normal -> {
                 InvUtils.swap(item.slot(), true);
-                if (!packet) {
-                    BlockUtils.place(pos, item, rotate, 100, true);
-                } else {
-                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), directionMode(directionMode), pos, false));
-                }
-                mc.player.swingHand(swingHand(hand));
+                placeAction.run();
             }
-
-            case none -> {
-                if (!packet) {
-                    BlockUtils.place(pos, item, rotate, 100, true);
-                } else {
-                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), directionMode(directionMode), pos, false));
-                }
-                mc.player.swingHand(swingHand(hand));
+            case Move -> {
+                swapUtils.moveSwitch(item.slot(), mc.player.getInventory().selectedSlot);
+                placeAction.run();
+                swapUtils.moveSwitch(mc.player.getInventory().selectedSlot, item.slot());
             }
+            case none -> placeAction.run();
             default -> throw new IllegalArgumentException("Unexpected value: " + Mode);
         }
     }
@@ -118,44 +105,35 @@ public class WorldUtils {
         if (rotate) {
             Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
         }
+        Runnable breakAction = () -> {
+            if (!packet) {
+                BlockUtils.breakBlock(pos, false);
+            } else {
+                if (!instant) {
+                    mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, directionMode(directionMode)));
+                }
+                mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, directionMode(directionMode)));
+            }
+            mc.player.swingHand(swingHand(hand));
+        };
+
         switch (Mode) {
             case Inventory -> {
                 swapUtils.pickSwitch(item.slot());
-                if (!packet) {
-                    BlockUtils.breakBlock(pos, false);
-                } else {
-                    if (!instant) {
-                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, directionMode(directionMode)));
-                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, directionMode(directionMode)));
-                    } else {
-                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, directionMode(directionMode)));
-                    }
-                }
+                breakAction.run();
                 swapUtils.pickSwapBack();
-                mc.player.swingHand(swingHand(hand));
             }
             case silent -> {
                 InvUtils.swap(item.slot(), true);
-                if (!packet) {
-                    BlockUtils.breakBlock(pos, false);
-                } else {
-                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), directionMode(directionMode), pos, false));
-                }
+                breakAction.run();
                 InvUtils.swapBack();
-                mc.player.swingHand(swingHand(hand));
             }
             case normal -> {
                 InvUtils.swap(item.slot(), false);
-                if (!packet) {
-                    BlockUtils.breakBlock(pos, false);
-                } else {
-                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), directionMode(directionMode), pos, false));
-                }
-                mc.player.swingHand(swingHand(hand));
+                breakAction.run();
             }
         }
     }
-
 
     public static Hand swingHand(HandMode Mode) {
         return switch (Mode) {

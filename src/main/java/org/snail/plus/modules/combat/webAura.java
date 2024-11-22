@@ -189,7 +189,7 @@ public class webAura extends Module {
     private long lastUpdateTime;
 
     public webAura() {
-        super(Addon.Snail, "web Aura+", "uses webs to slow down enemies");
+        super(Addon.Snail, "web Aura+", "Places cobwebs at players feet to slow them down");
     }
 
     @Override
@@ -220,6 +220,7 @@ public class webAura extends Module {
     protected List<BlockPos> positions(PlayerEntity entity) {
         lock.lock();
         try {
+
             if (predictMovement.get()) {
                 pos = Collections.singletonList(BlockPos.ofFloored(extrapolationUtils.predictEntityVe3d(entity, selfExtrapolateTicks.get())));
                 Box box = new Box(pos.getFirst());
@@ -254,8 +255,6 @@ public class webAura extends Module {
                 for (BlockPos blockPos : positions) {
                     if(CombatUtils.isBurrowed(entity)) continue;
                     placed = !WorldUtils.isAir(blockPos);
-
-                    if (WorldUtils.isAir(blockPos.down(1)) && !airPlace.get()) continue;
 
                     placeWeb(blockPos);
 

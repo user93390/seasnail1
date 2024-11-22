@@ -2,20 +2,21 @@ package org.snail.plus.mixins;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
-import meteordevelopment.meteorclient.gui.GuiThemes;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
-import meteordevelopment.meteorclient.gui.widgets.containers.WContainer;
 import meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList;
 import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.player.FakePlayer;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.Direction;
 import org.snail.plus.utils.PlayerMovement;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,6 +41,8 @@ public class FakePlayerMixin {
     private final List<PlayerMovement> recordedMovements = new ArrayList<>();
     @Unique
     private Setting<Boolean> loop = null;
+
+
     @Unique
     private boolean recording = false;
     @Unique
@@ -56,7 +59,6 @@ public class FakePlayerMixin {
                 .build());
     }
 
-
     @Inject(method = "getWidget", at = @At("RETURN"), cancellable = true, remap = false)
     private void onGetWidget(GuiTheme theme, CallbackInfoReturnable<WWidget> info) {
         WVerticalList button = theme.verticalList();
@@ -66,7 +68,10 @@ public class FakePlayerMixin {
         WButton stop = wHorizontalList.add(theme.button("Stop Recording")).widget();
         WButton play = wHorizontalList.add(theme.button("Play Recording")).widget();
 
-        start.action = this::startRecording;
+        start.action = () -> {
+            stopRecording();
+            startRecording();
+        };
         stop.action = this::stopRecording;
         play.action = this::startLooping;
 
@@ -89,8 +94,7 @@ public class FakePlayerMixin {
                     if (looping && !recordedMovements.isEmpty()) {
                         PlayerMovement movement = recordedMovements.get(loopIndex);
                         FakePlayer.updatePosition(movement.x, movement.y, movement.z);
-                        FakePlayer.setYaw(movement.yaw);
-                        FakePlayer.setPitch(movement.pitch);
+                        FakePlayer.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
                         loopIndex = (loopIndex + 1) % recordedMovements.size();
                         if (loopIndex == 0) {
                             if (loop.get()) {
@@ -103,7 +107,7 @@ public class FakePlayerMixin {
                 }
             }
         }
-   }
+    }
 
     @Unique
     public void startRecording() {

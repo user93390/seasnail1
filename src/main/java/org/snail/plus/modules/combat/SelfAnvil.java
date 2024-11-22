@@ -8,17 +8,12 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
@@ -27,16 +22,19 @@ import org.snail.plus.utils.swapUtils;
 public class SelfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
+
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
             .name("rotate")
             .description("Automatically rotates towards the position where the anvil is placed.")
             .defaultValue(true)
             .build());
+
     private final Setting<Boolean> support = sgGeneral.add(new BoolSetting.Builder()
             .name("support")
             .description("Places support blocks (recommended)")
             .defaultValue(true)
             .build());
+
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
             .name("delay")
             .description("Delay in seconds between each block placement.")
@@ -44,26 +42,31 @@ public class SelfAnvil extends Module {
             .min(0)
             .sliderMax(5)
             .build());
+
     private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
             .name("auto-disable")
             .description("Disables the module when you have placed the anvil.")
             .defaultValue(true)
             .build());
+
     private final Setting<Boolean> autoCenter = sgGeneral.add(new BoolSetting.Builder()
             .name("auto center")
             .description("centers you when placing the anvil")
             .defaultValue(true)
             .build());
+
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side color")
             .description("Side color")
             .defaultValue(new SettingColor(255, 0, 0, 75))
             .build());
+
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("line color")
             .description("Line color")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
+
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape-mode")
             .description("How the shapes are rendered.")
@@ -72,7 +75,7 @@ public class SelfAnvil extends Module {
     private long lastPlaceTime = 0;
 
     public SelfAnvil() {
-        super(Addon.Snail, "Self Anvil+", "Places an anvil in the air to burrow yourself.");
+        super(Addon.Snail, "Self Anvil+", "Places an anvil on the top of your head to burrow yourself.");
     }
 
     @EventHandler
@@ -111,7 +114,7 @@ public class SelfAnvil extends Module {
     }
 
     @EventHandler
-    public void AnvilRender(Render3DEvent event) {
+    public void onRender(Render3DEvent event) {
         if (mc.player == null || mc.world == null) return;
         BlockPos pos = mc.player.getBlockPos().up(2);
         if (pos != null) {

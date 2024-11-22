@@ -64,10 +64,6 @@ public class CombatUtils {
         return isValidBlock(blockPos.north()) && isValidBlock(blockPos.south()) && isValidBlock(blockPos.east()) && isValidBlock(blockPos.west());
     }
 
-    public static boolean isInDanger() {
-        return mc.player.getRecentDamageSource() != null;
-    }
-
     public enum filterMode {
         Closet,
         Furthest,
