@@ -2,6 +2,7 @@ package org.snail.plus.utils;
 
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -21,7 +22,6 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
-import java.util.Objects;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -30,8 +30,8 @@ public class WorldUtils {
         return mc.world.isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.FIRE;
     }
 
-    public static boolean isBreakable(BlockPos position) {
-        return mc.world.isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK || mc.world.getBlockState(position).getBlock() == Blocks.BARRIER;
+    public static List<AbstractClientPlayerEntity> getPlayers() {
+        return mc.world.getPlayers();
     }
 
     public static boolean strictDirection(BlockPos position, DirectionMode Direction) {
@@ -93,7 +93,7 @@ public class WorldUtils {
             case Move -> {
                 swapUtils.moveSwitch(item.slot(), mc.player.getInventory().selectedSlot);
                 placeAction.run();
-                swapUtils.moveSwitch(mc.player.getInventory().selectedSlot, item.slot());
+                swapUtils.moveSwitch(item.slot(), mc.player.getInventory().selectedSlot);
             }
             case none -> placeAction.run();
             default -> throw new IllegalArgumentException("Unexpected value: " + Mode);

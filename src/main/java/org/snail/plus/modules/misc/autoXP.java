@@ -14,6 +14,8 @@ import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.StreamSupport;
 
 public class autoXP extends Module {
@@ -70,9 +72,26 @@ public class autoXP extends Module {
             .sliderRange(0.0, 1.0)
             .build());
 
+     private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
+            .name("auto-disable")
+            .description("Automatically disables the module full armour durability.")
+            .defaultValue(true)
+            .build());
+
     private int slot = -1;
     private FindItemResult item;
-    private long lastUseTime = 0;
+    private long lastUseTime = 0;;
+
+    private final Runnable reset = () -> {
+        slot = -1;
+        item = null;
+        lastUseTime = 0;
+    };
+
+    private final Runnable interact = () -> {
+        Rotations.rotate(mc.player.getYaw(), Rotations.getPitch(mc.player.getBlockPos().down(1)), this::interact);
+        mc.player.swingHand(WorldUtils.swingHand(handSwing.get()));
+    };
 
     public autoXP() {
         super(Addon.Snail, "Auto-XP+", "Automatically interacts with xp bottles to repair armour");
@@ -80,35 +99,37 @@ public class autoXP extends Module {
 
     @Override
     public void onActivate() {
-        slot = -1;
+        reset.run();
     }
 
     @Override
     public void onDeactivate() {
-        slot = -1;
+        reset.run();
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (isArmorFullDurability()) return;
+        mc.executeTask(() -> {
+            if (autoDisable.get() && isArmorFullDurability()) {
+                toggle();
+                return;
+            }
+            if (isArmorFullDurability() || mc.player.getHealth() <= pauseHealth.get()) return;
 
-        if (mc.player.getHealth() <= pauseHealth.get()) return;
+            item = InvUtils.find(Items.EXPERIENCE_BOTTLE);
+            if (!item.found() || item.count() < minXPBottles.get()) {
+                error("Not enough XP bottles in inventory");
+                toggle();
+                return;
+            }
 
-        item = InvUtils.find(Items.EXPERIENCE_BOTTLE);
-        if (!item.found() || item.count() < minXPBottles.get()) {
-            error("Not enough XP bottles in inventory");
-            toggle();
-            return;
-        }
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastUseTime < cooldownTime.get() * 50) return;
 
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastUseTime < cooldownTime.get() * 50) return;
-
-        slot = item.slot();
-        Rotations.rotate(mc.player.getYaw(), Rotations.getPitch(mc.player.getBlockPos().down(1)), this::interact);
-        mc.player.swingHand(WorldUtils.swingHand(handSwing.get()));
-
-        lastUseTime = currentTime;
+            slot = item.slot();
+            interact.run();
+            lastUseTime = currentTime;
+        });
     }
 
     public void interact() {
@@ -128,6 +149,11 @@ public class autoXP extends Module {
                 InvUtils.move().from(slot).to(moveSlot.get());
                 InvUtils.swap(slot, false);
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+            }
+            case Move -> {
+                swapUtils.moveSwitch(slot, moveSlot.get());
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                swapUtils.moveSwitch(moveSlot.get(), slot);
             }
         }
     }

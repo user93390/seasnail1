@@ -1,8 +1,5 @@
 package org.snail.plus.utils;
 
-import java.util.List;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -10,11 +7,20 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static org.snail.plus.utils.WorldUtils.isAir;
 
 public class CombatUtils {
 
-    private static boolean isValidBlock(BlockPos pos) {
+    public static boolean isValidBlock(BlockPos pos) {
         Block block = mc.world.getBlockState(pos).getBlock();
         return block.equals(Blocks.OBSIDIAN) || block.equals(Blocks.BEDROCK) || block.equals(Blocks.REINFORCED_DEEPSLATE) || block.equals(Blocks.NETHERITE_BLOCK) || block.equals(Blocks.CRYING_OBSIDIAN) || block.equals(Blocks.ENDER_CHEST) || block.equals(Blocks.ANVIL);
     }
@@ -48,6 +54,8 @@ public class CombatUtils {
                         case Furthest -> Double.compare(distance2, distance1);
                         case LowestHealth -> Double.compare(health1, health2);
                         case HighestHealth -> Double.compare(health2, health1);
+                        case none -> 0;
+                        case null -> throw new IllegalStateException("Unexpected value");
                     };
                 }).orElse(null);
     }
@@ -64,10 +72,21 @@ public class CombatUtils {
         return isValidBlock(blockPos.north()) && isValidBlock(blockPos.south()) && isValidBlock(blockPos.east()) && isValidBlock(blockPos.west());
     }
 
+    public static List<BlockPos> getValidHole(BlockPos center, double radius) {
+        return MathUtils.getSphere(center, radius).stream()
+                .filter(pos -> isValidBlock(pos.down()) && isValidBlock(pos.north()) &&
+                        isValidBlock(pos.east()) && isValidBlock(pos.south()) &&
+                        isValidBlock(pos.west()) && isAir(pos))
+                .toList();
+    }
+
+
+
     public enum filterMode {
         Closet,
         Furthest,
         LowestHealth,
         HighestHealth,
+        none,
     }
 }
