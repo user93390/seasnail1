@@ -18,6 +18,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.StreamSupport;
 
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
 public class autoXP extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -30,7 +32,7 @@ public class autoXP extends Module {
 
     private final Setting<swapUtils.swapMode> autoSwitch = sgGeneral.add(new EnumSetting.Builder<swapUtils.swapMode>()
             .name("swap-mode")
-            .description("Swapping method")
+            .description("Swapping method. IGNORE MOVE")
             .defaultValue(swapUtils.swapMode.silent)
             .build());
 
@@ -38,9 +40,8 @@ public class autoXP extends Module {
             .name("slot")
             .description("the slot to move the xp to")
             .defaultValue(0)
-            .min(0)
-            .sliderMax(10)
-            .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal))
+            .sliderRange(0, 10)
+            .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal) || autoSwitch.get().equals(swapUtils.swapMode.Move))
             .build());
 
     private final Setting<WorldUtils.HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<WorldUtils.HandMode>()
@@ -109,7 +110,7 @@ public class autoXP extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        mc.executeTask(() -> {
+        mc.executeSync(() -> {
             if (autoDisable.get() && isArmorFullDurability()) {
                 toggle();
                 return;
@@ -146,14 +147,9 @@ public class autoXP extends Module {
                 swapUtils.pickSwapBack();
             }
             case normal -> {
-                InvUtils.move().from(slot).to(moveSlot.get());
+                InvUtils.move().from(slot).to(moveSlot.get() - 1);
                 InvUtils.swap(slot, false);
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-            }
-            case Move -> {
-                swapUtils.moveSwitch(slot, moveSlot.get());
-                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                swapUtils.moveSwitch(moveSlot.get(), slot);
             }
         }
     }

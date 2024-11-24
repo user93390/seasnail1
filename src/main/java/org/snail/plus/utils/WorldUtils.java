@@ -93,7 +93,7 @@ public class WorldUtils {
             case Move -> {
                 swapUtils.moveSwitch(item.slot(), mc.player.getInventory().selectedSlot);
                 placeAction.run();
-                swapUtils.moveSwitch(item.slot(), mc.player.getInventory().selectedSlot);
+                swapUtils.moveSwitch(mc.player.getInventory().selectedSlot, item.slot());
             }
             case none -> placeAction.run();
             default -> throw new IllegalArgumentException("Unexpected value: " + Mode);

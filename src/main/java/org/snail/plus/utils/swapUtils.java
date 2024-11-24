@@ -13,7 +13,6 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class swapUtils {
     public static int pickSlot = -1;
-    public static int moveSlot = -1;
 
     //credits to Blackout-client
     public static void pickSwitch(int slot) {
