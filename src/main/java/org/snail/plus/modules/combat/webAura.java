@@ -217,6 +217,13 @@ public class webAura extends Module {
                                 pos.getY() + 1, pos.getZ() + 1);
                     }
 
+                    if (renderBoxOne == null) {
+                        renderBoxOne = new Box(pos);
+                    }
+                    if (renderBoxTwo == null) {
+                        renderBoxTwo = new Box(pos);
+                    }
+
                     double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
                     double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
                     double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();

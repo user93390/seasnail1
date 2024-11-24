@@ -10,7 +10,6 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
 
 import java.util.List;
@@ -22,8 +21,8 @@ public class AutoEZ extends Module {
 
     private final Setting<List<String>> messageSetting = sgGeneral.add(new StringListSetting.Builder()
             .name("message")
-            .description("Custom message to send.")
-            .defaultValue("")
+            .description("Custom message to send. placeholders: %Entity%, %Coords%")
+            .defaultValue("ez %Entity%, coords: %Coords%", "gg %Entity%, coords: %Coords%")
             .build());
 
     private final Setting<Boolean> dm = sgGeneral.add(new BoolSetting.Builder()
@@ -32,7 +31,12 @@ public class AutoEZ extends Module {
             .defaultValue(true)
             .build());
 
-    private boolean sent = false;
+    Random random = new Random();
+    boolean sentMessage = false;
+    Runnable reset = () -> mc.execute(() -> {
+        sentMessage = false;
+        random = new Random();
+    });
 
     public AutoEZ() {
         super(Addon.Snail, "Auto EZ+", "sends a custom message when a player you've killed dies");
@@ -40,42 +44,37 @@ public class AutoEZ extends Module {
 
     @Override
     public void onActivate() {
-        sent = false;
+        reset.run();
     }
 
     @Override
     public void onDeactivate() {
-        sent = false;
+        reset.run();
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (sent) {
-            return;
-        }
-
-        for (PlayerEntity player : mc.world.getPlayers()) {
-            if (CombatUtils.getLastAttacker(player) == mc.player) {
-                sendEzMessage(player);
-                sent = true;
-                break;
+        mc.execute(() -> {
+            if (mc.player == null || mc.world == null) return;
+            for (PlayerEntity player : mc.world.getPlayers()) {
+                if ((player.isDead() && !player.equals(mc.player) && !sentMessage)) {
+                    sendMessages(List.of(player));
+                    sentMessage = true;
+                }
             }
-        }
+        });
     }
 
-    private void sendEzMessage(PlayerEntity player) {
-        List<String> messages = messageSetting.get();
-        String msg = messages.get(new Random().nextInt(messages.size()))
-                .replace("{victim}", WorldUtils.getName(player))
-                .replace("{coords}", WorldUtils.getCoords(player));
-        sendMsg(msg, dm.get(), player);
-    }
-
-    private void sendMsg(String msg, boolean dm, PlayerEntity player) {
-        if (dm) {
-            ChatUtils.sendPlayerMsg("/msg " + WorldUtils.getName(player) + " " + msg);
-        } else {
-            mc.player.networkHandler.sendChatMessage(msg);
+    private void sendMessages(List<PlayerEntity> entity) {
+        for (PlayerEntity player : entity) {
+            String message = messageSetting.get().get(random.nextInt(messageSetting.get().size()));
+            message = message.replace("%Entity%", player.getName().getString());
+            message = message.replace("%Coords%", WorldUtils.getCoords(player));
+            if (dm.get()) {
+                ChatUtils.sendPlayerMsg("/msg" + message);
+            } else {
+                ChatUtils.sendPlayerMsg(message);
+            }
         }
     }
 }

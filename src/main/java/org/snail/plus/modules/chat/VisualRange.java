@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
@@ -15,8 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class VisualRange extends Module {
 
@@ -39,7 +38,8 @@ public class VisualRange extends Module {
     private final Setting<Integer> maxAmount = sgVisualRange.add(new IntSetting.Builder()
             .name("max-amount")
             .description("The cap of how many players the visual range notifies.")
-            .defaultValue(3)
+            .defaultValue(20)
+            .sliderRange(1, 100)
             .build());
 
     private final Setting<List<SoundEvent>> sounds = sgVisualRange.add(new SoundEventListSetting.Builder()
@@ -47,9 +47,16 @@ public class VisualRange extends Module {
             .description("Sounds to play when a player is spotted")
             .build());
     public double x, y, z;
-    private List<Entity> players;
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final List<Entity> entitiesList = new ArrayList<>();
     private final Random random = new Random();
+
+
+    Runnable reset = () -> mc.execute(() -> {
+        entitiesList.clear();
+        x = 0;
+        y = 0;
+        z = 0;
+    });
 
     public VisualRange() {
         super(Addon.Snail, "Visual Range", "warns you when certain entities are within render distance");
@@ -57,52 +64,40 @@ public class VisualRange extends Module {
 
     @Override
     public void onActivate() {
-        players = new ArrayList<>();
-        if (executor.isShutdown() || executor.isTerminated()) {
-            executor = Executors.newSingleThreadExecutor();
-        }
+        reset.run();
     }
 
     @Override
     public void onDeactivate() {
-        players.clear();
-        if (executor != null) {
-            executor.shutdown();
-        }
+        reset.run();
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        List<SoundEvent> soundList = sounds.get();
-        for (Entity entity : mc.world.getEntities()) {
-            if (entity == mc.player) continue;
-            if (EntityUtils.isInRenderDistance(entity)) {
-                if (entities.get().contains(entity.getType()) && !players.contains(entity)) {
-                    if (checkUuid.get() && entity.getUuid() != null) {
-                        if (players.size() < maxAmount.get()) {
-                            players.add(entity);
-                            x = Math.round(entity.getX());
-                            y = Math.round(entity.getY());
-                            z = Math.round(entity.getZ());
-                            if (!soundList.isEmpty()) {
-                                WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
+        mc.execute(() -> {
+            if (mc.player == null || mc.world == null) return;
+            List<SoundEvent> soundList = sounds.get();
+            for (Entity entity : mc.world.getEntities()) {
+                if (entity == mc.player) continue;
+                if (EntityUtils.isInRenderDistance(entity)) {
+                    if (entities.get().contains(entity.getType()) && !entitiesList.contains(entity)) {
+                        if (checkUuid.get() && entity.getUuid() != null) {
+                            if (entitiesList.size() < maxAmount.get()) {
+                                if (!soundList.isEmpty()) {
+                                    WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
+                                }
+                                warning("Entity spotted %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                                entitiesList.add(entity);
                             }
-                            warning("Entity spotted %s", entity.getName().getString() + " at " + x + " " + y + " " + z);
                         }
                     }
-                }
-            } else {
-                if (checkUuid.get() && entity.getUuid() != null) {
-                    double x = Math.round(entity.getX());
-                    double y = Math.round(entity.getY());
-                    double z = Math.round(entity.getZ());
-                    warning("Entity left %s", entity.getName().getString() + " last known position was " + x + " " + y + " " + z);
-                    if (!soundList.isEmpty()) {
-                        WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
+                } else {
+                    if (entities.get().contains(entity.getType()) && entitiesList.contains(entity)) {
+                        warning("Entity left %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                        entitiesList.remove(entity);
                     }
-                    players.remove(entity);
                 }
             }
-        }
+        });
     }
 }

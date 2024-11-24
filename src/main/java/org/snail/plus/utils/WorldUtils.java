@@ -59,7 +59,7 @@ public class WorldUtils {
     }
 
     public static String getCoords(PlayerEntity player) {
-        return "%s, %s, %s".formatted(player.getX(), player.getY(), player.getZ());
+        return "%s, %s, %s".formatted(Math.round(player.getX()), Math.round(player.getY()), Math.round(player.getZ()));
     }
 
     public static void placeBlock(FindItemResult item, BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, swapUtils.swapMode Mode, boolean rotate) {
