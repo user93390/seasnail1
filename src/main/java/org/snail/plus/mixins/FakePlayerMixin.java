@@ -7,20 +7,17 @@ import meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList;
 import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.player.FakePlayer;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Direction;
 import org.snail.plus.utils.PlayerMovement;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -34,14 +31,12 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 @Mixin(FakePlayer.class)
 public class FakePlayerMixin {
-    @Final
-    private SettingGroup sgGeneral;
-
     @Unique
     private final List<PlayerMovement> recordedMovements = new ArrayList<>();
+    @Final
+    private SettingGroup sgGeneral;
     @Unique
     private Setting<Boolean> loop = null;
-
 
     @Unique
     private boolean recording = false;
@@ -67,11 +62,20 @@ public class FakePlayerMixin {
         WButton start = wHorizontalList.add(theme.button("Start Recording")).widget();
         WButton stop = wHorizontalList.add(theme.button("Stop Recording")).widget();
         WButton play = wHorizontalList.add(theme.button("Play Recording")).widget();
+        WButton clear = wHorizontalList.add(theme.button("Clear all recordings")).widget();
 
         start.action = () -> {
             stopRecording();
             startRecording();
+
         };
+
+        clear.action = () -> {
+            stopRecording();
+            recordedMovements.clear();
+            stopLooping();
+        };
+
         stop.action = this::stopRecording;
         play.action = this::startLooping;
 
@@ -85,27 +89,35 @@ public class FakePlayerMixin {
     @Unique
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
-            for(PlayerEntity FakePlayer : mc.world.getPlayers()) {
-                if (FakePlayer == fakePlayer) {
-                    if (recording) {
-                        recordedMovements.add(new PlayerMovement(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
-                    }
-                    if (looping && !recordedMovements.isEmpty()) {
-                        PlayerMovement movement = recordedMovements.get(loopIndex);
-                        FakePlayer.updatePosition(movement.x, movement.y, movement.z);
-                        FakePlayer.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
-                        loopIndex = (loopIndex + 1) % recordedMovements.size();
-                        if (loopIndex == 0) {
-                            if (loop.get()) {
-                                startLooping();
-                            } else {
-                                stopLooping();
+        synchronized (this) {
+            mc.execute(() -> {
+                try {
+                    for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
+                        for (PlayerEntity FakePlayer : mc.world.getPlayers()) {
+                            if (FakePlayer == fakePlayer) {
+                                if (recording) {
+                                    recordedMovements.add(new PlayerMovement(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
+                                }
+                                if (looping && !recordedMovements.isEmpty()) {
+                                    PlayerMovement movement = recordedMovements.get(loopIndex);
+                                    FakePlayer.updatePosition(movement.x, movement.y, movement.z);
+                                    FakePlayer.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
+                                    loopIndex = (loopIndex + 1) % recordedMovements.size();
+                                    if (loopIndex == 0) {
+                                        if (loop.get()) {
+                                            startLooping();
+                                        } else {
+                                            stopLooping();
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
+                } catch (Exception e) {
+                    ChatUtils.error("An error occurred while playing the recording.");
                 }
-            }
+            });
         }
     }
 

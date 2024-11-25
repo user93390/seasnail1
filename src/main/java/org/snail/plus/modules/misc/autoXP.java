@@ -9,7 +9,9 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import org.snail.plus.Addon;
+import org.snail.plus.utils.MathUtils;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
@@ -22,6 +24,14 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class autoXP extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
+
+    private final Setting<Double> pitch = sgGeneral.add(new DoubleSetting.Builder()
+            .name("pitch")
+            .description("Pitch to look at when using XP bottles.")
+            .defaultValue(-90.0)
+            .sliderRange(-90.0, 90.0)
+            .build());
 
     public final Setting<Double> pauseHealth = sgGeneral.add(new DoubleSetting.Builder()
             .name("pause-health")
@@ -41,13 +51,20 @@ public class autoXP extends Module {
             .description("the slot to move the xp to")
             .defaultValue(0)
             .sliderRange(0, 10)
-            .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal) || autoSwitch.get().equals(swapUtils.swapMode.Move))
+            .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal)
+                    || autoSwitch.get().equals(swapUtils.swapMode.Move))
             .build());
 
     private final Setting<WorldUtils.HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<WorldUtils.HandMode>()
             .name("swing")
             .description("Swing method")
             .defaultValue(WorldUtils.HandMode.MainHand)
+            .build());
+
+    private final Setting<Boolean> pauseUse = sgGeneral.add(new BoolSetting.Builder()
+            .name("pause-use")
+            .description("Pause using xp bottles when using other items.")
+            .defaultValue(false)
             .build());
 
     private final Setting<Integer> cooldownTime = sgGeneral.add(new IntSetting.Builder()
@@ -90,7 +107,7 @@ public class autoXP extends Module {
     };
 
     private final Runnable interact = () -> {
-        Rotations.rotate(mc.player.getYaw(), Rotations.getPitch(mc.player.getBlockPos().down(1)), this::interact);
+        interact();
         mc.player.swingHand(WorldUtils.swingHand(handSwing.get()));
     };
 
@@ -110,7 +127,8 @@ public class autoXP extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        mc.executeSync(() -> {
+            mc.executeSync(() -> {
+                if (pauseUse.get() && mc.player.isUsingItem()) return;
             if (autoDisable.get() && isArmorFullDurability()) {
                 toggle();
                 return;
@@ -128,7 +146,8 @@ public class autoXP extends Module {
             if (currentTime - lastUseTime < cooldownTime.get() * 50) return;
 
             slot = item.slot();
-            interact.run();
+                Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
+
             lastUseTime = currentTime;
         });
     }

@@ -50,7 +50,6 @@ public class VisualRange extends Module {
     private final List<Entity> entitiesList = new ArrayList<>();
     private final Random random = new Random();
 
-
     Runnable reset = () -> mc.execute(() -> {
         entitiesList.clear();
         x = 0;
@@ -83,9 +82,8 @@ public class VisualRange extends Module {
                     if (entities.get().contains(entity.getType()) && !entitiesList.contains(entity)) {
                         if (checkUuid.get() && entity.getUuid() != null) {
                             if (entitiesList.size() < maxAmount.get()) {
-                                if (!soundList.isEmpty()) {
-                                    WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
-                                }
+                                if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
+
                                 warning("Entity spotted %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
                                 entitiesList.add(entity);
                             }
@@ -93,6 +91,8 @@ public class VisualRange extends Module {
                     }
                 } else {
                     if (entities.get().contains(entity.getType()) && entitiesList.contains(entity)) {
+                        if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
+
                         warning("Entity left %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
                         entitiesList.remove(entity);
                     }

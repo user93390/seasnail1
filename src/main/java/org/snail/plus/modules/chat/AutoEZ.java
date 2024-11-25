@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.settings.StringListSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
@@ -39,7 +40,7 @@ public class AutoEZ extends Module {
     });
 
     public AutoEZ() {
-        super(Addon.Snail, "Auto EZ+", "sends a custom message when a player you've killed dies");
+        super(Addon.Snail, "Auto EZ+", "sends a custom message when a player dies");
     }
 
     @Override

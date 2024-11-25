@@ -90,14 +90,16 @@ public class BurrowEsp extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        synchronized (burrowedPlayers) {
-            burrowedPlayers.clear();
-            mc.world.getPlayers().stream()
-                    .filter(player -> !(ignoreFriends.get() && Friends.get().isFriend(player)))
-                    .filter(player -> CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get())
-                    .limit(performance.get() ? maxPlayers.get() : Long.MAX_VALUE)
-                    .forEach(burrowedPlayers::add);
-        }
+        mc.executeSync(() -> {
+            synchronized (this.burrowedPlayers) {
+                burrowedPlayers.clear();
+                mc.world.getPlayers().stream()
+                        .filter(player -> !(ignoreFriends.get() && Friends.get().isFriend(player)))
+                        .filter(player -> CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get())
+                        .limit(performance.get() ? maxPlayers.get() : Long.MAX_VALUE)
+                        .forEach(burrowedPlayers::add);
+            }
+        });
     }
 
     @EventHandler

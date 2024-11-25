@@ -23,6 +23,7 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.explosion.Explosion;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
@@ -121,6 +122,12 @@ public class AutoAnchor extends Module {
             .description("The minimum amount of damage that should be dealt to the target.")
             .defaultValue(10.5)
             .sliderRange(0.0, 36.0)
+            .build());
+
+    private final Setting<Boolean> strictDmg = sgDamage.add(new BoolSetting.Builder()
+            .name("strict damage")
+            .description("only place if the damage is exact. No exceptions.")
+            .defaultValue(false)
             .build());
 
     private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
@@ -310,6 +317,9 @@ public class AutoAnchor extends Module {
                     selfDamage = DamageUtils.bedDamage(mc.player, vec);
                     targetDamage = DamageUtils.bedDamage(entity, vec);
 
+                    //immediately return false if self dmg or target dmg is bad
+                    if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get()) return false;
+
                     if (!airPlace.get() && WorldUtils.isAir(pos.down(1))) return false;
 
                     if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos, true) && WorldUtils.isAir(pos)) {
@@ -329,38 +339,40 @@ public class AutoAnchor extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         resetDamageValues.run();
-        try {
-            mc.executeTask(() -> {
-                if (updateEat()) return;
-                targetDamage = 0;
-                selfDamage = 0;
-                if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-                    executor = Executors.newSingleThreadExecutor();
-                }
-                executor.submit(() -> {
-                    if (mc.world.getDimension().respawnAnchorWorks()) {
-                        error("You are in the wrong dimension!");
-                        return;
+        synchronized (this) {
+            try {
+                mc.executeSync(() -> {
+                    if (updateEat()) return;
+                    targetDamage = 0;
+                    selfDamage = 0;
+                    if (executor == null || executor.isShutdown() || executor.isTerminated()) {
+                        executor = Executors.newSingleThreadExecutor();
                     }
-                    long currentTime = System.currentTimeMillis();
-                    if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
+                    executor.submit(() -> {
+                        if (mc.world.getDimension().respawnAnchorWorks()) {
+                            error("You are in the wrong dimension!");
+                            return;
+                        }
+                        long currentTime = System.currentTimeMillis();
+                        if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
 
-                    PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), range.get());
-                    AnchorPos = positions(player, player.getBlockPos());
+                        PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), range.get());
+                        AnchorPos = positions(player, player.getBlockPos());
 
-                    BestTarget = player;
+                        BestTarget = player;
 
-                    lock.lock();
-                    try {
-                        doBreak.run();
-                    } finally {
-                        lock.unlock();
-                    }
-                    lastUpdateTime = currentTime;
+                        lock.lock();
+                        try {
+                            doBreak.run();
+                        } finally {
+                            lock.unlock();
+                        }
+                        lastUpdateTime = currentTime;
+                    });
                 });
-            });
-        } catch (Exception e) {
-            error("An error occurred while updating the module: " + e.getMessage());
+            } catch (Exception e) {
+                error("An error occurred while updating the module: " + e.getMessage());
+            }
         }
     }
 
