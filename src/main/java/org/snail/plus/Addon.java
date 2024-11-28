@@ -6,13 +6,12 @@ import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.systems.modules.render.HoleESP;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.tutorial.TutorialStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snail.plus.hud.*;
 
+import org.snail.plus.hud.*;
 import org.snail.plus.modules.chat.*;
 import org.snail.plus.modules.combat.*;
 import org.snail.plus.modules.misc.*;
@@ -22,7 +21,7 @@ public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
-    private final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final MinecraftClient mc = MinecraftClient.getInstance();
 
     @Override
     public void onInitialize() {
@@ -32,6 +31,7 @@ public class Addon extends MeteorAddon {
         mc.getTutorialManager().setStep(TutorialStep.NONE);
         mc.options.skipMultiplayerWarning = true;
         mc.options.advancedItemTooltips = true;
+        mc.options.getAutoJump().setValue(false);
         LOG.info("Snail++ loaded! Join the discord at " + "https://discord.gg/nh9pjVhsVb");
     }
 
@@ -53,6 +53,8 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new SelfAnvil());
         Modules.get().add(new ChatControl());
         Modules.get().add(new AutoEZ());
+        Modules.get().add(new AutoWither());
+        Modules.get().add(new autoReply());
         Hud.get().register(Watermark.INFO);
     }
 

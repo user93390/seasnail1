@@ -126,7 +126,7 @@ public class AutoAnchor extends Module {
 
     private final Setting<Boolean> strictDmg = sgDamage.add(new BoolSetting.Builder()
             .name("strict damage")
-            .description("only place if the damage is exact. No exceptions.")
+            .description("only place if the damage is exact or greater. No exceptions.")
             .defaultValue(false)
             .build());
 
@@ -409,90 +409,90 @@ public class AutoAnchor extends Module {
         return pauseUse.get() && mc.player.isUsingItem();
     }
 
-        @EventHandler
-        public void render(Render3DEvent event) {
-            try {
-                for (BlockPos pos : AnchorPos) {
-                    if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > range.get()) {
-                        continue;
-                    }
-
-                    if (renderOutline.get()) {
-                        WireframeEntityRenderer.render(event, BestTarget, 1, sideColor.get(), lineColor.get(), shapeMode.get());
-                    }
-
-                    switch (renderMode.get()) {
-                        case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                        case fading ->
-                                RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
-                        case smooth -> {
-                            if (renderBoxOne == null) {
-                                renderBoxOne = new Box(pos);
-                            }
-                            if (renderBoxTwo == null) {
-                                renderBoxTwo = new Box(pos);
-                            }
-
-                            if (renderBoxTwo instanceof IBox) {
-                                ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1,
-                                        pos.getY() + 1, pos.getZ() + 1);
-                            }
-
-                            double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
-                            double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
-                            double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
-
-                            ((IBox) renderBoxOne).set(
-                                    renderBoxOne.minX + offsetX,
-                                    renderBoxOne.minY + offsetY,
-                                    renderBoxOne.minZ + offsetZ,
-                                    renderBoxOne.maxX + offsetX,
-                                    renderBoxOne.maxY + offsetY,
-                                    renderBoxOne.maxZ + offsetZ);
-                            event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                error("An error occurred while rendering the anchor positions: " + e.getMessage());
-            }
-        }
-
-        @EventHandler
-        public void render2D(Render2DEvent event) {
+    @EventHandler
+    public void render(Render3DEvent event) {
+        try {
             for (BlockPos pos : AnchorPos) {
                 if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > range.get()) {
                     continue;
                 }
 
-                Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
-                if (renderMode.get() == RenderMode.smooth && renderBoxOne != null) {
-                    vec.set(renderBoxOne.minX + 0.5, renderBoxOne.minY + 0.5, renderBoxOne.minZ + 0.5);
-                } else {
-                    vec.set(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+                if (renderOutline.get()) {
+                    WireframeEntityRenderer.render(event, BestTarget, 1, sideColor.get(), lineColor.get(), shapeMode.get());
                 }
-                if (NametagUtils.to2D(vec, damageTextScale.get())) {
-                    NametagUtils.begin(vec);
-                    TextRenderer.get().begin(1, false, true);
 
-                    String text = String.format("%.1f / %.1f", damageValue, selfDamageValue);
-                    double w = TextRenderer.get().getWidth(text) / 2;
-                    TextRenderer.get().render(text, -w, 0, damageColor.get(), false);
+                switch (renderMode.get()) {
+                    case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    case fading ->
+                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
+                    case smooth -> {
+                        if (renderBoxOne == null) {
+                            renderBoxOne = new Box(pos);
+                        }
+                        if (renderBoxTwo == null) {
+                            renderBoxTwo = new Box(pos);
+                        }
 
-                    TextRenderer.get().end();
-                    NametagUtils.end();
+                        if (renderBoxTwo instanceof IBox) {
+                            ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1,
+                                    pos.getY() + 1, pos.getZ() + 1);
+                        }
+
+                        double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
+                        double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
+                        double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
+
+                        ((IBox) renderBoxOne).set(
+                                renderBoxOne.minX + offsetX,
+                                renderBoxOne.minY + offsetY,
+                                renderBoxOne.minZ + offsetZ,
+                                renderBoxOne.maxX + offsetX,
+                                renderBoxOne.maxY + offsetY,
+                                renderBoxOne.maxZ + offsetZ);
+                        event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    }
                 }
             }
-        }
-
-        @Override
-        public String getInfoString() {
-            return BestTarget != null ? BestTarget.getName().getString() : null;
-        }
-
-        public enum RenderMode {
-            fading,
-            normal,
-            smooth
+        } catch (Exception e) {
+            error("An error occurred while rendering the anchor positions: " + e.getMessage());
         }
     }
+
+    @EventHandler
+    public void render2D(Render2DEvent event) {
+        for (BlockPos pos : AnchorPos) {
+            if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > range.get()) {
+                continue;
+            }
+
+            Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
+            if (renderMode.get() == RenderMode.smooth && renderBoxOne != null) {
+                vec.set(renderBoxOne.minX + 0.5, renderBoxOne.minY + 0.5, renderBoxOne.minZ + 0.5);
+            } else {
+                vec.set(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            }
+            if (NametagUtils.to2D(vec, damageTextScale.get())) {
+                NametagUtils.begin(vec);
+                TextRenderer.get().begin(1, false, true);
+
+                String text = String.format("%.1f / %.1f", damageValue, selfDamageValue);
+                double w = TextRenderer.get().getWidth(text) / 2;
+                TextRenderer.get().render(text, -w, 0, damageColor.get(), false);
+
+                TextRenderer.get().end();
+                NametagUtils.end();
+            }
+        }
+    }
+
+    @Override
+    public String getInfoString() {
+        return BestTarget != null ? BestTarget.getName().getString() : null;
+    }
+
+    public enum RenderMode {
+        fading,
+        normal,
+        smooth
+    }
+}

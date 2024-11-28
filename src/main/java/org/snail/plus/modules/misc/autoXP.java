@@ -51,8 +51,7 @@ public class autoXP extends Module {
             .description("the slot to move the xp to")
             .defaultValue(0)
             .sliderRange(0, 10)
-            .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal)
-                    || autoSwitch.get().equals(swapUtils.swapMode.Move))
+            .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal))
             .build());
 
     private final Setting<WorldUtils.HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<WorldUtils.HandMode>()
@@ -146,7 +145,8 @@ public class autoXP extends Module {
             if (currentTime - lastUseTime < cooldownTime.get() * 50) return;
 
             slot = item.slot();
-                Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
+            Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
+            MathUtils.updateRotation(3);
 
             lastUseTime = currentTime;
         });

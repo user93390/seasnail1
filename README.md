@@ -1,3 +1,5 @@
+## snail++ 
+
 made for `1.20.4-1.21.1`
 
 
@@ -6,6 +8,8 @@ Credits:
 - Fabric loader made by Fabric development team
 
 - Meteor client made by Meteor development team
+
+- TurtleWithaBlock made AutoWither.java
 
 
 

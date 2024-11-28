@@ -3,8 +3,6 @@
   "required": true,
   "package": "org.snail.plus.mixins",
   "compatibilityLevel": "JAVA_21",
-  "client": [
-  ],
   "injectors": {
     "defaultRequire": 1
   },

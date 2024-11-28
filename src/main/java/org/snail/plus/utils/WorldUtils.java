@@ -31,7 +31,7 @@ public class WorldUtils {
     }
 
     public static List<AbstractClientPlayerEntity> getPlayers() {
-        return mc.world.getPlayers();
+        return mc.world != null ? mc.world.getPlayers() : null;
     }
 
     public static boolean strictDirection(BlockPos position, DirectionMode Direction) {

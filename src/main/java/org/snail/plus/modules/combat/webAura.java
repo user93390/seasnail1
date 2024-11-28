@@ -20,10 +20,7 @@ import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -172,7 +169,8 @@ public class webAura extends Module {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
             for (PlayerEntity entity : mc.world.getPlayers()) {
-                if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity)) continue;
+                if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity))
+                    continue;
                 if (onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
                 for (BlockPos blockPos : positions(entity)) {
                     placed = !WorldUtils.isAir(blockPos);
@@ -208,7 +206,6 @@ public class webAura extends Module {
 
     @EventHandler
     public void onRender(Render3DEvent event) {
-        if (BestTarget == null) return;
         switch (mode.get()) {
             case smooth -> {
                 for (BlockPos pos : positions(BestTarget)) {

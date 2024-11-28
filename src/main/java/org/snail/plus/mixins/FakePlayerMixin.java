@@ -1,5 +1,6 @@
 package org.snail.plus.mixins;
 
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
@@ -10,12 +11,26 @@ import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.player.FakePlayer;
+import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.EntityStatuses;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.Vec3d;
 import org.snail.plus.utils.PlayerMovement;
+import org.snail.plus.utils.WorldUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -33,6 +48,8 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class FakePlayerMixin {
     @Unique
     private final List<PlayerMovement> recordedMovements = new ArrayList<>();
+    @Final
+    public Setting<String> name;
     @Final
     private SettingGroup sgGeneral;
     @Unique
@@ -68,6 +85,7 @@ public class FakePlayerMixin {
             stopRecording();
             startRecording();
 
+
         };
 
         clear.action = () -> {
@@ -93,16 +111,23 @@ public class FakePlayerMixin {
             mc.execute(() -> {
                 try {
                     for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
-                        for (PlayerEntity FakePlayer : mc.world.getPlayers()) {
-                            if (FakePlayer == fakePlayer) {
+                        for (PlayerEntity fakePlayerEntity : mc.world.getPlayers()) {
+                            if (fakePlayerEntity == fakePlayer) {
                                 if (recording) {
                                     recordedMovements.add(new PlayerMovement(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
                                 }
+                                fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 9999, 2));
+                                fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 9999, 4));
+                                fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 9999, 1));
+
                                 if (looping && !recordedMovements.isEmpty()) {
                                     PlayerMovement movement = recordedMovements.get(loopIndex);
-                                    FakePlayer.updatePosition(movement.x, movement.y, movement.z);
-                                    FakePlayer.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
+                                    fakePlayerEntity.updatePosition(movement.x, movement.y, movement.z);
+                                    fakePlayerEntity.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
+                                    fakePlayer.updateLimbs(true);
+
                                     loopIndex = (loopIndex + 1) % recordedMovements.size();
+
                                     if (loopIndex == 0) {
                                         if (loop.get()) {
                                             startLooping();
@@ -120,6 +145,29 @@ public class FakePlayerMixin {
             });
         }
     }
+
+    @Unique
+    @EventHandler
+    private void onPacket(PacketEvent.Receive event) {
+        mc.execute(() -> {
+            if (event.packet instanceof ExplosionS2CPacket packet ) {
+                for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
+                    for (PlayerEntity fakePlayerEntity : mc.world.getPlayers()) {
+                        float damage = DamageUtils.crystalDamage(fakePlayerEntity, new Vec3d(packet.getX(), packet.getY(), packet.getZ()));
+                        if (damage > 0.0F && fakePlayerEntity.timeUntilRegen <= 10) {
+                            fakePlayerEntity.hurtTime = 10;
+                            fakePlayerEntity.timeUntilRegen = 20;
+                            WorldUtils.playSound(SoundEvents.ENTITY_PLAYER_HURT, 1.0F);
+                            fakePlayer.setHealth(fakePlayer.getHealth() - damage);
+
+                            if(fakePlayer.getHealth() == 1.0f) fakePlayer.setHealth(fakePlayer.defaultMaxHealth);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
 
     @Unique
     public void startRecording() {

@@ -8,8 +8,10 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.CropBlock;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.HoeItem;
 import net.minecraft.util.math.BlockPos;
 import org.snail.plus.Addon;
@@ -24,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static net.minecraft.block.Blocks.FARMLAND;
+import static org.snail.plus.utils.WorldUtils.placeBlock;
 
 public class Farmer extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -139,10 +142,26 @@ public class Farmer extends Module {
         });
     }
 
+    private FindItemResult findSeeds() {
+        return InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem && ((BlockItem) itemStack.getItem()).getBlock() instanceof CropBlock);
+    }
+
     private void BreakCrop(BlockPos pos, FindItemResult tool) {
         if (tool.found()) {
             InvUtils.move().from(tool.slot()).to(mc.player.getInventory().selectedSlot);
             WorldUtils.breakBlock(pos, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, false, false, swapUtils.swapMode.normal, rotate.get());
+            if (replant.get()) {
+                replantCrop(pos);
+            }
+        }
+    }
+
+    private void replantCrop(BlockPos pos) {
+        FindItemResult seeds = findSeeds();
+        if (seeds.found()) {
+            info("Replanting crop at %s", pos.toShortString());
+            InvUtils.move().from(seeds.slot()).to(mc.player.getInventory().selectedSlot);
+            BlockUtils.place(pos, seeds, 100);
         }
     }
 
