@@ -172,12 +172,13 @@ public class webAura extends Module {
                 if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity))
                     continue;
                 if (onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
-                for (BlockPos blockPos : positions(entity)) {
+
+                BestTarget = entity;
+                for (BlockPos blockPos : positions(BestTarget)) {
                     placed = !WorldUtils.isAir(blockPos);
                     placeWeb(blockPos);
                     if (doublePlace.get()) {
                         placeWeb(blockPos.up(1));
-                        BestTarget = entity;
                     }
                 }
             }
@@ -193,10 +194,13 @@ public class webAura extends Module {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastPlacedTime < (1000 / speed.get())) return;
             if (!placed) {
-                FindItemResult web = InvUtils.findInHotbar(Items.COBWEB);
-                if (web.found()) {
-                    WorldUtils.placeBlock(web, pos, hand.get(), direction.get(), true, swapMode.get(), rotate.get());
+                FindItemResult web = InvUtils.find(Items.COBWEB);
+                if (!web.found()) {
+                    error("No webs in hotbar... disabling.");
+                    toggle();
+                    return;
                 }
+                WorldUtils.placeBlock(web, pos, hand.get(), direction.get(), true, swapMode.get(), rotate.get());
             }
             lastPlacedTime = currentTime;
         } finally {
@@ -208,36 +212,41 @@ public class webAura extends Module {
     public void onRender(Render3DEvent event) {
         switch (mode.get()) {
             case smooth -> {
-                for (BlockPos pos : positions(BestTarget)) {
-                    if (renderBoxTwo instanceof IBox) {
-                        ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1,
-                                pos.getY() + 1, pos.getZ() + 1);
-                    }
+                if (BestTarget != null) {
 
-                    if (renderBoxOne == null) {
-                        renderBoxOne = new Box(pos);
-                    }
-                    if (renderBoxTwo == null) {
-                        renderBoxTwo = new Box(pos);
-                    }
+                    for (BlockPos pos : positions(BestTarget)) {
+                        if (renderBoxTwo instanceof IBox) {
+                            ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1,
+                                    pos.getY() + 1, pos.getZ() + 1);
+                        }
 
-                    double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
-                    double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
-                    double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
+                        if (renderBoxOne == null) {
+                            renderBoxOne = new Box(pos);
+                        }
+                        if (renderBoxTwo == null) {
+                            renderBoxTwo = new Box(pos);
+                        }
 
-                    ((IBox) renderBoxOne).set(
-                            renderBoxOne.minX + offsetX,
-                            renderBoxOne.minY + offsetY,
-                            renderBoxOne.minZ + offsetZ,
-                            renderBoxOne.maxX + offsetX,
-                            renderBoxOne.maxY + offsetY,
-                            renderBoxOne.maxZ + offsetZ);
-                    event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                        double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
+                        double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
+                        double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
+
+                        ((IBox) renderBoxOne).set(
+                                renderBoxOne.minX + offsetX,
+                                renderBoxOne.minY + offsetY,
+                                renderBoxOne.minZ + offsetZ,
+                                renderBoxOne.maxX + offsetX,
+                                renderBoxOne.maxY + offsetY,
+                                renderBoxOne.maxZ + offsetZ);
+                        event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    }
                 }
             }
             case normal -> {
-                for (BlockPos pos : positions(BestTarget)) {
-                    event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                if (BestTarget != null) {
+                    for (BlockPos pos : positions(BestTarget)) {
+                        event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    }
                 }
             }
         }
