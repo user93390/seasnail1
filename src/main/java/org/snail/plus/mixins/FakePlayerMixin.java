@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.player.FakePlayer;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
@@ -160,7 +161,9 @@ public class FakePlayerMixin {
                             WorldUtils.playSound(SoundEvents.ENTITY_PLAYER_HURT, 1.0F);
                             fakePlayer.setHealth(fakePlayer.getHealth() - damage);
 
-                            if(fakePlayer.getHealth() == 1.0f) fakePlayer.setHealth(fakePlayer.defaultMaxHealth);
+                            if(fakePlayer.getHealth() < Modules.get().get(FakePlayer.class).health.get()) {
+                                fakePlayer.setHealth(Modules.get().get(FakePlayer.class).health.get());
+                            }
                         }
                     }
                 }
