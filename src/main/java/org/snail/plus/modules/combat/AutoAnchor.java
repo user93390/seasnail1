@@ -104,6 +104,12 @@ public class AutoAnchor extends Module {
             .sliderRange(0.1, 10.0)
             .build());
 
+    private final Setting<Boolean> liquidPlace = sgPlacement.add(new BoolSetting.Builder()
+            .name("liquid place")
+            .description("Allows placing anchors in liquids.")
+            .defaultValue(false)
+            .build());
+
     private final Setting<swapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<swapUtils.swapMode>()
             .name("swap mode")
             .description("The mode used for swapping items when placing anchors.")
@@ -320,9 +326,9 @@ public class AutoAnchor extends Module {
                     //immediately return false if self dmg or target dmg is bad
                     if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get()) return false;
 
-                    if (!airPlace.get() && WorldUtils.isAir(pos.down(1))) return false;
+                    if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
 
-                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos, true) && WorldUtils.isAir(pos)) {
+                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos, true) && WorldUtils.isAir(pos, liquidPlace.get())) {
                         if (debugCalculations.get())
                             info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
                         damageValue = targetDamage;
@@ -392,7 +398,6 @@ public class AutoAnchor extends Module {
 
             for (BlockPos pos : AnchorPos) {
                 if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
-
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), true, swap.get(), rotate.get());
                 WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());

@@ -85,8 +85,6 @@ public class FakePlayerMixin {
         start.action = () -> {
             stopRecording();
             startRecording();
-
-
         };
 
         clear.action = () -> {
@@ -125,7 +123,6 @@ public class FakePlayerMixin {
                                     PlayerMovement movement = recordedMovements.get(loopIndex);
                                     fakePlayerEntity.updatePosition(movement.x, movement.y, movement.z);
                                     fakePlayerEntity.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
-                                    fakePlayer.updateLimbs(true);
 
                                     loopIndex = (loopIndex + 1) % recordedMovements.size();
 

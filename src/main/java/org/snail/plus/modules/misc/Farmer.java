@@ -149,7 +149,7 @@ public class Farmer extends Module {
     private void BreakCrop(BlockPos pos, FindItemResult tool) {
         if (tool.found()) {
             InvUtils.move().from(tool.slot()).to(mc.player.getInventory().selectedSlot);
-            WorldUtils.breakBlock(pos, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, false, false, swapUtils.swapMode.normal, rotate.get());
+            WorldUtils.breakBlock(pos, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, false, swapUtils.swapMode.normal, rotate.get());
             if (replant.get()) {
                 replantCrop(pos);
             }

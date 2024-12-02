@@ -60,24 +60,9 @@ public class CombatUtils {
                 }).orElse(null);
     }
 
-    public static PlayerEntity getLastAttacker(Entity entity) {
-        if (!entity.isAlive() && entity instanceof LivingEntity livingEntity) {
-            return (PlayerEntity) livingEntity.getAttacker();
-        }
-        return null;
-    }
-
     public static boolean isSurrounded(PlayerEntity target) {
         BlockPos blockPos = target.getBlockPos();
         return isValidBlock(blockPos.north()) && isValidBlock(blockPos.south()) && isValidBlock(blockPos.east()) && isValidBlock(blockPos.west());
-    }
-
-    public static List<BlockPos> getValidHole(BlockPos center, double radius) {
-        return MathUtils.getSphere(center, radius).stream()
-                .filter(pos -> isValidBlock(pos.down()) && isValidBlock(pos.north()) &&
-                        isValidBlock(pos.east()) && isValidBlock(pos.south()) &&
-                        isValidBlock(pos.west()) && isAir(pos))
-                .toList();
     }
 
 

@@ -90,7 +90,7 @@ public class SelfAnvil extends Module {
 
         if (mc.world.getBlockState(mc.player.getBlockPos().up(2)).isAir()) {
             if (anvil.found()) {
-                if (WorldUtils.isAir(mc.player.getBlockPos().up(2))) {
+                if (WorldUtils.isAir(mc.player.getBlockPos().up(2), false)) {
                     if (support.get()) {
                         PlaceSupportBlocks(mc.player, InvUtils.findInHotbar(Items.OBSIDIAN));
                     }

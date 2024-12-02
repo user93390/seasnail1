@@ -158,7 +158,7 @@ public class webAura extends Module {
 
     protected List<BlockPos> positions(PlayerEntity entity) {
         return Stream.of(entity.getBlockPos())
-                .filter(pos -> !CombatUtils.isBurrowed(entity) && (airPlace.get() || !WorldUtils.isAir(pos)))
+                .filter(pos -> !CombatUtils.isBurrowed(entity) && (airPlace.get() || !WorldUtils.isAir(pos, false)))
                 .collect(Collectors.toList());
     }
 
@@ -175,7 +175,7 @@ public class webAura extends Module {
 
                 BestTarget = entity;
                 for (BlockPos blockPos : positions(BestTarget)) {
-                    placed = !WorldUtils.isAir(blockPos);
+                    placed = !WorldUtils.isAir(blockPos, false);
                     placeWeb(blockPos);
                     if (doublePlace.get()) {
                         placeWeb(blockPos.up(1));

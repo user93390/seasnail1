@@ -26,12 +26,8 @@ import java.util.List;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class WorldUtils {
-    public static boolean isAir(BlockPos position) {
-        return mc.world.isAir(position) || mc.world.getBlockState(position).getBlock() == Blocks.FIRE;
-    }
-
-    public static List<AbstractClientPlayerEntity> getPlayers() {
-        return mc.world != null ? mc.world.getPlayers() : null;
+    public static boolean isAir(BlockPos position, boolean ignoreLiquid) {
+        return mc.world.getBlockState(position).isAir() || (ignoreLiquid && mc.world.getBlockState(position).isLiquid());
     }
 
     public static boolean strictDirection(BlockPos position, DirectionMode Direction) {

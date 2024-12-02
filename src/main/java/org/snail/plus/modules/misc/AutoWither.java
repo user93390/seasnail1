@@ -24,8 +24,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.WorldUtils;
-import org.snail.plus.utils.swapUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,15 +38,6 @@ public class AutoWither extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final SettingGroup sgRender = settings.createGroup("Render");
-
-
-    private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
-        .name("Delay")
-        .description("How many ticks to wait in between placing blocks")
-        .defaultValue(1)
-        .sliderMin(0)
-        .sliderMax(10)
-        .build());
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Rotate")
@@ -87,7 +76,6 @@ public class AutoWither extends Module {
         super(Addon.Snail, "Auto Wither", "Automatically builds a wither");
     }
     BlockPos currentBlockPos = null;
-    int cooldown;
 
     ArrayList<BlockPos> soulSandOffsetsX = new ArrayList<>(Arrays.asList(
             new BlockPos(0, 0, 0),
@@ -134,8 +122,6 @@ public class AutoWither extends Module {
             placeBlock(BlockUtils.getPlaceSide(target), target, rotate.get());
             InvUtils.swapBack();
 
-            cooldown= delay.get();
-            return delay.get() != 0;
         } else if (!mc.world.getBlockState(target).getBlock().equals(type)) {
             currentBlockPos=null;
             return true;
@@ -158,30 +144,30 @@ public class AutoWither extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (cooldown>1) {
-            cooldown-=1;
-            return;
-        }
-        if (currentBlockPos!=null) {
+        if (currentBlockPos != null) {
             FindItemResult soulSand = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.SOUL_SAND));
             FindItemResult witherSkull = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.WITHER_SKELETON_SKULL));
             if (soulSand.found() && witherSkull.found()) {
-                ArrayList<BlockPos> offsets = null;
-                ArrayList<BlockPos> skullOffsets = null;
+                ArrayList<BlockPos> offsets;
+                ArrayList<BlockPos> skullOffsets;
                 if (Math.abs(mc.player.getBlockPos().getZ()-currentBlockPos.getZ())>Math.abs(mc.player.getBlockPos().getX()-currentBlockPos.getX())) {
-                    offsets=soulSandOffsetsX;
-                    skullOffsets=witherSkullOffsetsX;
+                    offsets = soulSandOffsetsX;
+                    skullOffsets = witherSkullOffsetsX;
                 } else {
-                    offsets=soulSandOffsetsZ;
-                    skullOffsets=witherSkullOffsetsZ;
+                    offsets = soulSandOffsetsZ;
+                    skullOffsets = witherSkullOffsetsZ;
                 }
                 for (BlockPos offset : offsets) {
                     BlockPos target = currentBlockPos.add(offset);
-                    if (attemptPlace(target, soulSand, Blocks.SOUL_SAND)) {return;}
+                    if (attemptPlace(target, soulSand, Blocks.SOUL_SAND)) {
+                        return;
+                    }
                 }
                 for (BlockPos offset : skullOffsets) {
                     BlockPos target = currentBlockPos.add(offset);
-                    if (attemptPlace(target, witherSkull, Blocks.WITHER_SKELETON_SKULL)) {return;}
+                    if (attemptPlace(target, witherSkull, Blocks.WITHER_SKELETON_SKULL)) {
+                        return;
+                    }
                 }
                 currentBlockPos=null;
             }
