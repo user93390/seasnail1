@@ -1,4 +1,4 @@
-package org.snail.plus.utils;
+package org.snail.plus.utils.movements;
 
 public class PlayerMovement {
     public double x;

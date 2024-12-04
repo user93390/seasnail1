@@ -4,8 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+import net.minecraft.entity.MovementType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
@@ -41,6 +46,14 @@ public class MathUtils {
         return Math.sqrt(zx * zx + y * y);
     }
 
+    public static BlockPos getCrosshairBlocks() {
+        HitResult hitResult = mc.crosshairTarget;
+        if (hitResult.getType() == HitResult.Type.BLOCK) {
+            return ((BlockHitResult) hitResult).getBlockPos();
+        }
+        return null;
+    }
+
     public static boolean rayCast(Vec3d blockPos) {
         HitResult hitResult = mc.world.raycast(new RaycastContext(new Vec3d(mc.player.getX(), mc.player.getEyeY(), mc.player.getZ()), blockPos, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player));
         return hitResult.getType() != HitResult.Type.MISS;
@@ -53,7 +66,9 @@ public class MathUtils {
             mc.player.setYaw(interpolatedYaw);
             mc.player.setPitch(interpolatedPitch);
             currentStep++;
-
         }
+    }
+    public static Box extrapolateBox(PlayerEntity entity, int ticks) {
+        return entity.getBoundingBox().offset(entity.getVelocity().multiply(ticks));
     }
 }

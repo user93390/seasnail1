@@ -23,7 +23,6 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.explosion.Explosion;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.CombatUtils;
@@ -38,8 +37,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
-
 /**
  * Author: seasnail1
  */
@@ -52,9 +49,16 @@ public class AutoAnchor extends Module {
     private final SettingGroup sgMisc = settings.createGroup("Misc");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
 
-    private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
-            .name("range")
-            .description("The maximum distance to target players for anchor placement.")
+    private final Setting<Double> placeBreak = sgGeneral.add(new DoubleSetting.Builder()
+            .name("place-break range")
+            .description("The maximum distance to place and break anchors.")
+            .defaultValue(3.0)
+            .sliderRange(1.0, 10.0)
+            .build());
+
+    private final Setting<Double> targetRange = sgGeneral.add(new DoubleSetting.Builder()
+            .name("target range")
+            .description("The maximum distance to target players.")
             .defaultValue(3.0)
             .sliderRange(1.0, 10.0)
             .build());
@@ -95,6 +99,20 @@ public class AutoAnchor extends Module {
             .name("air place")
             .description("Allows placing anchors in the air.")
             .defaultValue(true)
+            .build());
+
+    private final Setting<Boolean> predictMovement = sgPlacement.add(new BoolSetting.Builder()
+            .name("predict movement")
+            .description("Predicts the movement of the target.")
+            .defaultValue(false)
+            .build());
+
+    private final Setting<Integer> steps = sgPlacement.add(new IntSetting.Builder()
+            .name("steps")
+            .description("The amount of steps to predict.")
+            .defaultValue(1)
+            .sliderRange(1, 10)
+            .visible(predictMovement::get)
             .build());
 
     private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
@@ -252,30 +270,15 @@ public class AutoAnchor extends Module {
             .build());
 
     private final ReentrantLock lock = new ReentrantLock();
-    ExecutorService executor = Executors.newSingleThreadExecutor();
     private Box renderBoxOne, renderBoxTwo;
     private List<BlockPos> AnchorPos = new ArrayList<>();
     private long lastPlacedTime;
+    private double damageValue;
+    private double selfDamageValue;
     private long lastUpdateTime;
     private double selfDamage;
     private double targetDamage;
-    private double damageValue;
-    private double selfDamageValue;
     private PlayerEntity BestTarget;
-
-    Runnable resetDamageValues = () -> {
-        selfDamage = 0;
-        targetDamage = 0;
-    };
-
-    Runnable reset = () -> {
-        selfDamage = 0;
-        targetDamage = 0;
-        damageValue = 0;
-        selfDamageValue = 0;
-        executor.shutdown();
-        AnchorPos = new ArrayList<>();
-    };
 
     Runnable doBreak = () -> {
         for (BlockPos pos : AnchorPos) {
@@ -288,6 +291,19 @@ public class AutoAnchor extends Module {
         }
     };
 
+    Runnable resetDamageValues = () -> {
+        selfDamage = 0;
+        targetDamage = 0;
+    };
+
+    Runnable reset = () -> {
+        selfDamage = 0;
+        targetDamage = 0;
+        damageValue = 0;
+        selfDamageValue = 0;
+        AnchorPos = new ArrayList<>();
+    };
+
     public AutoAnchor() {
         super(Addon.Snail, "Anchor Aura+", "blows up respawn anchors to damage enemies");
     }
@@ -298,6 +314,7 @@ public class AutoAnchor extends Module {
             reset.run();
         } catch (Exception e) {
             error("An error occurred while activating the module: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
@@ -307,11 +324,12 @@ public class AutoAnchor extends Module {
             reset.run();
         } catch (Exception e) {
             error("An error occurred while deactivating the module: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
     private List<BlockPos> positions(PlayerEntity entity, BlockPos start) {
-        return MathUtils.getSphere(start, MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))
+        return MathUtils.getSphere(start, MathUtils.getRadius((int) Math.sqrt(placeBreak.get()), (int) Math.sqrt(placeBreak.get())))
                 .stream()
                 .filter(pos -> {
                     Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
@@ -324,7 +342,8 @@ public class AutoAnchor extends Module {
                     targetDamage = DamageUtils.bedDamage(entity, vec);
 
                     //immediately return false if self dmg or target dmg is bad
-                    if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get()) return false;
+                    if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get())
+                        return false;
 
                     if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
 
@@ -351,10 +370,6 @@ public class AutoAnchor extends Module {
                     if (updateEat()) return;
                     targetDamage = 0;
                     selfDamage = 0;
-                    if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-                        executor = Executors.newSingleThreadExecutor();
-                    }
-                    executor.submit(() -> {
                         if (mc.world.getDimension().respawnAnchorWorks()) {
                             error("You are in the wrong dimension!");
                             return;
@@ -362,7 +377,8 @@ public class AutoAnchor extends Module {
                         long currentTime = System.currentTimeMillis();
                         if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
 
-                        PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), range.get());
+                        PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), targetRange.get());
+                        if(player == null) return;
                         AnchorPos = positions(player, player.getBlockPos());
 
                         BestTarget = player;
@@ -374,10 +390,10 @@ public class AutoAnchor extends Module {
                             lock.unlock();
                         }
                         lastUpdateTime = currentTime;
-                    });
                 });
             } catch (Exception e) {
                 error("An error occurred while updating the module: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         }
     }
@@ -396,11 +412,14 @@ public class AutoAnchor extends Module {
                 return;
             }
 
+
             for (BlockPos pos : AnchorPos) {
-                if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
-                WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
-                WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), true, swap.get(), rotate.get());
-                WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
+                if(pos.getSquaredDistance(mc.player.getPos()) < placeBreak.get() * placeBreak.get()) {
+                    if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
+                    WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
+                    WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), true, swap.get(), rotate.get());
+                    WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
+                }
             }
             lastPlacedTime = currentTime;
         } catch (Exception e) {
@@ -418,18 +437,17 @@ public class AutoAnchor extends Module {
     public void render(Render3DEvent event) {
         try {
             for (BlockPos pos : AnchorPos) {
-                if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > range.get()) {
+                if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > targetRange.get()) {
                     continue;
                 }
 
-                if (renderOutline.get()) {
-                    WireframeEntityRenderer.render(event, BestTarget, 1, sideColor.get(), lineColor.get(), shapeMode.get());
+                if (renderOutline.get() ) {
+                    event.renderer.box(MathUtils.extrapolateBox(mc.player, steps.get()), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 }
 
                 switch (renderMode.get()) {
                     case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                    case fading ->
-                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
+                    case fading -> RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
                     case smooth -> {
                         if (renderBoxOne == null) {
                             renderBoxOne = new Box(pos);
@@ -466,7 +484,7 @@ public class AutoAnchor extends Module {
     @EventHandler
     public void render2D(Render2DEvent event) {
         for (BlockPos pos : AnchorPos) {
-            if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > range.get()) {
+            if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > targetRange.get()) {
                 continue;
             }
 

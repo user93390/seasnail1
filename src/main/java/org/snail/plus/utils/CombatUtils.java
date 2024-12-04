@@ -65,8 +65,6 @@ public class CombatUtils {
         return isValidBlock(blockPos.north()) && isValidBlock(blockPos.south()) && isValidBlock(blockPos.east()) && isValidBlock(blockPos.west());
     }
 
-
-
     public enum filterMode {
         Closet,
         Furthest,

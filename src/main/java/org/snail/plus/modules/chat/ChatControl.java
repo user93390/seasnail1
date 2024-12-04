@@ -17,7 +17,7 @@ public class ChatControl extends Module {
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
 
-    public final Setting<Boolean> improvedMsgs = sgClient.add(new BoolSetting.Builder()
+    public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder()
             .name("improved-msgs")
             .description("Improves the look of chat messages.")
             .defaultValue(true)

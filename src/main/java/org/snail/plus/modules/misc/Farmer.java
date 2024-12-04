@@ -7,61 +7,55 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.CropBlock;
-import net.minecraft.item.BlockItem;
+import net.minecraft.block.FarmlandBlock;
 import net.minecraft.item.HoeItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.MathUtils;
-import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import static net.minecraft.block.Blocks.FARMLAND;
-import static org.snail.plus.utils.WorldUtils.placeBlock;
+import static net.minecraft.item.Items.*;
+import static org.snail.plus.utils.MathUtils.getCrosshairBlocks;
 
 public class Farmer extends Module {
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgBreak = settings.createGroup("Break");
+    private final SettingGroup sgReplant = settings.createGroup("Replant");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
-    private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<breakMode> Mode = sgBreak.add(new EnumSetting.Builder<breakMode>()
+            .name("break-mode")
+            .description("How to calculate the blocks to break.")
+            .defaultValue(breakMode.crosshair)
+            .build());
+
+    private final Setting<Boolean> rotate = sgBreak.add(new BoolSetting.Builder()
+            .name("rotate")
+            .description("Automatically faces the crops.")
+            .defaultValue(true)
+            .visible(() -> Mode.get() != breakMode.crosshair)
+            .build());
+
+    private final Setting<Double> range = sgBreak.add(new DoubleSetting.Builder()
             .name("range")
             .description("The maximum distance to search for crops.")
             .sliderRange(0, 8)
             .build());
 
-    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
-            .name("rotate")
-            .description("Automatically faces the crops.")
-            .defaultValue(true)
-            .build());
-
-    private final Setting<Boolean> harvest = sgGeneral.add(new BoolSetting.Builder()
-            .name("harvest")
-            .description("Automatically harvests crops.")
-            .defaultValue(true)
-            .build());
-
-    private final Setting<Boolean> replant = sgGeneral.add(new BoolSetting.Builder()
-            .name("replant")
-            .description("Automatically replants crops.")
-            .defaultValue(true)
-            .visible(harvest::get)
-            .build());
-
-    private final Setting<Integer> minAge = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> minAge = sgBreak.add(new IntSetting.Builder()
             .name("min-age")
             .description("The minimum age of the crop to harvest.")
             .sliderRange(0, 10)
-            .visible(harvest::get)
             .build());
 
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
@@ -82,8 +76,36 @@ public class Farmer extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
 
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    private List<BlockPos> cropsList = new ArrayList<>();
+    private final List<BlockPos> blocks = Collections.synchronizedList(new ArrayList<>());
+    private FindItemResult hoe;
+    private BlockPos crosshairBlock;
+    private BlockPos bestPos;
+    Runnable breakBlock = () -> {
+        synchronized (this) {
+            mc.executeSync(() -> {
+                for (BlockPos pos : blocks) {
+                    if (mc.player.getBlockPos().isWithinDistance(pos, range.get())) {
+                        bestPos = pos;
+                        InvUtils.swap(hoe.slot(), true);
+                        breakCrop(bestPos);
+                        InvUtils.swapBack();
+                    }
+                }
+            });
+        }
+    };
+
+    Runnable reset = () -> {
+        synchronized (this) {
+            mc.executeSync(() -> {
+                crosshairBlock = null;
+                synchronized (blocks) {
+                    blocks.clear();
+                }
+                bestPos = null;
+            });
+        }
+    };
 
     public Farmer() {
         super(Addon.Snail, "Auto farmer", "Automatically breaks crop blocks");
@@ -91,85 +113,82 @@ public class Farmer extends Module {
 
     @Override
     public void onActivate() {
-        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-            executor = Executors.newSingleThreadExecutor();
-        }
-
-        cropsList = new ArrayList<>();
+        reset.run();
     }
 
     @Override
     public void onDeactivate() {
-        cropsList.clear();
-        if (executor != null) {
-            executor.shutdown();
-        }
+        reset.run();
     }
 
-    private List<BlockPos> findCrops(BlockPos start) {
-        return MathUtils.getSphere(start, MathUtils.getRadius((int) Math.sqrt(range.get()), (int) Math.sqrt(range.get())))
-                .stream()
-                .filter(pos -> {
-                    if (isCrop(pos)) {
-                        return harvest.get() && mc.world.getBlockState(pos).get(CropBlock.AGE) >= minAge.get();
+    public List<BlockPos> getBlocks(BlockPos center, double radius) {
+        return MathUtils.getSphere(center, radius).stream().filter(pos -> {
+                    if (mc.world.getBlockState(pos).getBlock() instanceof CropBlock crop) {
+                        return crop.getMaxAge() - mc.world.getBlockState(pos).get(CropBlock.AGE) >= minAge.get();
                     }
                     return false;
-                })
-                .findFirst()
+                }).findFirst()
                 .map(Collections::singletonList)
                 .orElse(Collections.emptyList());
     }
 
-    private boolean isCrop(BlockPos pos) {
-        return mc.world.getBlockState(pos).getBlock() instanceof CropBlock;
-    }
-
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        executor.submit(() -> {
-            for (BlockPos pos : findCrops(mc.player.getBlockPos())) {
-                if (pos.isWithinDistance(mc.player.getPos(), range.get())) cropsList.add(pos);
+        try {
+            synchronized (this) {
+                mc.executeSync(() -> {
+                    switch (Mode.get()) {
+                        case crosshair -> {
+                            if (mc.world != null && mc.player != null) {
+                                hoe = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof HoeItem);
+                                //check if crosshair is on crop
+                                crosshairBlock = getCrosshairBlocks();
+                                if (crosshairBlock != null && mc.world.getBlockState(crosshairBlock).getBlock() instanceof CropBlock) {
+                                    blocks.clear();
+                                    blocks.add(crosshairBlock);
+                                }
+                            }
+                        }
 
-                FindItemResult tool = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof HoeItem);
-
-                if (tool.found()) {
-                    if (harvest.get()) {
-                        BreakCrop(pos, tool);
-                        cropsList.remove(pos);
+                        case radius -> {
+                            if (mc.player != null) {
+                                blocks.clear();
+                                blocks.addAll(getBlocks(mc.player.getBlockPos(), range.get()));
+                            }
+                        }
                     }
-                }
+                    breakBlock.run();
+                });
             }
-        });
-    }
-
-    private FindItemResult findSeeds() {
-        return InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem && ((BlockItem) itemStack.getItem()).getBlock() instanceof CropBlock);
-    }
-
-    private void BreakCrop(BlockPos pos, FindItemResult tool) {
-        if (tool.found()) {
-            InvUtils.move().from(tool.slot()).to(mc.player.getInventory().selectedSlot);
-            WorldUtils.breakBlock(pos, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, false, swapUtils.swapMode.normal, rotate.get());
-            if (replant.get()) {
-                replantCrop(pos);
-            }
+        } catch (Exception e) {
+            error("An error occurred: " + e.getMessage());
         }
     }
 
-    private void replantCrop(BlockPos pos) {
-        FindItemResult seeds = findSeeds();
-        if (seeds.found()) {
-            info("Replanting crop at %s", pos.toShortString());
-            InvUtils.move().from(seeds.slot()).to(mc.player.getInventory().selectedSlot);
-            BlockUtils.place(pos, seeds, 100);
+    private void breakCrop(BlockPos cropBlock) {
+        if (hoe != null) {
+            swapUtils.moveSwitch(hoe.slot(), mc.player.getInventory().selectedSlot);
+            if (rotate.get()) {
+                Rotations.rotate(Rotations.getYaw(cropBlock), Rotations.getPitch(cropBlock), 100, () -> BlockUtils.breakBlock(cropBlock, true));
+            } else {
+                BlockUtils.breakBlock(cropBlock, true);
+            }
         }
     }
 
     @EventHandler
-    private void onRender(Render3DEvent event) {
-        for (BlockPos pos : cropsList) {
-            if (mc.player.squaredDistanceTo(pos.getX(), pos.getY(), pos.getZ()) > range.get()) continue;
-            event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+    private void onRender3D(Render3DEvent event) {
+        if (bestPos != null && mc.world != null && mc.world.getBlockState(bestPos).getBlock() instanceof CropBlock) {
+            event.renderer.box(bestPos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
         }
+    }
+
+    public List<Item> cropItems() {
+        return List.of(WHEAT, BEETROOT_SEEDS, CARROT, POTATO, NETHER_WART, SWEET_BERRIES);
+    }
+
+    public enum breakMode {
+        crosshair,
+        radius
     }
 }

@@ -33,7 +33,7 @@ public class ModuleMixin {
     @Inject(method = "sendToggledMsg", at = @At("HEAD"), cancellable = true, remap = false)
     private void sendToggledMsg(CallbackInfo ci) {
         try {
-            if (Config.get().chatFeedback.get() && Modules.get().get(ChatControl.class).improvedMsgs.get()) {
+            if (Config.get().chatFeedback.get() && Modules.get().get(ChatControl.class).improveClientMessage.get()) {
                 String enabledMsg =  "[+] " + module.title;
                 String disableMsg =  "[-] " + module.title;
 
@@ -48,7 +48,7 @@ public class ModuleMixin {
 
     @Inject(method = "warning", at = @At("HEAD"), cancellable = true, remap = false)
     private void warning(String message, Object[] args, CallbackInfo ci) {
-        if(Modules.get().get(ChatControl.class).improvedMsgs.get()) {
+        if(Modules.get().get(ChatControl.class).improveClientMessage.get()) {
             try {
                 ChatUtils.sendMsg(Text.of(Formatting.YELLOW + " [!] " + String.format(message, args)));
                 ci.cancel();
@@ -60,7 +60,7 @@ public class ModuleMixin {
 
     @Inject(method = "error", at = @At("HEAD"), cancellable = true, remap = false)
     private void error(String message, Object[] args, CallbackInfo ci) {
-        if(Modules.get().get(ChatControl.class).improvedMsgs.get()) {
+        if(Modules.get().get(ChatControl.class).improveClientMessage.get()) {
             try {
                 ChatUtils.sendMsg(Text.of(Formatting.RED + " [!] " + String.format(message, args)));
                 ci.cancel();
@@ -72,7 +72,7 @@ public class ModuleMixin {
 
     @Inject(method = "info*", at = @At("HEAD"), cancellable = true, remap = false)
     private void info(String message, Object[] args, CallbackInfo ci) {
-        if(Modules.get().get(ChatControl.class).improvedMsgs.get()) {
+        if(Modules.get().get(ChatControl.class).improveClientMessage.get()) {
             try {
                 ChatUtils.sendMsg(Text.of(Formatting.GRAY + " [i] " + String.format(message, args)));
                 ci.cancel();

@@ -96,41 +96,6 @@ public class WorldUtils {
         }
     }
 
-    public static void breakBlock(BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, boolean instant, swapUtils.swapMode Mode, boolean rotate) {
-        FindItemResult item = InvUtils.findFastestTool(mc.world.getBlockState(pos));
-        if (rotate) {
-            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
-        }
-        Runnable breakAction = () -> {
-            if (!packet) {
-                BlockUtils.breakBlock(pos, false);
-            } else {
-                if (!instant) {
-                    mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, directionMode(directionMode)));
-                }
-                mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, directionMode(directionMode)));
-            }
-            mc.player.swingHand(swingHand(hand));
-        };
-
-        switch (Mode) {
-            case Inventory -> {
-                swapUtils.pickSwitch(item.slot());
-                breakAction.run();
-                swapUtils.pickSwapBack();
-            }
-            case silent -> {
-                InvUtils.swap(item.slot(), true);
-                breakAction.run();
-                InvUtils.swapBack();
-            }
-            case normal -> {
-                InvUtils.swap(item.slot(), false);
-                breakAction.run();
-            }
-        }
-    }
-
     public static Hand swingHand(HandMode Mode) {
         return switch (Mode) {
             case MainHand -> Hand.MAIN_HAND;
