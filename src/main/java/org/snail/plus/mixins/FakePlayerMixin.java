@@ -23,7 +23,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
-import org.snail.plus.utils.movements.PlayerMovement;
+import org.snail.plus.utils.PlayerMovement;
 import org.snail.plus.utils.WorldUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
