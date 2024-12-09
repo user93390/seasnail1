@@ -25,7 +25,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-public class BurrowEsp extends Module {
+public class burrowEsp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Boolean> ignoreFriends = sgGeneral.add(new BoolSetting.Builder()
@@ -74,7 +74,7 @@ public class BurrowEsp extends Module {
 
     private final List<PlayerEntity> burrowedPlayers = new ArrayList<>();
 
-    public BurrowEsp() {
+    public burrowEsp() {
         super(Addon.Snail, "Burrow ESP", "Highlights players that are in burrows (inside blocks)");
     }
 

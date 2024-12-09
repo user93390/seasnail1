@@ -8,7 +8,6 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
-import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
@@ -34,7 +33,7 @@ import java.util.Arrays;
  * Author: TurtleWithaBlock
  */
 
-public class AutoWither extends Module {
+public class autoWither extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -72,9 +71,10 @@ public class AutoWither extends Module {
         .visible(() -> renderBlock.get())
         .build());
 
-    public AutoWither() {
+    public autoWither() {
         super(Addon.Snail, "Auto Wither", "Automatically builds a wither");
     }
+
     BlockPos currentBlockPos = null;
 
     ArrayList<BlockPos> soulSandOffsetsX = new ArrayList<>(Arrays.asList(

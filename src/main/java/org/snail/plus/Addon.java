@@ -1,17 +1,18 @@
 package org.snail.plus;
 
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.tutorial.TutorialStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.snail.plus.commands.swapCommand;
 import org.snail.plus.hud.*;
 import org.snail.plus.modules.chat.*;
 import org.snail.plus.modules.combat.*;
@@ -43,20 +44,22 @@ public class Addon extends MeteorAddon {
 
     // Load modules
     public void loadModules() {
-        Modules.get().add(new VisualRange());
-        Modules.get().add(new BurrowEsp());
+        Modules.get().add(new visualRange());
+        Modules.get().add(new burrowEsp());
         Modules.get().add(new FOV());
         Modules.get().add(new discordRPC());
-        Modules.get().add(new AutoAnchor());
+        Modules.get().add(new autoAnchor());
         Modules.get().add(new autoXP());
         Modules.get().add(new webAura());
-        Modules.get().add(new Farmer());
-        Modules.get().add(new SelfAnvil());
-        Modules.get().add(new ChatControl());
-        Modules.get().add(new AutoEZ());
-        Modules.get().add(new AutoWither());
+        Modules.get().add(new autoFarmer());
+        Modules.get().add(new selfAnvil());
+        Modules.get().add(new chatControl());
+        Modules.get().add(new killMessages());
+        Modules.get().add(new autoWither());
         Modules.get().add(new autoReply());
+        Modules.get().add(new armorWarning());
         Hud.get().register(Watermark.INFO);
+        Commands.add(new swapCommand());
     }
 
     @Override

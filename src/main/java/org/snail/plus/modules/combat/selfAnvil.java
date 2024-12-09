@@ -19,7 +19,7 @@ import org.snail.plus.utils.CombatUtils;
 import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
-public class SelfAnvil extends Module {
+public class selfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
 
@@ -74,7 +74,7 @@ public class SelfAnvil extends Module {
             .build());
     private long lastPlaceTime = 0;
 
-    public SelfAnvil() {
+    public selfAnvil() {
         super(Addon.Snail, "Self Anvil+", "Places an anvil on the top of your head to burrow yourself.");
     }
 

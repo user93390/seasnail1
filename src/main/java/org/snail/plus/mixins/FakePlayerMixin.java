@@ -16,6 +16,7 @@ import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -114,7 +115,15 @@ public class FakePlayerMixin {
 
                                 if (looping && !recordedMovements.isEmpty()) {
                                     PlayerMovement movement = recordedMovements.get(loopIndex);
-                                    fakePlayerEntity.updatePosition(movement.x, movement.y, movement.z);
+                                    PlayerMovement nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
+
+                                    double t = (double) loopIndex / recordedMovements.size();
+                                    double interpolatedX = movement.x + t * (nextMovement.x - movement.x);
+                                    double interpolatedY = movement.y + t * (nextMovement.y - movement.y);
+                                    double interpolatedZ = movement.z + t * (nextMovement.z - movement.z);
+                                    double interpolatedYaw = movement.yaw + t * (nextMovement.yaw - movement.yaw);
+                                    fakePlayerEntity.updatePosition(interpolatedX, interpolatedY, interpolatedZ);
+                                    fakePlayerEntity.updateTrackedHeadRotation((float) interpolatedYaw, 3);
                                     fakePlayerEntity.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
 
                                     loopIndex = (loopIndex + 1) % recordedMovements.size();
@@ -142,7 +151,7 @@ public class FakePlayerMixin {
     @EventHandler
     private void onPacket(PacketEvent.Receive event) {
         mc.execute(() -> {
-            if (event.packet instanceof ExplosionS2CPacket packet ) {
+            if (event.packet instanceof ExplosionS2CPacket packet) {
                 for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
                     for (PlayerEntity fakePlayerEntity : mc.world.getPlayers()) {
                         float damage = DamageUtils.crystalDamage(fakePlayerEntity, new Vec3d(packet.getX(), packet.getY(), packet.getZ()));

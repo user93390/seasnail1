@@ -13,7 +13,7 @@ import org.snail.plus.Addon;
 
 import java.util.List;
 
-public class ChatControl extends Module {
+public class chatControl extends Module {
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
 
@@ -22,15 +22,18 @@ public class ChatControl extends Module {
             .description("Improves the look of chat messages.")
             .defaultValue(true)
             .build());
+
     public final Setting<SettingColor> color = sgClient.add(new ColorSetting.Builder()
             .name("prefix color")
             .description("The color of the prefix.")
             .build());
+
     private final Setting<Boolean> coordsProtection = sgChat.add(new BoolSetting.Builder()
             .name("coords-protection")
             .description("Prevents you from sending messages in chat that may contain coordinates.")
             .defaultValue(true)
             .build());
+
     private final Setting<Boolean> prefix = sgChat.add(new BoolSetting.Builder()
             .name("chat prefix")
             .description("Adds a prefix to your chat messages.")
@@ -68,8 +71,7 @@ public class ChatControl extends Module {
             .visible(filter::get)
             .build());
 
-
-    public ChatControl() {
+    public chatControl() {
         super(Addon.Snail, "Chat Control", "allows you to have more control over client messages and server messages\n");
     }
 
@@ -83,7 +85,6 @@ public class ChatControl extends Module {
             }
             event.message = setPrefix(event.message);
             event.message = setGreen(event.message);
-
         } catch (Exception e) {
             ChatUtils.error("Error in onMessageReceive method: %s", e.getMessage());
         }

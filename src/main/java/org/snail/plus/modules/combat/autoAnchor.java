@@ -37,7 +37,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Author: seasnail1
  */
-public class AutoAnchor extends Module {
+public class autoAnchor extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacement = settings.createGroup("Placement");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
@@ -299,8 +299,8 @@ public class AutoAnchor extends Module {
     };
 
 
-    public AutoAnchor() {
-        super(Addon.Snail, "Anchor Aura+", "blows up respawn anchors to damage enemies");
+    public autoAnchor() {
+        super(Addon.Snail, "Anchor aura+", "blows up respawn anchors to damage enemies");
     }
 
     @Override
@@ -343,8 +343,7 @@ public class AutoAnchor extends Module {
                     if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
 
                     //remove blocks that are too far away
-                    if (pos.getSquaredDistance(mc.player.getBlockPos()) > placeBreak.get() * placeBreak.get())
-                        return false;
+                    if (pos.getSquaredDistance(mc.player.getBlockPos()) > placeBreak.get() * placeBreak.get()) return false;
 
                     if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos, true) && WorldUtils.isAir(pos, liquidPlace.get())) {
                         if (debugCalculations.get())

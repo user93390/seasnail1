@@ -5,6 +5,7 @@ import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+import meteordevelopment.meteorclient.mixininterface.IBox;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
@@ -21,6 +22,7 @@ public class MathUtils {
     private static float targetYaw;
     private static float targetPitch;
     private static int currentStep;
+    private static Box extBox, renderBoxTwo;
 
     public static List<BlockPos> getSphere(BlockPos pos, double radius) {
         List<BlockPos> sphere = new ArrayList<>();

@@ -8,7 +8,6 @@ import meteordevelopment.meteorclient.settings.StringListSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.snail.plus.Addon;
 import org.snail.plus.utils.WorldUtils;
@@ -16,7 +15,7 @@ import org.snail.plus.utils.WorldUtils;
 import java.util.List;
 import java.util.Random;
 
-public class AutoEZ extends Module {
+public class killMessages extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -26,10 +25,10 @@ public class AutoEZ extends Module {
             .defaultValue("ez %Entity%, coords: %Coords%", "gg %Entity%, coords: %Coords%")
             .build());
 
-    private final Setting<Boolean> dm = sgGeneral.add(new BoolSetting.Builder()
-            .name("auto-dm")
-            .description("Sends the message to the player.")
-            .defaultValue(true)
+    private final Setting<Boolean> directMessage = sgGeneral.add(new BoolSetting.Builder()
+            .name("direct message")
+            .description("sends the message directly to the player")
+            .defaultValue(false)
             .build());
 
     Random random = new Random();
@@ -39,7 +38,7 @@ public class AutoEZ extends Module {
         random = new Random();
     });
 
-    public AutoEZ() {
+    public killMessages() {
         super(Addon.Snail, "Auto EZ+", "sends a custom message when a player dies");
     }
 
@@ -71,7 +70,7 @@ public class AutoEZ extends Module {
             String message = messageSetting.get().get(random.nextInt(messageSetting.get().size()));
             message = message.replace("%Entity%", player.getName().getString());
             message = message.replace("%Coords%", WorldUtils.getCoords(player));
-            if (dm.get()) {
+            if (directMessage.get()) {
                 ChatUtils.sendPlayerMsg("/msg" + message);
             } else {
                 ChatUtils.sendPlayerMsg(message);

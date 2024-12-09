@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-public class VisualRange extends Module {
+public class visualRange extends Module {
 
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
 
@@ -46,6 +46,8 @@ public class VisualRange extends Module {
             .name("sounds")
             .description("Sounds to play when a player is spotted")
             .build());
+
+
     public double x, y, z;
     private final List<Entity> entitiesList = new ArrayList<>();
     private final Random random = new Random();
@@ -57,7 +59,7 @@ public class VisualRange extends Module {
         z = 0;
     });
 
-    public VisualRange() {
+    public visualRange() {
         super(Addon.Snail, "Visual Range", "warns you when certain entities are within render distance");
     }
 

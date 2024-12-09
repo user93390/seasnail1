@@ -28,7 +28,7 @@ import java.util.List;
 import static net.minecraft.item.Items.*;
 import static org.snail.plus.utils.MathUtils.getCrosshairBlocks;
 
-public class Farmer extends Module {
+public class autoFarmer extends Module {
     private final SettingGroup sgBreak = settings.createGroup("Break");
     private final SettingGroup sgReplant = settings.createGroup("Replant");
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -107,7 +107,7 @@ public class Farmer extends Module {
         }
     };
 
-    public Farmer() {
+    public autoFarmer() {
         super(Addon.Snail, "Auto farmer", "Automatically breaks crop blocks");
     }
 
