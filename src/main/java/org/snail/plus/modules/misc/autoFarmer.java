@@ -183,10 +183,6 @@ public class autoFarmer extends Module {
         }
     }
 
-    public List<Item> cropItems() {
-        return List.of(WHEAT, BEETROOT_SEEDS, CARROT, POTATO, NETHER_WART, SWEET_BERRIES);
-    }
-
     public enum breakMode {
         crosshair,
         radius

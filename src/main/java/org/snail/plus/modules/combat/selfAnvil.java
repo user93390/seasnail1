@@ -72,6 +72,8 @@ public class selfAnvil extends Module {
             .description("How the shapes are rendered.")
             .defaultValue(ShapeMode.Both)
             .build());
+
+
     private long lastPlaceTime = 0;
 
     public selfAnvil() {

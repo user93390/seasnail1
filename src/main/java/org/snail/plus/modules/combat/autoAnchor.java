@@ -30,7 +30,6 @@ import org.snail.plus.utils.WorldUtils;
 import org.snail.plus.utils.swapUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -106,7 +105,7 @@ public class autoAnchor extends Module {
 
     private final Setting<Integer> steps = sgPlacement.add(new IntSetting.Builder()
             .name("steps")
-            .description("The amount of steps to predict.")
+            .description("The amount of steps to predict. Only for rendering.")
             .defaultValue(1)
             .sliderRange(1, 10)
             .visible(predictMovement::get)
@@ -143,6 +142,13 @@ public class autoAnchor extends Module {
             .description("The minimum amount of damage that should be dealt to the target.")
             .defaultValue(10.5)
             .sliderRange(0.0, 36.0)
+            .build());
+
+    private final Setting<Double> damageRatio = sgDamage.add(new DoubleSetting.Builder()
+            .name("damage ratio")
+            .description("The ratio. (damage dealt / damage taken)")
+            .defaultValue(1.0)
+            .sliderRange(0.0, 4.5)
             .build());
 
     private final Setting<Boolean> strictDmg = sgDamage.add(new BoolSetting.Builder()
@@ -335,9 +341,9 @@ public class autoAnchor extends Module {
 
                     selfDamage = DamageUtils.bedDamage(mc.player, vec);
                     targetDamage = DamageUtils.bedDamage(entity, vec);
-
+                    double ratio = targetDamage / selfDamage;
                     //immediately return false if self dmg or target dmg is bad
-                    if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get())
+                    if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get() || ratio < damageRatio.get())
                         return false;
 
                     if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
@@ -345,7 +351,9 @@ public class autoAnchor extends Module {
                     //remove blocks that are too far away
                     if (pos.getSquaredDistance(mc.player.getBlockPos()) > placeBreak.get() * placeBreak.get()) return false;
 
-                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && WorldUtils.hitBoxCheck(pos, true) && WorldUtils.isAir(pos, liquidPlace.get())) {
+                    if (selfDamage <= maxSelfDamage.get()
+                            && targetDamage >= minDamage.get() && ratio >= damageRatio.get() && WorldUtils.hitBoxCheck(pos, true)
+                            && WorldUtils.isAir(pos, liquidPlace.get())) {
                         if (debugCalculations.get())
                             info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
                         damageValue = targetDamage;
@@ -355,8 +363,8 @@ public class autoAnchor extends Module {
                     return false;
                 })
                 .findFirst()
-                .map(Collections::singletonList)
-                .orElse(Collections.emptyList());
+                .map(List::of)
+                .orElse(new ArrayList<>());
     }
 
     @EventHandler

@@ -126,30 +126,32 @@ public class autoXP extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
+        synchronized (this) {
             mc.executeSync(() -> {
                 if (pauseUse.get() && mc.player.isUsingItem()) return;
-            if (autoDisable.get() && isArmorFullDurability()) {
-                toggle();
-                return;
-            }
-            if (isArmorFullDurability() || mc.player.getHealth() <= pauseHealth.get()) return;
+                if (autoDisable.get() && isArmorFullDurability()) {
+                    toggle();
+                    return;
+                }
+                if (isArmorFullDurability() || mc.player.getHealth() <= pauseHealth.get()) return;
 
-            item = InvUtils.find(Items.EXPERIENCE_BOTTLE);
-            if (!item.found() || item.count() < minXPBottles.get()) {
-                error("Not enough XP bottles in inventory");
-                toggle();
-                return;
-            }
+                item = InvUtils.find(Items.EXPERIENCE_BOTTLE);
+                if (!item.found() || item.count() < minXPBottles.get()) {
+                    error("Not enough XP bottles in inventory");
+                    toggle();
+                    return;
+                }
 
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastUseTime < cooldownTime.get() * 50) return;
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastUseTime < cooldownTime.get() * 50) return;
 
-            slot = item.slot();
-            Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
-            MathUtils.updateRotation(3);
+                slot = item.slot();
+                Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
+                MathUtils.updateRotation(3);
 
-            lastUseTime = currentTime;
-        });
+                lastUseTime = currentTime;
+            });
+        }
     }
 
     public void interact() {

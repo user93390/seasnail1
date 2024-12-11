@@ -27,14 +27,21 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
-        loadModules();
-        Config.get().load();
+        synchronized (this) {
+            mc.execute(() -> {
+                try {
+                    loadModules();
+                    Config.get().load();
 
-        mc.getTutorialManager().setStep(TutorialStep.NONE);
-        mc.options.skipMultiplayerWarning = true;
-        mc.options.advancedItemTooltips = true;
-        mc.options.getAutoJump().setValue(false);
-        LOG.info("Snail++ loaded! Join the discord at " + "https://discord.gg/nh9pjVhsVb");
+                    mc.getTutorialManager().setStep(TutorialStep.NONE);
+                    mc.options.skipMultiplayerWarning = true;
+                    mc.options.advancedItemTooltips = true;
+                    mc.options.getAutoJump().setValue(false);
+                } catch (Exception e) {
+                    LOG.error("Critical error while loading: {}", e.getMessage());
+                }
+            });
+        }
     }
 
     @Override
@@ -58,6 +65,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new autoWither());
         Modules.get().add(new autoReply());
         Modules.get().add(new armorWarning());
+        Modules.get().add(new antiBurrow());
         Hud.get().register(Watermark.INFO);
         Commands.add(new swapCommand());
     }

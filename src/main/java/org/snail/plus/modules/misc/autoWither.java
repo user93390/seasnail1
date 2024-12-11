@@ -123,7 +123,7 @@ public class autoWither extends Module {
             InvUtils.swapBack();
 
         } else if (!mc.world.getBlockState(target).getBlock().equals(type)) {
-            currentBlockPos=null;
+            currentBlockPos = null;
             return true;
         }
         return false;

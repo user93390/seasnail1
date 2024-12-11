@@ -3,12 +3,14 @@ package org.snail.plus.modules.chat;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
+import org.snail.plus.modules.misc.autoXP;
 import org.snail.plus.utils.WorldUtils;
 
 import java.util.List;
@@ -58,6 +60,12 @@ public class armorWarning extends Module {
             .sliderRange(0, 100)
             .build());
 
+    private final Setting<Boolean> enableXP = sgGeneral.add(new BoolSetting.Builder()
+            .name("enable auto-XP")
+            .description("Automatically uses XP to repair armor.")
+            .defaultValue(true)
+            .build());
+
     private final Setting<Boolean> playSound = sgGeneral.add(new BoolSetting.Builder()
             .name("sound")
             .description("Plays a sound when your armor is low.")
@@ -80,6 +88,7 @@ public class armorWarning extends Module {
     Integer armorDurability;
     private long lastAlertTime = 0;
     private final long alertIntervalMillis = remind.get() * 1000;
+    private Module module = Modules.get().get(autoXP.class);
 
     Runnable reset = () -> mc.execute(() -> {
         sent = false;
@@ -116,6 +125,9 @@ public class armorWarning extends Module {
                             if (playSound.get() && !sounds.get().isEmpty()) {
                                 for (SoundEvent sound : sounds.get()) {
                                     mc.player.playSound(sound, 1, 1);
+                                }
+                                if(enableXP.get() && !module.isActive()) {
+                                    module.toggle();
                                 }
                             }
                             warning("Your armor is low! (%s)", armorDurability.toString());

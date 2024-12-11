@@ -18,12 +18,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ModuleMixin {
 
     @Unique
-    private Module module = (Module) (Object) this;
+    private Module seasnail1$module = (Module) (Object) this;
 
     @Inject(method = "sendToggledMsg", at = @At("HEAD"), cancellable = true, remap = false)
     private void sendToggledMsg(CallbackInfo ci) {
         if (Config.get().chatFeedback.get() && Modules.get().get(chatControl.class).improveClientMessage.get()) {
-            String message = module.isActive() ? Formatting.GREEN + "[+] " + module.title : Formatting.RED + "[-] " + module.title;
+            String message = seasnail1$module.isActive() ? Formatting.GREEN + "[+] " + seasnail1$module.title : Formatting.RED + "[-] " + seasnail1$module.title;
             ChatUtils.sendMsg(Text.of(Formatting.BOLD + message));
             ci.cancel();
         }

@@ -16,7 +16,6 @@ import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -77,18 +76,18 @@ public class FakePlayerMixin {
         WButton clear = wHorizontalList.add(theme.button("Clear all recordings")).widget();
 
         start.action = () -> {
-            stopRecording();
-            startRecording();
+            seasnail1$stopRecording();
+            seasnail1$startRecording();
         };
 
         clear.action = () -> {
-            stopRecording();
+            seasnail1$stopRecording();
             recordedMovements.clear();
-            stopLooping();
+            seasnail1$stopLooping();
         };
 
-        stop.action = this::stopRecording;
-        play.action = this::startLooping;
+        stop.action = this::seasnail1$stopRecording;
+        play.action = this::seasnail1$startLooping;
 
         button.add(info.getReturnValue());
         button.add(theme.horizontalSeparator()).expandX();
@@ -130,9 +129,9 @@ public class FakePlayerMixin {
 
                                     if (loopIndex == 0) {
                                         if (loop.get()) {
-                                            startLooping();
+                                            seasnail1$startLooping();
                                         } else {
-                                            stopLooping();
+                                            seasnail1$stopLooping();
                                         }
                                     }
                                 }
@@ -173,24 +172,24 @@ public class FakePlayerMixin {
 
 
     @Unique
-    public void startRecording() {
+    public void seasnail1$startRecording() {
         recordedMovements.clear();
         recording = true;
     }
 
     @Unique
-    public void stopRecording() {
+    public void seasnail1$stopRecording() {
         recording = false;
     }
 
     @Unique
-    public void startLooping() {
+    public void seasnail1$startLooping() {
         looping = true;
         loopIndex = 0;
     }
 
     @Unique
-    public void stopLooping() {
+    public void seasnail1$stopLooping() {
         looping = false;
     }
 }
