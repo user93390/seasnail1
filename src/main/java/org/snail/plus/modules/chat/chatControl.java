@@ -16,13 +16,11 @@ import java.util.List;
 public class chatControl extends Module {
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
-
     public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder()
             .name("improved client messages")
             .description("Improves the look of chat messages.")
             .defaultValue(true)
             .build());
-
     public final Setting<SettingColor> color = sgClient.add(new ColorSetting.Builder()
             .name("prefix color")
             .description("The color of the prefix.")

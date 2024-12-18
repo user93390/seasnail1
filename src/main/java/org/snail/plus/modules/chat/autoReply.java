@@ -30,6 +30,12 @@ public class autoReply extends Module {
             .defaultValue(false)
             .build());
 
+    private final Setting<Boolean> directMessage = sgGeneral.add(new BoolSetting.Builder()
+            .name("direct message")
+            .description("sends the message directly to the player")
+            .defaultValue(false)
+            .build());
+
     private final Setting<List<String>> players = sgGeneral.add(new StringListSetting.Builder()
             .name("players")
             .description("Players to reply to.")
@@ -95,7 +101,11 @@ public class autoReply extends Module {
         String replyMessage = replyMessages.get().get(random.nextInt(replyMessages.get().size()));
 
         if (!sentMessage && replyMessage != null && !replyMessage.isEmpty()) {
-            ChatUtils.sendPlayerMsg(replyMessage);
+            if (directMessage.get()) {
+                ChatUtils.sendPlayerMsg("/msg " + replyMessage);
+            } else {
+                ChatUtils.sendPlayerMsg(replyMessage);
+            }
         }
         sentMessage = true;
     }

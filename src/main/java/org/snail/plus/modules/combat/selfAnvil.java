@@ -15,9 +15,9 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.WorldUtils;
-import org.snail.plus.utils.swapUtils;
+import org.snail.plus.utilities.CombatUtils;
+import org.snail.plus.utilities.WorldUtils;
+import org.snail.plus.utilities.swapUtils;
 
 public class selfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

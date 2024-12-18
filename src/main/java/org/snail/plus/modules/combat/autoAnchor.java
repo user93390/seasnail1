@@ -24,10 +24,10 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.MathUtils;
-import org.snail.plus.utils.WorldUtils;
-import org.snail.plus.utils.swapUtils;
+import org.snail.plus.utilities.CombatUtils;
+import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.WorldUtils;
+import org.snail.plus.utilities.swapUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -276,6 +276,13 @@ public class autoAnchor extends Module {
     private Box renderBoxOne, renderBoxTwo;
     private List<BlockPos> AnchorPos = new ArrayList<>();
     private long lastPlacedTime;
+    private PlayerEntity BestTarget;
+    private double damageValue;
+    private double selfDamageValue;
+    private long lastUpdateTime;
+    private double selfDamage;
+    private double targetDamage;
+
     Runnable doBreak = () -> {
         for (BlockPos pos : AnchorPos) {
             if (rotate.get()) {
@@ -286,16 +293,12 @@ public class autoAnchor extends Module {
             }
         }
     };
-    private PlayerEntity BestTarget;
-    private double damageValue;
-    private double selfDamageValue;
-    private long lastUpdateTime;
-    private double selfDamage;
-    private double targetDamage;
+
     Runnable resetDamageValues = () -> {
         selfDamage = 0;
         targetDamage = 0;
     };
+
     Runnable reset = () -> {
         selfDamage = 0;
         targetDamage = 0;
@@ -418,7 +421,6 @@ public class autoAnchor extends Module {
                 return;
             }
 
-
             for (BlockPos pos : AnchorPos) {
                 if (pos.getSquaredDistance(mc.player.getPos()) < placeBreak.get() * placeBreak.get()) {
                     if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
@@ -446,7 +448,6 @@ public class autoAnchor extends Module {
                 if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > targetRange.get()) {
                     continue;
                 }
-
                 if (renderOutline.get()) {
                     event.renderer.box(MathUtils.extrapolateBox(mc.player, steps.get()), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 }

@@ -16,9 +16,9 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.WorldUtils;
-import org.snail.plus.utils.swapUtils;
+import org.snail.plus.utilities.CombatUtils;
+import org.snail.plus.utilities.WorldUtils;
+import org.snail.plus.utilities.swapUtils;
 
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -196,7 +196,6 @@ public class webAura extends Module {
             if (!placed) {
                 FindItemResult web = InvUtils.find(Items.COBWEB);
                 if (!web.found()) {
-                    error("No webs in hotbar... disabling.");
                     toggle();
                     return;
                 }

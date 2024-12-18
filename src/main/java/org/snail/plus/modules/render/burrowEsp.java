@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.snail.plus.Addon;
-import org.snail.plus.utils.CombatUtils;
-import org.snail.plus.utils.MathUtils;
+import org.snail.plus.utilities.CombatUtils;
+import org.snail.plus.utilities.MathUtils;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -44,6 +44,7 @@ public class burrowEsp extends Module {
             .name("max-players")
             .description("The maximum amount of burrowed players to render.")
             .sliderRange(1, 10)
+            .defaultValue(5)
             .visible(performance::get)
             .build());
 

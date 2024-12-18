@@ -11,7 +11,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
 import org.snail.plus.modules.misc.autoXP;
-import org.snail.plus.utils.WorldUtils;
+import org.snail.plus.utilities.WorldUtils;
 
 import java.util.List;
 

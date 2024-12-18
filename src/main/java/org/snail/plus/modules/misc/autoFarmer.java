@@ -12,21 +12,17 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.CropBlock;
-import net.minecraft.block.FarmlandBlock;
 import net.minecraft.item.HoeItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.MathUtils;
-import org.snail.plus.utils.swapUtils;
+import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.swapUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static net.minecraft.item.Items.*;
-import static org.snail.plus.utils.MathUtils.getCrosshairBlocks;
+import static org.snail.plus.utilities.MathUtils.getCrosshairBlocks;
 
 public class autoFarmer extends Module {
     private final SettingGroup sgBreak = settings.createGroup("Break");

@@ -1,12 +1,10 @@
-package org.snail.plus.utils;
+package org.snail.plus.utilities;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-import meteordevelopment.meteorclient.mixininterface.IBox;
-import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -70,6 +68,7 @@ public class MathUtils {
             currentStep++;
         }
     }
+
     public static Box extrapolateBox(PlayerEntity entity, int ticks) {
         return entity.getBoundingBox().offset(entity.getVelocity().multiply(ticks));
     }

@@ -6,7 +6,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.serverUtils;
+import org.snail.plus.utilities.serverUtils;
 
 import java.util.List;
 import java.util.Random;

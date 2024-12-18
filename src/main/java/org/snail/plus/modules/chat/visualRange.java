@@ -10,7 +10,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.WorldUtils;
+import org.snail.plus.utilities.WorldUtils;
 
 import java.util.ArrayList;
 import java.util.List;

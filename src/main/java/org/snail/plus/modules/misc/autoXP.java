@@ -9,22 +9,17 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.MathUtils;
-import org.snail.plus.utils.WorldUtils;
-import org.snail.plus.utils.swapUtils;
+import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.WorldUtils;
+import org.snail.plus.utilities.serverUtils;
+import org.snail.plus.utilities.swapUtils;
 
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.StreamSupport;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class autoXP extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-
 
     private final Setting<Double> pitch = sgGeneral.add(new DoubleSetting.Builder()
             .name("pitch")
@@ -54,6 +49,7 @@ public class autoXP extends Module {
             .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal))
             .build());
 
+
     private final Setting<WorldUtils.HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<WorldUtils.HandMode>()
             .name("swing")
             .description("Swing method")
@@ -72,6 +68,12 @@ public class autoXP extends Module {
             .defaultValue(20)
             .min(0)
             .sliderMax(100)
+            .build());
+
+    private final Setting<Boolean> tpsSync = sgGeneral.add(new BoolSetting.Builder()
+            .name("TPS-sync")
+            .description("syncs the delay ( " + cooldownTime.get() + ") with the server tps")
+            .defaultValue(true)
             .build());
 
     private final Setting<Integer> minXPBottles = sgGeneral.add(new IntSetting.Builder()
@@ -97,7 +99,7 @@ public class autoXP extends Module {
 
     private int slot = -1;
     private FindItemResult item;
-    private long lastUseTime = 0;;
+    private long lastUseTime = 0;
 
     private final Runnable reset = () -> {
         slot = -1;
@@ -143,7 +145,8 @@ public class autoXP extends Module {
                 }
 
                 long currentTime = System.currentTimeMillis();
-                if (currentTime - lastUseTime < cooldownTime.get() * 50) return;
+                 double time = tpsSync.get() ? serverUtils.serverTps() : 50;
+                if (currentTime - lastUseTime < cooldownTime.get() * time) return;
 
                 slot = item.slot();
                 Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
@@ -162,11 +165,13 @@ public class autoXP extends Module {
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 InvUtils.swapBack();
             }
+
             case Inventory -> {
                 swapUtils.pickSwitch(slot);
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 swapUtils.pickSwapBack();
             }
+
             case normal -> {
                 InvUtils.move().from(slot).to(moveSlot.get() - 1);
                 InvUtils.swap(slot, false);

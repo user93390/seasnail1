@@ -10,7 +10,7 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import org.snail.plus.Addon;
-import org.snail.plus.utils.WorldUtils;
+import org.snail.plus.utilities.WorldUtils;
 
 import java.util.List;
 import java.util.Random;

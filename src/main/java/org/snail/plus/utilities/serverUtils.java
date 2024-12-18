@@ -1,14 +1,10 @@
-package org.snail.plus.utils;
-
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+package org.snail.plus.utilities;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class serverUtils {
 
-    public static Integer currentPlayers() {
+    public static int currentPlayers() {
         return mc.world.getPlayers().size();
     }
 
@@ -18,5 +14,9 @@ public class serverUtils {
 
     public static int currentPing() {
         return mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid()).getLatency();
+    }
+
+    public static float serverTps() {
+        return mc.world.getTickManager().getTickRate();
     }
 }
