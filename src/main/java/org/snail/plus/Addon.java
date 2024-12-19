@@ -15,10 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.snail.plus.commands.swapCommand;
 import org.snail.plus.hud.Watermark;
 import org.snail.plus.modules.chat.*;
-import org.snail.plus.modules.combat.antiBurrow;
-import org.snail.plus.modules.combat.autoAnchor;
-import org.snail.plus.modules.combat.selfAnvil;
-import org.snail.plus.modules.combat.webAura;
+import org.snail.plus.modules.combat.*;
 import org.snail.plus.modules.misc.*;
 import org.snail.plus.modules.render.FOV;
 import org.snail.plus.modules.render.burrowEsp;
@@ -73,6 +70,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new armorWarning());
         Modules.get().add(new antiBurrow());
         Modules.get().add(new obsidianFarmer());
+        Modules.get().add(new minecartAura());
         Hud.get().register(Watermark.INFO);
         Commands.add(new swapCommand());
     }
