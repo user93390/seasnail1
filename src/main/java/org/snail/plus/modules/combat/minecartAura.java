@@ -167,7 +167,6 @@ public class minecartAura extends Module {
 
                 isPlacing = false;
                 minecartCount++;
-                warning(String.valueOf(minecartCount));
 
                 if (minecartCount >= maxMinecarts.get()) {
                     maxMinecartsReached = true;
