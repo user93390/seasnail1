@@ -15,6 +15,7 @@ import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.RailBlock;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ArrowItem;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -97,16 +98,12 @@ public class minecartAura extends Module {
             .defaultValue(new SettingColor(255, 255, 255, 255))
             .build());
     long lastPlacedTime = 0;
-    //super easy way to shoot arrows
-    Module bowSpam = Modules.get().get(BowSpam.class);
     private BlockPos position;
     private int minecartCount = 0;
     private boolean isPlacing;
+
     private boolean maxMinecartsReached;
     private final Runnable reset = () -> {
-        if (bowSpam.isActive()) {
-            bowSpam.toggle();
-        }
         position = null;
         minecartCount = 0;
         isPlacing = false;
@@ -150,8 +147,8 @@ public class minecartAura extends Module {
     }
 
     private void useMinecart(BlockPos pos) {
-        FindItemResult minecart = InvUtils.findInHotbar(Items.TNT_MINECART);
-        FindItemResult rail = InvUtils.findInHotbar(Items.RAIL);
+        FindItemResult minecart = InvUtils.find(Items.TNT_MINECART);
+        FindItemResult rail = InvUtils.find(Items.RAIL);
 
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastPlacedTime < (1000 / speed.get())) return;
@@ -159,9 +156,7 @@ public class minecartAura extends Module {
         if (minecart.found() && rail.found()) {
             if (!maxMinecartsReached) {
                 isPlacing = true;
-                if (rotate.get()) {
-                    Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
-                }
+
                 WorldUtils.placeBlock(rail, pos, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapMode.get(), rotate.get());
                 WorldUtils.placeBlock(minecart, pos, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapMode.get(), rotate.get());
 
@@ -170,36 +165,40 @@ public class minecartAura extends Module {
 
                 if (minecartCount >= maxMinecarts.get()) {
                     maxMinecartsReached = true;
-                    shootArrow();
+                    if (rotate.get()) {
+                        Rotations.rotate( Rotations.getPitch(pos), Rotations.getPitch(pos), 100 , this::shootArrow);
+                        MathUtils.updateRotation(3);
+                    }
                 }
             } else {
                 shootArrow();
             }
         }
+        lastPlacedTime = currentTime;
     }
 
     private void shootArrow() {
         if (isPlacing) return; // Prevent shooting while placing
-
+        /*
+        TODO: make the player rotate and check for raycast to ensure that the minecarts can explode automatically
+         */
         FindItemResult bow = InvUtils.findInHotbar(Items.BOW);
         if (!bow.found()) return;
 
         InvUtils.swap(bow.slot(), false);
 
-        if (!bowSpam.isActive()) {
-            bowSpam.toggle();
-            info("Shooting arrows");
-            Executors.newSingleThreadScheduledExecutor().schedule(() -> {
-                if (bowSpam.isActive()) {
-                    Rotations.rotate(Rotations.getYaw(position), Rotations.getPitch(position), 100, () -> {
-                        bowSpam.toggle();
-                        maxMinecartsReached = false; // Reset after shooting
-                        minecartCount = 0; // Reset minecart count
-                    });
+        if (!mc.player.getAbilities().creativeMode && !InvUtils.find(itemStack -> itemStack.getItem() instanceof ArrowItem).found()) return;
 
-                }
-            }, bowDelay.get(), TimeUnit.MILLISECONDS); // Adjust the delay as needed
-        }
+        boolean isBow = mc.player.getMainHandStack().getItem() == Items.BOW;
+        if (!isBow) return;
+
+        mc.options.useKey.setPressed(true);
+        Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+            mc.interactionManager.stopUsingItem(mc.player);
+            mc.options.useKey.setPressed(false);
+            maxMinecartsReached = false; // Reset after shooting
+            minecartCount = 0; // Reset minecart count
+        }, bowDelay.get(), TimeUnit.MILLISECONDS); // Adjust the delay as needed
     }
 
     @EventHandler

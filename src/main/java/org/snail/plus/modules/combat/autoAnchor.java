@@ -346,8 +346,7 @@ public class autoAnchor extends Module {
                     targetDamage = DamageUtils.bedDamage(entity, vec);
                     double ratio = targetDamage / selfDamage;
                     //immediately return false if self dmg or target dmg is bad
-                    if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get() || ratio < damageRatio.get())
-                        return false;
+                    if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get() || ratio < damageRatio.get()) return false;
 
                     if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
 
@@ -453,9 +452,12 @@ public class autoAnchor extends Module {
                 }
 
                 switch (renderMode.get()) {
-                    case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    case normal ->
+                            event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+
                     case fading ->
                             RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
+
                     case smooth -> {
                         if (renderBoxOne == null) {
                             renderBoxOne = new Box(pos);

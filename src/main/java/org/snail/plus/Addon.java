@@ -19,6 +19,7 @@ import org.snail.plus.modules.combat.*;
 import org.snail.plus.modules.misc.*;
 import org.snail.plus.modules.render.FOV;
 import org.snail.plus.modules.render.burrowEsp;
+import org.snail.plus.modules.render.spawnerExploit;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Snail++");
@@ -71,6 +72,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new antiBurrow());
         Modules.get().add(new obsidianFarmer());
         Modules.get().add(new minecartAura());
+        Modules.get().add(new spawnerExploit());
         Hud.get().register(Watermark.INFO);
         Commands.add(new swapCommand());
     }
