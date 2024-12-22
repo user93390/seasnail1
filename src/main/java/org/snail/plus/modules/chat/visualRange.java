@@ -29,8 +29,8 @@ public class visualRange extends Module {
             .build());
 
     private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
-            .name("check-uuid")
-            .description("Toggle checking player UUIDs. (only works on players)")
+            .name("ignore invalid")
+            .description("Ignores bots and other invalid entities.")
             .defaultValue(true)
             .visible(() -> entities.get().contains(EntityType.PLAYER))
             .build());
@@ -46,7 +46,6 @@ public class visualRange extends Module {
             .name("sounds")
             .description("Sounds to play when a player is spotted")
             .build());
-
 
     public double x, y, z;
     private final List<Entity> entitiesList = new ArrayList<>();
@@ -73,6 +72,20 @@ public class visualRange extends Module {
         reset.run();
     }
 
+    private boolean isValid(Entity entity) {
+        //ignore if uuid is invalid or name is invalid
+        return validUuid(entity) && validName(entity);
+    }
+
+    private boolean validName(Entity entity) {
+        //usernames only contain letters, numbers, and underscores and a minimum of 3 characters
+        return entity.getName().getString().matches("[a-zA-Z0-9_]{3,16}");
+    }
+
+    private boolean validUuid(Entity entity) {
+        return entity.getUuid() != null;
+    }
+
     @EventHandler
     private void onTick(TickEvent.Post event) {
         mc.execute(() -> {
@@ -82,11 +95,16 @@ public class visualRange extends Module {
                 if (entity == mc.player) continue;
                 if (EntityUtils.isInRenderDistance(entity)) {
                     if (entities.get().contains(entity.getType()) && !entitiesList.contains(entity)) {
-                        if (checkUuid.get() && entity.getUuid() != null) {
+                        if (checkUuid.get() && isValid(entity)) {
                             if (entitiesList.size() < maxAmount.get()) {
                                 if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
-
-                                warning("Entity spotted %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                                warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                                entitiesList.add(entity);
+                            }
+                        } else if (!checkUuid.get()) {
+                            if (entitiesList.size() < maxAmount.get()) {
+                                if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
+                                warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
                                 entitiesList.add(entity);
                             }
                         }

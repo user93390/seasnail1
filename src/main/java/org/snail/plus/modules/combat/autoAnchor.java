@@ -307,7 +307,6 @@ public class autoAnchor extends Module {
         AnchorPos = new ArrayList<>();
     };
 
-
     public autoAnchor() {
         super(Addon.Snail, "Anchor aura+", "blows up respawn anchors to damage enemies");
     }
@@ -340,24 +339,23 @@ public class autoAnchor extends Module {
 
                     // Anti-cheat checks
                     if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) return false;
-                    if (rayCast.get() && MathUtils.rayCast(new Vec3d(pos.getX(), pos.getY(), pos.getZ()))) return false;
+                    if (rayCast.get() && MathUtils.rayCast(vec)) return false;
 
                     selfDamage = DamageUtils.bedDamage(mc.player, vec);
                     targetDamage = DamageUtils.bedDamage(entity, vec);
                     double ratio = targetDamage / selfDamage;
-                    //immediately return false if self dmg or target dmg is bad
-                    if (strictDmg.get() && selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get() || ratio < damageRatio.get()) return false;
+
+                    // Immediately return false if self damage or target damage is bad
+                    if (strictDmg.get() && (selfDamage > maxSelfDamage.get() || targetDamage < minDamage.get() || ratio < damageRatio.get())) return false;
 
                     if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
 
-                    //remove blocks that are too far away
+                    // Remove blocks that are too far away
                     if (pos.getSquaredDistance(mc.player.getBlockPos()) > placeBreak.get() * placeBreak.get()) return false;
 
-                    if (selfDamage <= maxSelfDamage.get()
-                            && targetDamage >= minDamage.get() && ratio >= damageRatio.get() && WorldUtils.hitBoxCheck(pos, true)
-                            && WorldUtils.isAir(pos, liquidPlace.get())) {
-                        if (debugCalculations.get())
-                            info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
+                    if (selfDamage <= maxSelfDamage.get() && targetDamage >= minDamage.get() && ratio >= damageRatio.get()
+                            && WorldUtils.hitBoxCheck(pos, true) && WorldUtils.isAir(pos, liquidPlace.get())) {
+                        if (debugCalculations.get()) info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
                         damageValue = targetDamage;
                         selfDamageValue = selfDamage;
                         return true;

@@ -169,8 +169,7 @@ public class webAura extends Module {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
             for (PlayerEntity entity : mc.world.getPlayers()) {
-                if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity))
-                    continue;
+                if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity)) continue;
                 if (onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
 
                 BestTarget = entity;

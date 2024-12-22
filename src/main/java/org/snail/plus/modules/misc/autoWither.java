@@ -27,7 +27,7 @@ import org.snail.plus.Addon;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.List;
 
 
 /**
@@ -68,7 +68,7 @@ public class autoWither extends Module {
     private final Setting<SettingColor> LineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
         .description("Color of the outlines on the rendered block")
-        .defaultValue(Color.CYAN)
+        .defaultValue(new SettingColor(0, 255, 255, 255))
         .visible(() -> renderBlock.get())
         .build());
 
@@ -78,51 +78,49 @@ public class autoWither extends Module {
 
     BlockPos currentBlockPos = null;
 
-    ArrayList<BlockPos> soulSandOffsetsX = new ArrayList<>(Arrays.asList(
+    List<BlockPos> soulSandOffsetsX = Arrays.asList(
             new BlockPos(0, 0, 0),
             new BlockPos(0, 1, 0),
             new BlockPos(1, 1, 0),
-            new BlockPos(-1, 1, 0)));
+            new BlockPos(-1, 1, 0));
 
-    ArrayList<BlockPos> soulSandOffsetsZ = new ArrayList<>(Arrays.asList(
+    List<BlockPos> soulSandOffsetsZ = Arrays.asList(
             new BlockPos(0, 0, 0),
             new BlockPos(0, 1, 0),
             new BlockPos(0, 1, 1),
-            new BlockPos(0, 1, -1)));
+            new BlockPos(0, 1, -1));
 
-    ArrayList<BlockPos> witherSkullOffsetsX = new ArrayList<>(Arrays.asList(
+    List<BlockPos> witherSkullOffsetsX = Arrays.asList(
             new BlockPos(0, 2, 0),
             new BlockPos(1, 2, 0),
-            new BlockPos(-1, 2, 0)));
+            new BlockPos(-1, 2, 0));
 
-    ArrayList<BlockPos> witherSkullOffsetsZ = new ArrayList<>(Arrays.asList(
+    List<BlockPos> witherSkullOffsetsZ = Arrays.asList(
             new BlockPos(0, 2, 0),
             new BlockPos(0, 2, 1),
-            new BlockPos(0, 2, -1)));
+            new BlockPos(0, 2, -1));
 
     private boolean canPlace(Block block, BlockPos pos) {
         return mc.world.canPlace(block.getDefaultState(), pos, ShapeContext.absent());
     }
 
     private void placeBlock(Direction placementSide, BlockPos blockPos, boolean rotate) {
-        Vec3d hitPos = Vec3d.ofCenter(blockPos);
-        hitPos=hitPos.add(new Vec3d(placementSide.getOffsetX() * 0.5, placementSide.getOffsetY() * 0.5, placementSide.getOffsetZ() * 0.5));
+        Vec3d hitPos = Vec3d.ofCenter(blockPos).add(
+                placementSide.getOffsetX() * 0.5,
+                placementSide.getOffsetY() * 0.5,
+                placementSide.getOffsetZ() * 0.5);
         if (rotate) {
             Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 5);
         }
-
-        BlockHitResult hitResult = new BlockHitResult(hitPos, placementSide.getOpposite(), blockPos.add(placementSide.getOffsetX(), placementSide.getOffsetY(), placementSide.getOffsetZ()), false);
-
+        BlockHitResult hitResult = new BlockHitResult(hitPos, placementSide.getOpposite(), blockPos, false);
         mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hitResult);
     }
 
     private boolean attemptPlace(BlockPos target, FindItemResult block, Block type) {
         if (mc.world.getBlockState(target).isAir() && canPlace(type, target)) {
-
             InvUtils.swap(block.slot(), true);
             placeBlock(BlockUtils.getPlaceSide(target), target, rotate.get());
             InvUtils.swapBack();
-
         } else if (!mc.world.getBlockState(target).getBlock().equals(type)) {
             currentBlockPos = null;
             return true;
@@ -132,10 +130,7 @@ public class autoWither extends Module {
 
     @EventHandler
     private void onSendPacket(PacketEvent.Send event) {
-        if (currentBlockPos!=null) {
-            return;
-        }
-
+        if (currentBlockPos != null) return;
         if (!(event.packet instanceof PlayerInteractBlockC2SPacket p)) return;
         BlockPos placed = p.getBlockHitResult().getBlockPos().offset(p.getBlockHitResult().getSide());
         if (mc.world.getBlockState(placed).getBlock().equals(Blocks.SOUL_SAND)) {
@@ -149,28 +144,15 @@ public class autoWither extends Module {
             FindItemResult soulSand = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.SOUL_SAND));
             FindItemResult witherSkull = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.WITHER_SKELETON_SKULL));
             if (soulSand.found() && witherSkull.found()) {
-                ArrayList<BlockPos> offsets;
-                ArrayList<BlockPos> skullOffsets;
-                if (Math.abs(mc.player.getBlockPos().getZ()-currentBlockPos.getZ())>Math.abs(mc.player.getBlockPos().getX()-currentBlockPos.getX())) {
-                    offsets = soulSandOffsetsX;
-                    skullOffsets = witherSkullOffsetsX;
-                } else {
-                    offsets = soulSandOffsetsZ;
-                    skullOffsets = witherSkullOffsetsZ;
-                }
+                List<BlockPos> offsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? soulSandOffsetsX : soulSandOffsetsZ;
+                List<BlockPos> skullOffsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? witherSkullOffsetsX : witherSkullOffsetsZ;
                 for (BlockPos offset : offsets) {
-                    BlockPos target = currentBlockPos.add(offset);
-                    if (attemptPlace(target, soulSand, Blocks.SOUL_SAND)) {
-                        return;
-                    }
+                    if (attemptPlace(currentBlockPos.add(offset), soulSand, Blocks.SOUL_SAND)) return;
                 }
                 for (BlockPos offset : skullOffsets) {
-                    BlockPos target = currentBlockPos.add(offset);
-                    if (attemptPlace(target, witherSkull, Blocks.WITHER_SKELETON_SKULL)) {
-                        return;
-                    }
+                    if (attemptPlace(currentBlockPos.add(offset), witherSkull, Blocks.WITHER_SKELETON_SKULL)) return;
                 }
-                currentBlockPos=null;
+                currentBlockPos = null;
             }
         }
     }
