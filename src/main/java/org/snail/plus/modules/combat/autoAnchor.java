@@ -16,11 +16,15 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.NametagUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
@@ -31,6 +35,7 @@ import org.snail.plus.utilities.swapUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -45,6 +50,7 @@ public class autoAnchor extends Module {
     private final SettingGroup sgMisc = settings.createGroup("Misc");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
 
+    // General Settings
     private final Setting<Double> placeBreak = sgGeneral.add(new DoubleSetting.Builder()
             .name("place-break range")
             .description("The maximum distance to place and break anchors.")
@@ -78,17 +84,11 @@ public class autoAnchor extends Module {
             .sliderRange(7.5, 10.0)
             .build());
 
+    // Placement Settings
     private final Setting<Boolean> rotate = sgPlacement.add(new BoolSetting.Builder()
             .name("rotation")
             .description("Enables rotation towards the block when placing anchors.")
             .defaultValue(false)
-            .build());
-
-    private final Setting<Integer> rotationSteps = sgAntiCheat.add(new IntSetting.Builder()
-            .name("rotation steps")
-            .description("The amount of steps to rotate.")
-            .sliderRange(5, 25)
-            .visible(rotate::get)
             .build());
 
     private final Setting<Boolean> airPlace = sgPlacement.add(new BoolSetting.Builder()
@@ -118,6 +118,19 @@ public class autoAnchor extends Module {
             .sliderRange(0.1, 10.0)
             .build());
 
+    private final Setting<Boolean> strictDirection = sgAntiCheat.add(new BoolSetting.Builder()
+            .name("strict direction")
+            .description("Only places anchors in the direction you are facing.")
+            .defaultValue(false)
+            .build());
+
+    private final Setting<Integer> threads = sgPlacement.add(new IntSetting.Builder()
+            .name("threads")
+            .description("The amount of threads to use for calculations.")
+            .defaultValue(1)
+            .sliderRange(1, 10)
+            .build());
+
     private final Setting<Boolean> liquidPlace = sgPlacement.add(new BoolSetting.Builder()
             .name("liquid place")
             .description("Allows placing anchors in liquids.")
@@ -128,6 +141,26 @@ public class autoAnchor extends Module {
             .name("swap mode")
             .description("The mode used for swapping items when placing anchors.")
             .defaultValue(swapUtils.swapMode.Move)
+            .build());
+
+    private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
+            .name("direction")
+            .description("The mode used for direction.")
+            .defaultValue(WorldUtils.DirectionMode.Down)
+            .visible(strictDirection::get)
+            .build());
+
+    private final Setting<Boolean> swing = sgPlacement.add(new BoolSetting.Builder()
+            .name("swing")
+            .description("Swings your hand.")
+            .defaultValue(true)
+            .build());
+
+    private final Setting<WorldUtils.HandMode> swingMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.HandMode>()
+            .name("swing mode")
+            .description("The mode used for swinging your hand.")
+            .defaultValue(WorldUtils.HandMode.MainHand)
+            .visible(swing::get)
             .build());
 
     private final Setting<Double> maxSelfDamage = sgDamage.add(new DoubleSetting.Builder()
@@ -153,7 +186,7 @@ public class autoAnchor extends Module {
 
     private final Setting<Boolean> strictDmg = sgDamage.add(new BoolSetting.Builder()
             .name("strict damage")
-            .description("only place if the damage is exact or greater. No exceptions.")
+            .description("Only place if the damage is exact or greater. No exceptions.")
             .defaultValue(false)
             .build());
 
@@ -164,17 +197,11 @@ public class autoAnchor extends Module {
             .sliderRange(0.0, 36.0)
             .build());
 
-    private final Setting<Boolean> strictDirection = sgAntiCheat.add(new BoolSetting.Builder()
-            .name("strict direction")
-            .description("Only places anchors in the direction you are facing.")
-            .defaultValue(false)
-            .build());
-
-    private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
-            .name("direction")
-            .description("The mode used for direction.")
-            .defaultValue(WorldUtils.DirectionMode.Down)
-            .visible(() -> !strictDirection.get())
+    private final Setting<Integer> rotationSteps = sgAntiCheat.add(new IntSetting.Builder()
+            .name("rotation steps")
+            .description("The amount of steps to rotate.")
+            .sliderRange(5, 25)
+            .visible(rotate::get)
             .build());
 
     private final Setting<Boolean> rayCast = sgAntiCheat.add(new BoolSetting.Builder()
@@ -207,19 +234,6 @@ public class autoAnchor extends Module {
             .sliderRange(0.1, 2.0)
             .build());
 
-    private final Setting<Boolean> swing = sgPlacement.add(new BoolSetting.Builder()
-            .name("swing")
-            .description("Swings your hand.")
-            .defaultValue(true)
-            .build());
-
-    private final Setting<WorldUtils.HandMode> swingMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.HandMode>()
-            .name("swing mode")
-            .description("The mode used for swinging your hand.")
-            .defaultValue(WorldUtils.HandMode.MainHand)
-            .visible(swing::get)
-            .build());
-
     private final Setting<Boolean> renderOutline = sgRender.add(new BoolSetting.Builder()
             .name("render outline")
             .description("Renders an outline around the anchor box.")
@@ -248,16 +262,16 @@ public class autoAnchor extends Module {
             .visible(() -> renderMode.get() == RenderMode.smooth)
             .build());
 
-    private final Setting<Boolean> pauseUse = sgMisc.add(new BoolSetting.Builder()
-            .name("pause on use")
-            .description("Pauses the module when you are using an item.")
-            .defaultValue(false)
-            .build());
-
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape mode")
             .description("The shape mode used for rendering the anchor box.")
             .defaultValue(ShapeMode.Both)
+            .build());
+
+    private final Setting<Boolean> pauseUse = sgMisc.add(new BoolSetting.Builder()
+            .name("pause on use")
+            .description("Pauses the module when you are using an item.")
+            .defaultValue(false)
             .build());
 
     private final Setting<Boolean> debugCalculations = sgDebug.add(new BoolSetting.Builder()
@@ -272,6 +286,7 @@ public class autoAnchor extends Module {
             .defaultValue(false)
             .build());
 
+    private final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(threads.get());
     private final ReentrantLock lock = new ReentrantLock();
     private Box renderBoxOne, renderBoxTwo;
     private List<BlockPos> AnchorPos = new ArrayList<>();
@@ -287,9 +302,9 @@ public class autoAnchor extends Module {
         for (BlockPos pos : AnchorPos) {
             if (rotate.get()) {
                 Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, () -> MathUtils.updateRotation(rotationSteps.get()));
-                mc.execute(this::breakAnchor);
+                executor.execute(this::breakAnchor);
             } else {
-                mc.execute(this::breakAnchor);
+                executor.execute(this::breakAnchor);
             }
         }
     };
@@ -369,10 +384,9 @@ public class autoAnchor extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        resetDamageValues.run();
-        synchronized (this) {
             try {
-                mc.executeSync(() -> {
+                executor.execute(() -> {
+                    resetDamageValues.run();
                     if (updateEat()) return;
                     targetDamage = 0;
                     selfDamage = 0;
@@ -401,7 +415,6 @@ public class autoAnchor extends Module {
                 error("An error occurred while updating the module: " + e.getMessage());
                 throw new RuntimeException(e);
             }
-        }
     }
 
     public void breakAnchor() {
@@ -423,6 +436,10 @@ public class autoAnchor extends Module {
                     if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
                     WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                     WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), true, swap.get(), rotate.get());
+                    if(!packetPlace.get()) {
+                        BlockUtils.interact(new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.DOWN, pos, false), Hand.MAIN_HAND, swing.get());
+                    }
+
                     WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 }
             }
@@ -440,52 +457,54 @@ public class autoAnchor extends Module {
 
     @EventHandler
     public void render(Render3DEvent event) {
-        try {
-            for (BlockPos pos : AnchorPos) {
-                if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > targetRange.get()) {
-                    continue;
-                }
-                if (renderOutline.get()) {
-                    event.renderer.box(MathUtils.extrapolateBox(mc.player, steps.get()), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                }
+        synchronized (this) {
+            try {
+                for (BlockPos pos : AnchorPos) {
+                    if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > targetRange.get()) {
+                        continue;
+                    }
+                    if (renderOutline.get()) {
+                        event.renderer.box(MathUtils.extrapolateBox(mc.player, steps.get()), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    }
 
-                switch (renderMode.get()) {
-                    case normal ->
-                            event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                    switch (renderMode.get()) {
+                        case normal ->
+                                event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
 
-                    case fading ->
-                            RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
+                        case fading ->
+                                RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
 
-                    case smooth -> {
-                        if (renderBoxOne == null) {
-                            renderBoxOne = new Box(pos);
+                        case smooth -> {
+                            if (renderBoxOne == null) {
+                                renderBoxOne = new Box(pos);
+                            }
+                            if (renderBoxTwo == null) {
+                                renderBoxTwo = new Box(pos);
+                            }
+
+                            if (renderBoxTwo instanceof IBox) {
+                                ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1,
+                                        pos.getY() + 1, pos.getZ() + 1);
+                            }
+
+                            double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
+                            double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
+                            double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
+
+                            ((IBox) renderBoxOne).set(
+                                    renderBoxOne.minX + offsetX,
+                                    renderBoxOne.minY + offsetY,
+                                    renderBoxOne.minZ + offsetZ,
+                                    renderBoxOne.maxX + offsetX,
+                                    renderBoxOne.maxY + offsetY,
+                                    renderBoxOne.maxZ + offsetZ);
+                            event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                         }
-                        if (renderBoxTwo == null) {
-                            renderBoxTwo = new Box(pos);
-                        }
-
-                        if (renderBoxTwo instanceof IBox) {
-                            ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1,
-                                    pos.getY() + 1, pos.getZ() + 1);
-                        }
-
-                        double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
-                        double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
-                        double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
-
-                        ((IBox) renderBoxOne).set(
-                                renderBoxOne.minX + offsetX,
-                                renderBoxOne.minY + offsetY,
-                                renderBoxOne.minZ + offsetZ,
-                                renderBoxOne.maxX + offsetX,
-                                renderBoxOne.maxY + offsetY,
-                                renderBoxOne.maxZ + offsetZ);
-                        event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                     }
                 }
+            } catch (Exception e) {
+                error("An error occurred while rendering the anchor positions: " + e.getMessage());
             }
-        } catch (Exception e) {
-            error("An error occurred while rendering the anchor positions: " + e.getMessage());
         }
     }
 
