@@ -130,8 +130,7 @@ public class minecartAura extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        synchronized (this) {
-            mc.executeSync(() -> {
+            mc.execute(() -> {
                 if (mc.world != null) {
                     PlayerEntity bestTarget = CombatUtils.filter(mc.world.getPlayers(), filterMode.get(), range.get());
                     if (bestTarget != null) {
@@ -143,7 +142,6 @@ public class minecartAura extends Module {
                     }
                 }
             });
-        }
     }
 
     private void useMinecart(BlockPos pos) {
@@ -166,8 +164,8 @@ public class minecartAura extends Module {
                 if (minecartCount >= maxMinecarts.get()) {
                     maxMinecartsReached = true;
                     if (rotate.get()) {
-                        Rotations.rotate( Rotations.getPitch(pos), Rotations.getPitch(pos), 100 , this::shootArrow);
-                        MathUtils.updateRotation(3);
+                        mc.player.setYaw((float) Rotations.getYaw(position));
+                        mc.player.setPitch((float) Rotations.getPitch(position));
                     }
                 }
             } else {
@@ -179,11 +177,12 @@ public class minecartAura extends Module {
 
     private void shootArrow() {
         if (isPlacing) return; // Prevent shooting while placing
-        /*
-        TODO: make the player rotate and check for raycast to ensure that the minecarts can explode automatically
-         */
+
         FindItemResult bow = InvUtils.findInHotbar(Items.BOW);
         if (!bow.found()) return;
+
+        //raycast
+        if(MathUtils.rayCast(Vec3d.of(position.up(1)))) return;
 
         InvUtils.swap(bow.slot(), false);
 
@@ -198,7 +197,7 @@ public class minecartAura extends Module {
             mc.options.useKey.setPressed(false);
             maxMinecartsReached = false; // Reset after shooting
             minecartCount = 0; // Reset minecart count
-        }, bowDelay.get(), TimeUnit.MILLISECONDS); // Adjust the delay as needed
+        }, bowDelay.get(), TimeUnit.MILLISECONDS);
     }
 
     @EventHandler

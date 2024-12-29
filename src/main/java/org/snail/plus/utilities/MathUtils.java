@@ -20,7 +20,6 @@ public class MathUtils {
     private static float targetYaw;
     private static float targetPitch;
     private static int currentStep;
-    private static Box extBox, renderBoxTwo;
 
     public static List<BlockPos> getSphere(BlockPos pos, double radius) {
         List<BlockPos> sphere = new ArrayList<>();
@@ -63,6 +62,7 @@ public class MathUtils {
         if (currentStep < steps) {
             float interpolatedYaw = currentYaw + (targetYaw - currentYaw) * (currentStep / (float) steps);
             float interpolatedPitch = currentPitch + (targetPitch - currentPitch) * (currentStep / (float) steps);
+
             mc.player.setYaw(interpolatedYaw);
             mc.player.setPitch(interpolatedPitch);
             currentStep++;

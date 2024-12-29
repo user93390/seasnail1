@@ -29,7 +29,7 @@ public class obsidianFarmer extends Module {
 
     private final Setting<Double> mineRange = sgGeneral.add(new DoubleSetting.Builder()
             .name("mine-range")
-            .description("The range to mine obsidian.")
+            .description("The range to mine ender chests.")
             .defaultValue(5)
             .sliderRange(1, 10)
             .build());
@@ -38,6 +38,12 @@ public class obsidianFarmer extends Module {
             .name("mode")
             .description("The mining mode.")
             .defaultValue(mineMode.packet)
+            .build());
+
+    private final Setting<Boolean> instant = sgGeneral.add(new BoolSetting.Builder()
+            .name("instant")
+            .description("Instantly reMines ender chests.")
+            .defaultValue(true)
             .build());
 
     private final Setting<Boolean> autoSwitch = sgGeneral.add(new BoolSetting.Builder()
@@ -89,7 +95,7 @@ public class obsidianFarmer extends Module {
     };
 
     public obsidianFarmer() {
-        super(Addon.Snail, "Obsidian Farmer", "Automatically mines obsidian. REQUIRES YOU TO PLACE 1 ENDERCHEST");
+        super(Addon.Snail, "Obsidian Farmer", "Automatically mines obsidian.");
     }
 
 
@@ -125,8 +131,7 @@ public class obsidianFarmer extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        synchronized (this) {
-            mc.executeSync(() -> {
+            mc.execute(() -> {
                 if (autoDisable.get() && mc.player.getInventory().count(Items.OBSIDIAN) >= disableAmount.get()) {
                     toggle();
                     return;
@@ -143,7 +148,6 @@ public class obsidianFarmer extends Module {
                 }
             });
         }
-    }
 
     private void mineBlock() {
         FindItemResult pickaxe = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof PickaxeItem);
@@ -153,7 +157,9 @@ public class obsidianFarmer extends Module {
             }
             switch (mode.get()) {
                 case packet -> {
-                    mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
+                    if(!instant.get()) {
+                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
+                    }
                     mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
                 }
                 case vanilla -> BlockUtils.breakBlock(obsidianPosition, true);

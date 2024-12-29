@@ -26,7 +26,6 @@ public class Addon extends MeteorAddon {
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     private static final MinecraftClient mc = MinecraftClient.getInstance();
-
     Runnable Initialize = () -> {
         synchronized (this) {
             try {

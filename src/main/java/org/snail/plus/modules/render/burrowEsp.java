@@ -91,15 +91,13 @@ public class burrowEsp extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        mc.executeSync(() -> {
-            synchronized (this.burrowedPlayers) {
+        mc.execute(() -> {
                 burrowedPlayers.clear();
                 mc.world.getPlayers().stream()
                         .filter(player -> !(ignoreFriends.get() && Friends.get().isFriend(player)))
                         .filter(player -> CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get())
                         .limit(performance.get() ? maxPlayers.get() : Long.MAX_VALUE)
                         .forEach(burrowedPlayers::add);
-            }
         });
     }
 
@@ -107,8 +105,9 @@ public class burrowEsp extends Module {
     public void onRender3D(Render3DEvent event) {
         burrowedPlayers.forEach(player -> {
             Vec3d pos = new Vec3d(player.getX(), player.getY() + 0.4, player.getZ());
-            if(performance.get() && !MathUtils.rayCast(pos)) return;
-            event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            if(performance.get() && MathUtils.rayCast(pos)){
+                event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            }
         });
     }
 }

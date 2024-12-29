@@ -1,5 +1,8 @@
 package org.snail.plus.modules.chat;
 
+import com.google.cloud.translate.Translate;
+import com.google.cloud.translate.TranslateOptions;
+import com.google.cloud.translate.Translation;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -10,14 +13,15 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.snail.plus.Addon;
-
 import java.util.List;
 
 public class chatControl extends Module {
+
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
+
     public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder()
-            .name("improved client messages")
+           .name("improved client messages")
             .description("Improves the look of chat messages.")
             .defaultValue(true)
             .build());
@@ -76,15 +80,17 @@ public class chatControl extends Module {
     @EventHandler
     private void onMessageSend(SendMessageEvent event) {
         try {
+
             if (coordsProtection.get() && containsCoords(event.message)) {
                 event.cancel();
                 ChatUtils.sendMsg(Text.of(Formatting.RED + "Your message contains coordinates and was not sent."));
                 return;
             }
+
             event.message = setPrefix(event.message);
             event.message = setGreen(event.message);
         } catch (Exception e) {
-            ChatUtils.error("Error in onMessageReceive method: %s", e.getMessage());
+            error("Error in onMessageReceive method: %s", e.getMessage());
         }
     }
 
@@ -97,6 +103,7 @@ public class chatControl extends Module {
                 return;
             }
         }
+
         for (String player : playerList.get()) {
             if (message.getString().contains(player)) {
                 event.cancel();

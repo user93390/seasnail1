@@ -49,7 +49,6 @@ public class autoXP extends Module {
             .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal))
             .build());
 
-
     private final Setting<WorldUtils.HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<WorldUtils.HandMode>()
             .name("swing")
             .description("Swing method")
@@ -176,6 +175,11 @@ public class autoXP extends Module {
                 InvUtils.move().from(slot).to(moveSlot.get() - 1);
                 InvUtils.swap(slot, false);
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+            }
+
+            case Move -> {
+                error("Move is not a valid option for this module");
+                toggle();
             }
         }
     }
