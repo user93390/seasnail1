@@ -433,7 +433,7 @@ public class autoAnchor extends Module {
 
             for (BlockPos pos : AnchorPos) {
                 if (pos.getSquaredDistance(mc.player.getPos()) < placeBreak.get() * placeBreak.get()) {
-                    if (debugBreak.get()) info("breaking anchor at: " + pos.toShortString());
+                    if (debugBreak.get()) info("breaking anchor at: " + WorldUtils.getCoords(pos));
                     WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                     WorldUtils.placeBlock(stone, pos, swingMode.get(), directionMode.get(), true, swap.get(), rotate.get());
                     if(!packetPlace.get()) {
@@ -463,6 +463,7 @@ public class autoAnchor extends Module {
                     if (BestTarget == mc.player || Friends.get().isFriend(BestTarget) || mc.player.distanceTo(BestTarget) > targetRange.get()) {
                         continue;
                     }
+
                     if (renderOutline.get()) {
                         event.renderer.box(MathUtils.extrapolateBox(mc.player, steps.get()), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                     }
@@ -478,6 +479,7 @@ public class autoAnchor extends Module {
                             if (renderBoxOne == null) {
                                 renderBoxOne = new Box(pos);
                             }
+
                             if (renderBoxTwo == null) {
                                 renderBoxTwo = new Box(pos);
                             }

@@ -22,6 +22,7 @@ public class chatControl extends Module {
             .description("Improves the look of chat messages.")
             .defaultValue(true)
             .build());
+
     public final Setting<SettingColor> color = sgClient.add(new ColorSetting.Builder()
             .name("prefix color")
             .description("The color of the prefix.")
@@ -77,7 +78,6 @@ public class chatControl extends Module {
     @EventHandler
     private void onMessageSend(SendMessageEvent event) {
         try {
-
             if (coordsProtection.get() && containsCoords(event.message)) {
                 event.cancel();
                 ChatUtils.sendMsg(Text.of(Formatting.RED + "Your message contains coordinates and was not sent."));

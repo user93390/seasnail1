@@ -3,7 +3,10 @@ package org.snail.plus.modules.chat;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.player.FakePlayer;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -18,7 +21,6 @@ import java.util.Random;
 import java.util.Set;
 
 public class visualRange extends Module {
-
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
 
     private final Setting<Set<EntityType<?>>> entities = sgVisualRange.add(new EntityTypeListSetting.Builder()
@@ -47,6 +49,13 @@ public class visualRange extends Module {
             .description("Sounds to play when a player is spotted")
             .build());
 
+    private final Setting<Double> pitch = sgVisualRange.add(new DoubleSetting.Builder()
+            .name("pitch")
+            .description("The pitch of the sound.")
+            .defaultValue(1.0)
+            .sliderRange(0.0, 2.0)
+            .build());
+
     public double x, y, z;
     private final List<Entity> entitiesList = new ArrayList<>();
     private final Random random = new Random();
@@ -56,6 +65,7 @@ public class visualRange extends Module {
         x = 0;
         y = 0;
         z = 0;
+        random.setSeed(System.currentTimeMillis());
     });
 
     public visualRange() {
@@ -72,17 +82,18 @@ public class visualRange extends Module {
         reset.run();
     }
 
-    private boolean isValid(Entity entity) {
+    public static boolean isValid(Entity entity) {
         //ignore if uuid is invalid or name is invalid
-        return validUuid(entity) && validName(entity);
+        return validUuid(entity) || validName(entity);
     }
 
-    private boolean validName(Entity entity) {
+    public static boolean validName(Entity entity) {
         //usernames only contain letters, numbers, and underscores and a minimum of 3 characters
+        //skip if entity is fake-player (client side testing bots)
         return entity.getName().getString().matches("[a-zA-Z0-9_]{3,16}");
     }
 
-    private boolean validUuid(Entity entity) {
+    public static boolean validUuid(Entity entity) {
         return entity.getUuid() != null;
     }
 
@@ -95,25 +106,30 @@ public class visualRange extends Module {
                 if (entity == mc.player) continue;
                 if (EntityUtils.isInRenderDistance(entity)) {
                     if (entities.get().contains(entity.getType()) && !entitiesList.contains(entity)) {
+                        if (entitiesList.size() < maxAmount.get()) {
                         if (checkUuid.get() && isValid(entity)) {
                             if (entitiesList.size() < maxAmount.get()) {
-                                if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
-                                warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                                if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
+                                if (entity instanceof PlayerEntity) {
+                                    warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                                }
                                 entitiesList.add(entity);
                             }
                         } else if (!checkUuid.get()) {
-                            if (entitiesList.size() < maxAmount.get()) {
-                                if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
-                                warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                                if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
+                                if (entity instanceof PlayerEntity) {
+                                    warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                                }
                                 entitiesList.add(entity);
                             }
                         }
                     }
                 } else {
                     if (entities.get().contains(entity.getType()) && entitiesList.contains(entity)) {
-                        if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), 1.0f);
-
-                        warning("Entity left %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                        if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
+                        if (entity instanceof PlayerEntity) {
+                            warning("Entity left %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                        }
                         entitiesList.remove(entity);
                     }
                 }

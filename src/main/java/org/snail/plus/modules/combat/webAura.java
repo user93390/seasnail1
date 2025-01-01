@@ -21,6 +21,7 @@ import org.snail.plus.utilities.WorldUtils;
 import org.snail.plus.utilities.swapUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -95,36 +96,31 @@ public class webAura extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<renderMode> mode = sgRender.add(new EnumSetting.Builder<renderMode>()
-            .name("mode")
-            .description("The render mode of the web.")
-            .defaultValue(renderMode.smooth)
-            .build());
-
-    private final Setting<Integer> Smoothness = sgRender.add(new IntSetting.Builder()
-            .name("smoothness")
-            .description("The smoothness of the web.")
-            .defaultValue(10)
-            .sliderRange(0, 20)
-            .visible(() -> mode.get() == renderMode.smooth)
+    private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
+            .name("render")
+            .description("Renders the webs.")
+            .defaultValue(true)
             .build());
 
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side-color")
             .description("The side color of the web.")
             .defaultValue(new SettingColor(0, 255, 0, 50))
+            .visible(render::get)
             .build());
 
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("line-color")
             .description("The line color of the web.")
             .defaultValue(new SettingColor(0, 255, 0, 255))
+            .visible(render::get)
             .build());
 
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape-mode")
             .description("How the shape is rendered.")
             .defaultValue(ShapeMode.Both)
+            .visible(render::get)
             .build());
 
     private final Setting<WorldUtils.HandMode> hand = sgMisc.add(new EnumSetting.Builder<WorldUtils.HandMode>()
@@ -208,50 +204,10 @@ public class webAura extends Module {
 
     @EventHandler
     public void onRender(Render3DEvent event) {
-        switch (mode.get()) {
-            case smooth -> {
-                if (BestTarget != null) {
-
-                    for (BlockPos pos : positions(BestTarget)) {
-                        if (renderBoxTwo instanceof IBox) {
-                            ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1,
-                                    pos.getY() + 1, pos.getZ() + 1);
-                        }
-
-                        if (renderBoxOne == null) {
-                            renderBoxOne = new Box(pos);
-                        }
-                        if (renderBoxTwo == null) {
-                            renderBoxTwo = new Box(pos);
-                        }
-
-                        double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
-                        double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
-                        double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
-
-                        ((IBox) renderBoxOne).set(
-                                renderBoxOne.minX + offsetX,
-                                renderBoxOne.minY + offsetY,
-                                renderBoxOne.minZ + offsetZ,
-                                renderBoxOne.maxX + offsetX,
-                                renderBoxOne.maxY + offsetY,
-                                renderBoxOne.maxZ + offsetZ);
-                        event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                    }
-                }
-            }
-            case normal -> {
-                if (BestTarget != null) {
-                    for (BlockPos pos : positions(BestTarget)) {
-                        event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                    }
-                }
+        if (render.get() && BestTarget != null) {
+                for (BlockPos pos : positions(BestTarget)) {
+                    event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
             }
         }
-    }
-
-    public enum renderMode {
-        normal,
-        smooth
     }
 }

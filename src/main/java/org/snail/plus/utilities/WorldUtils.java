@@ -55,6 +55,10 @@ public class WorldUtils {
         return "%s, %s, %s".formatted(Math.round(player.getX()), Math.round(player.getY()), Math.round(player.getZ()));
     }
 
+    public static String getCoords(BlockPos pos) {
+        return "%s, %s, %s".formatted(pos.getX(), pos.getY(), pos.getZ());
+    }
+
     public static void placeBlock(FindItemResult item, BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, swapUtils.swapMode Mode, boolean rotate) {
         if (rotate) {
             Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);

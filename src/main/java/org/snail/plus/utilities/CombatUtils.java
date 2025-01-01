@@ -1,15 +1,19 @@
 package org.snail.plus.utilities;
 
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.snail.plus.modules.chat.visualRange;
 
 import java.util.List;
 
+import static meteordevelopment.meteorclient.MeteorClient.INSTANCE;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static org.snail.plus.modules.chat.visualRange.isValid;
 
 public class CombatUtils {
 
@@ -35,7 +39,7 @@ public class CombatUtils {
         playerEntities.remove(mc.player);
         playerEntities.removeAll(WorldUtils.getAllFriends());
         return playerEntities.stream()
-                .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range)
+                .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range && isValid(player))
                 .min((player1, player2) -> {
                     double distance1 = mc.player.distanceTo(player1);
                     double distance2 = mc.player.distanceTo(player2);
