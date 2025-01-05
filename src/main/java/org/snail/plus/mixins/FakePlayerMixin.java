@@ -23,7 +23,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
-import org.snail.plus.utilities.PlayerMovement;
+import org.snail.plus.utilities.events.PlayerMoveEvent;
 import org.snail.plus.utilities.WorldUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,7 +41,8 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 @Mixin(FakePlayer.class)
 public class FakePlayerMixin {
     @Unique
-    private final List<PlayerMovement> recordedMovements = new ArrayList<>();
+    private final List<PlayerMoveEvent> recordedMovements = new ArrayList<>();
+    @Unique
     @Final
     public Setting<String> name;
     @Final
@@ -106,15 +107,16 @@ public class FakePlayerMixin {
                         for (PlayerEntity fakePlayerEntity : mc.world.getPlayers()) {
                             if (fakePlayerEntity == fakePlayer) {
                                 if (recording) {
-                                    recordedMovements.add(new PlayerMovement(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
+                                    recordedMovements.add(new PlayerMoveEvent(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
                                 }
+
                                 fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 9999, 2));
                                 fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 9999, 4));
                                 fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 9999, 1));
 
                                 if (looping && !recordedMovements.isEmpty()) {
-                                    PlayerMovement movement = recordedMovements.get(loopIndex);
-                                    PlayerMovement nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
+                                    PlayerMoveEvent movement = recordedMovements.get(loopIndex);
+                                    PlayerMoveEvent nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
 
                                     double t = (double) loopIndex / recordedMovements.size();
                                     double interpolatedX = movement.x + t * (nextMovement.x - movement.x);

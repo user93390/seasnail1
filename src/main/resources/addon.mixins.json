@@ -10,5 +10,8 @@
     "ChatUtilsMixin",
     "FakePlayerMixin",
     "ModuleMixin"
+  ],
+  "client": [
+    "ClientPlayNetworkHandlerMixin"
   ]
 }

@@ -13,13 +13,13 @@ import net.minecraft.client.tutorial.TutorialStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snail.plus.commands.swapCommand;
-import org.snail.plus.hud.Watermark;
+
+
+import org.snail.plus.hud.*;
 import org.snail.plus.modules.chat.*;
 import org.snail.plus.modules.combat.*;
 import org.snail.plus.modules.misc.*;
-import org.snail.plus.modules.render.FOV;
-import org.snail.plus.modules.render.burrowEsp;
-import org.snail.plus.modules.render.spawnerExploit;
+import org.snail.plus.modules.render.*;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Snail++");
@@ -37,7 +37,8 @@ public class Addon extends MeteorAddon {
                 mc.options.advancedItemTooltips = true;
                 mc.options.getAutoJump().setValue(false);
             } catch (Exception e) {
-                LOG.error("Critical error while loading: {}", e.getMessage());
+                LOG.error("Critical error while loading: {}", e.getMessage() + ". Some modules may not work properly");
+                e.printStackTrace();
             }
         }
     };
@@ -66,12 +67,12 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new chatControl());
         Modules.get().add(new killMessages());
         Modules.get().add(new autoWither());
-        Modules.get().add(new autoReply());
         Modules.get().add(new armorWarning());
         Modules.get().add(new antiBurrow());
         Modules.get().add(new obsidianFarmer());
         Modules.get().add(new minecartAura());
         Modules.get().add(new spawnerExploit());
+        Modules.get().add(new packetMine());
         Hud.get().register(Watermark.INFO);
         Commands.add(new swapCommand());
     }

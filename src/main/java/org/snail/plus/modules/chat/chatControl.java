@@ -11,11 +11,13 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.snail.plus.Addon;
 import java.util.List;
+import java.util.Random;
 
 public class chatControl extends Module {
 
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
+    private final SettingGroup sgReply = settings.createGroup("Reply");
 
     public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder()
            .name("improved client messages")
@@ -71,9 +73,61 @@ public class chatControl extends Module {
             .visible(filter::get)
             .build());
 
+    private final Setting<Boolean> autoReply = sgReply.add(new BoolSetting.Builder()
+            .name("auto-reply")
+            .description("Automatically reply to certain messages.")
+            .defaultValue(true)
+            .build());
+
+    private final Setting<Boolean> requireMcName = sgReply.add(new BoolSetting.Builder()
+            .name("require-mc-name")
+            .description("Only reply to messages that contain your Minecraft name.")
+            .defaultValue(true)
+            .visible(autoReply::get)
+            .build());
+
+    private final Setting<Boolean> directMessage = sgReply.add(new BoolSetting.Builder()
+            .name("direct message")
+            .description("sends the message directly to the player")
+            .defaultValue(false)
+            .visible(autoReply::get)
+            .build());
+
+    private final Setting<Boolean> whiteList = sgReply.add(new BoolSetting.Builder()
+            .name("whitelist")
+            .description("Only reply to certain players.")
+            .defaultValue(false)
+            .visible(autoReply::get)
+            .build());
+
+    private final Setting<List<String>> players = sgReply.add(new StringListSetting.Builder()
+            .name("players")
+            .description("Players to reply to.")
+            .defaultValue(List.of())
+            .visible(whiteList::get)
+            .visible(autoReply::get)
+            .build());
+
+    private final Setting<List<String>> replyMessages = sgReply.add(new StringListSetting.Builder()
+            .name("reply-messages")
+            .description("Messages to reply with.")
+            .defaultValue(List.of("I am currently afk.", "I am currently busy."))
+            .visible(autoReply::get)
+            .build());
+
+    private final Setting<List<String>> triggerKeywords = sgReply.add(new StringListSetting.Builder()
+            .name("trigger-keywords")
+            .description("Keywords that trigger an auto-reply. Leave empty to reply to all messages.")
+            .defaultValue(List.of("help", "question"))
+            .visible(autoReply::get)
+            .build());
+
     public chatControl() {
         super(Addon.Snail, "Chat Control", "allows you to have more control over client messages and server messages\n");
     }
+
+    Random random = new Random();
+    boolean sentMessage = false;
 
     @EventHandler
     private void onMessageSend(SendMessageEvent event) {
@@ -95,18 +149,43 @@ public class chatControl extends Module {
     private void onMessageReceive(ReceiveMessageEvent event) {
         Text message = event.getMessage();
         for (String word : filterWords.get()) {
-            if (message.getString().contains(word)) {
+            for (String player : playerList.get()) {
+            if (message.getString().contains(word) || message.getString().contains(player)) {
                 event.cancel();
                 return;
             }
         }
 
-        for (String player : playerList.get()) {
-            if (message.getString().contains(player)) {
-                event.cancel();
-                return;
+            if(autoReply.get()) {
+                String messageString = message.getString();
+                for (String keyword : triggerKeywords.get()) {
+                    if (messageString.contains(keyword) && requireMcName.get() && messageString.contains(mc.player.getName().getString())) {
+                        if (whiteList.get()) {
+                            for (String player : players.get()) {
+                                if (messageString.contains(player)) {
+                                    sendReply();
+                                }
+                            }
+                        } else {
+                            sendReply();
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private void sendReply() {
+        String replyMessage = replyMessages.get().get(random.nextInt(replyMessages.get().size()));
+
+        if (!sentMessage && replyMessage != null && !replyMessage.isEmpty()) {
+            if (directMessage.get()) {
+                ChatUtils.sendPlayerMsg("/msg " + replyMessage);
+            } else {
+                ChatUtils.sendPlayerMsg(replyMessage);
+            }
+        }
+        sentMessage = true;
     }
 
     private boolean containsCoords(String message) {

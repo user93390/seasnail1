@@ -72,4 +72,6 @@ public class MathUtils {
     public static Box extrapolateBox(PlayerEntity entity, int ticks) {
         return entity.getBoundingBox().offset(entity.getVelocity().multiply(ticks));
     }
+
+
 }

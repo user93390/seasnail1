@@ -5,6 +5,7 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.world.PacketMine;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -17,6 +18,7 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.snail.plus.Addon;
+import org.snail.plus.modules.combat.packetMine;
 import org.snail.plus.utilities.MathUtils;
 
 import java.util.ArrayList;
@@ -158,7 +160,7 @@ public class obsidianFarmer extends Module {
             switch (mode.get()) {
                 case packet -> {
                     if(!instant.get()) {
-                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
+                       packetMine.setBlock(obsidianPosition);
                     }
                     mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
                 }

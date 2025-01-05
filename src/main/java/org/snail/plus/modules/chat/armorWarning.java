@@ -1,17 +1,25 @@
 package org.snail.plus.modules.chat;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.gui.GuiTheme;
+import meteordevelopment.meteorclient.gui.widgets.WWidget;
+import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
+import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
 import org.snail.plus.modules.misc.autoXP;
 import org.snail.plus.utilities.WorldUtils;
+import org.snail.plus.utilities.screens.Placeholders;
 
 import java.util.List;
 
@@ -35,7 +43,7 @@ public class armorWarning extends Module {
     private final Setting<String> chatMessage = sgGeneral.add(new StringSetting.Builder()
             .name("chat-message")
             .description("The message to send in chat when your armor is low.")
-            .defaultValue("Your armor is is low {name}! ({value})")
+            .defaultValue("")
             .visible(friends::get)
             .build());
 
@@ -88,13 +96,32 @@ public class armorWarning extends Module {
     Integer armorDurability;
     private long lastAlertTime = 0;
     private final long alertIntervalMillis = remind.get() * 1000;
-    private Module module = Modules.get().get(autoXP.class);
+    private final Module module = Modules.get().get(autoXP.class);
+    private String grammar;
 
+
+    Runnable showScreen = Placeholders::showScreen;
     Runnable reset = () -> mc.execute(() -> {
         sent = false;
         armorDurability = 0;
         lastAlertTime = 0;
     });
+
+    public WWidget getWidget(GuiTheme theme) {
+        WVerticalList list = theme.verticalList();
+        WButton placeholders = list.add(theme.button("Placeholders")).expandX().widget();
+        placeholders.action = () -> {
+            getContent();
+            showScreen.run();
+        };
+        return list;
+    }
+
+    public void getContent() {
+        Placeholders.items = List.of("{name} - shows the player's name", "{piece} - shows the piece of armor",
+                "{durability} - shows the durability of the armor");
+        Placeholders.title = "Kill Message Placeholders";
+    }
 
     @Override
     public void onActivate() {
@@ -110,52 +137,87 @@ public class armorWarning extends Module {
         super(Addon.Snail, "armor-warning", "Warns you when your armor is low.");
     }
 
+    private void handleArmor() {
+        if (mc.player != null) {
+            armorDurability = getDurability(mc.player);
+        }
+
+        long currentTime = System.currentTimeMillis();
+        boolean shouldAlert = currentTime - lastAlertTime >= alertIntervalMillis;
+
+        if (armorDurability < threshold.get() && shouldAlert) {
+            playAlertSounds();
+            if (enableXP.get() && !module.isActive()) {
+                module.toggle();
+            }
+            warning("Your armor is low! (%s)", armorDurability.toString());
+            lastAlertTime = currentTime;
+        }
+
+        if (friends.get()) {
+            for (PlayerEntity friend : WorldUtils.getAllFriends()) {
+                if (friend != null) {
+                    Integer friendDurability = getDurability(friend);
+
+                    if (friendDurability < friendThreshold.get() && mc.player.distanceTo(friend) < maxFriendRange.get() && shouldAlert) {
+                        sendMessage(friend, friendDurability);
+                        lastAlertTime = currentTime;
+                    }
+                }
+            }
+        }
+    }
+
+    private void playAlertSounds() {
+        if (playSound.get() && !sounds.get().isEmpty()) {
+            for (SoundEvent sound : sounds.get()) {
+                mc.player.playSound(sound, 1, 1);
+            }
+        }
+    }
+
+    private void sendMessage(PlayerEntity entity, Integer friendDurability) {
+        for (ItemStack stack : entity.getArmorItems()) {
+            if (stack.getItem() instanceof ArmorItem armorItem) {
+                grammar = switch (armorItem.getSlotType()) {
+                    case HEAD, CHEST -> "is";
+                    case LEGS, FEET -> "are";
+                    default -> "NaN";
+                };
+            }
+        }
+
+        String message = chatMessage.get()
+                .replace("{durability}", friendDurability.toString())
+                .replace("{name}", entity.getName().getString())
+                .replace("{piece}", getArmorPiece(entity).getItem().getName().getString())
+                .replace("{grammar}", grammar);
+        if (directMessage.get()) {
+            ChatUtils.sendPlayerMsg("/msg " + entity.getName().getString() + " " + message);
+        } else {
+            ChatUtils.sendPlayerMsg(message);
+        }
+    }
+
+    private ItemStack getArmorPiece(PlayerEntity entity) {
+        for (ItemStack stack : entity.getArmorItems()) {
+            if (stack != null && !stack.isEmpty() && stack.isDamageable()) {
+                if (stack.getMaxDamage() - 100 * (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage() == armorDurability) {
+                    return stack;
+                }
+            }
+        }
+        return null;
+    }
+
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
-            synchronized (this) {
-                mc.executeSync(() -> {
-                    if (mc.player != null) {
-                        armorDurability = getDurability(mc.player);
-
-                        long currentTime = System.currentTimeMillis();
-                        boolean shouldAlert = currentTime - lastAlertTime >= alertIntervalMillis;
-
-                        if (armorDurability < threshold.get() && shouldAlert) {
-                            if (playSound.get() && !sounds.get().isEmpty()) {
-                                for (SoundEvent sound : sounds.get()) {
-                                    mc.player.playSound(sound, 1, 1);
-                                }
-                                if(enableXP.get() && !module.isActive()) {
-                                    module.toggle();
-                                }
-                            }
-                            warning("Your armor is low! (%s)", armorDurability.toString());
-                            lastAlertTime = currentTime;
-                        }
-
-                        if (friends.get()) {
-                            for (PlayerEntity friend : WorldUtils.getAllFriends()) {
-                                if (friend != null) {
-                                    Integer friendDurability = getDurability(friend);
-
-                                    if (friendDurability < friendThreshold.get() && mc.player.distanceTo(friend) < maxFriendRange.get() && shouldAlert) {
-                                        String message = chatMessage.get()
-                                                .replace("{value}", armorDurability.toString())
-                                                .replace("{name}", friend.getName().getString());
-                                        if (directMessage.get()) {
-                                            ChatUtils.sendPlayerMsg("/msg " + friend.getName().getString() + " " + message);
-                                        } else {
-                                            ChatUtils.sendPlayerMsg(message);
-                                        }
-                                        lastAlertTime = currentTime;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
+            mc.execute(() -> {
+                if (mc.player != null) {
+                   handleArmor();
+                }
+            });
         } catch (Exception e) {
             error("Error in armorWarning", e);
         }
