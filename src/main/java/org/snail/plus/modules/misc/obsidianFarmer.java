@@ -160,9 +160,11 @@ public class obsidianFarmer extends Module {
             switch (mode.get()) {
                 case packet -> {
                     if(!instant.get()) {
-                       packetMine.setBlock(obsidianPosition);
+                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
+                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
+                    } else {
+                        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
                     }
-                    mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
                 }
                 case vanilla -> BlockUtils.breakBlock(obsidianPosition, true);
             }
