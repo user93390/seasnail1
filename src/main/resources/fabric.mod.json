@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "snailplus",
+  "id": "snail-plus",
   "version": "${version}",
   "name": "snail++",
   "description": "meteor client addon",
@@ -15,6 +15,7 @@
   "entrypoints": {
     "meteor": [
       "org.snail.plus.Addon"
+
     ]
   },
   "mixins": [

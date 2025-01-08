@@ -46,6 +46,10 @@ public class ClientPlayNetworkHandlerMixin {
                     PlayerDeathEvent event = new PlayerDeathEvent(player, player.getBlockPos(), selfKilled);
                     MeteorClient.EVENT_BUS.post(event);
                 }
+
+                case 4 -> {
+
+                }
             }
 
             if (player.isDead()) {

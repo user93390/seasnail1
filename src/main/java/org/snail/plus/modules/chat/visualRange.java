@@ -3,10 +3,7 @@ package org.snail.plus.modules.chat;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.systems.modules.player.FakePlayer;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -55,11 +52,9 @@ public class visualRange extends Module {
             .defaultValue(1.0)
             .sliderRange(0.0, 2.0)
             .build());
-
-    public double x, y, z;
     private final List<Entity> entitiesList = new ArrayList<>();
     private final Random random = new Random();
-
+    public double x, y, z;
     Runnable reset = () -> mc.execute(() -> {
         entitiesList.clear();
         x = 0;
@@ -70,16 +65,6 @@ public class visualRange extends Module {
 
     public visualRange() {
         super(Addon.Snail, "Visual Range", "warns you when certain entities are within render distance");
-    }
-
-    @Override
-    public void onActivate() {
-        reset.run();
-    }
-
-    @Override
-    public void onDeactivate() {
-        reset.run();
     }
 
     public static boolean isValid(Entity entity) {
@@ -97,6 +82,16 @@ public class visualRange extends Module {
         return entity.getUuid() != null;
     }
 
+    @Override
+    public void onActivate() {
+        reset.run();
+    }
+
+    @Override
+    public void onDeactivate() {
+        reset.run();
+    }
+
     @EventHandler
     private void onTick(TickEvent.Post event) {
         mc.execute(() -> {
@@ -107,16 +102,18 @@ public class visualRange extends Module {
                 if (EntityUtils.isInRenderDistance(entity)) {
                     if (entities.get().contains(entity.getType()) && !entitiesList.contains(entity)) {
                         if (entitiesList.size() < maxAmount.get()) {
-                        if (checkUuid.get() && isValid(entity)) {
-                            if (entitiesList.size() < maxAmount.get()) {
-                                if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
-                                if (entity instanceof PlayerEntity) {
-                                    warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                            if (checkUuid.get() && isValid(entity)) {
+                                if (entitiesList.size() < maxAmount.get()) {
+                                    if (!soundList.isEmpty())
+                                        WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
+                                    if (entity instanceof PlayerEntity) {
+                                        warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
+                                    }
+                                    entitiesList.add(entity);
                                 }
-                                entitiesList.add(entity);
-                            }
-                        } else if (!checkUuid.get()) {
-                                if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
+                            } else if (!checkUuid.get()) {
+                                if (!soundList.isEmpty())
+                                    WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
                                 if (entity instanceof PlayerEntity) {
                                     warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
                                 }
@@ -126,7 +123,8 @@ public class visualRange extends Module {
                     }
                 } else {
                     if (entities.get().contains(entity.getType()) && entitiesList.contains(entity)) {
-                        if (!soundList.isEmpty()) WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
+                        if (!soundList.isEmpty())
+                            WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
                         if (entity instanceof PlayerEntity) {
                             warning("Entity left %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
                         }

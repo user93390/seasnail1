@@ -16,16 +16,6 @@ public class Placeholders {
         mc.setScreen(new showScreen());
     }
 
-    public Placeholders setTitle(String title) {
-        Placeholders.title = title;
-        return this;
-    }
-
-    public Placeholders addItem(String... items) {
-        Placeholders.items = List.of(items);
-        return this;
-    }
-
     public  static class showScreen extends WindowScreen {
         public showScreen() {
             super(GuiThemes.get(), "Placeholders");
