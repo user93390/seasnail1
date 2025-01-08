@@ -194,6 +194,7 @@ public class packetMine extends Module {
                 Box box = shape.getBoundingBox();
                 double shrinkX = box.getLengthX() * clampedValue * 0.5;
                 double shrinkY = box.getLengthY() * clampedValue * 0.5;
+
                 double shrinkZ = box.getLengthZ() * clampedValue * 0.5;
                 double smoothness = Math.max(1, 1 / clampedValue);
                 event.renderer.box(
