@@ -21,7 +21,7 @@
     "addon.mixins.json"
   ],
   "custom": {
-    "meteor-client:color": "76,25,76",
+    "meteor-client:color": "76,25,76"
   },
   "depends": {
     "java": ">=21",

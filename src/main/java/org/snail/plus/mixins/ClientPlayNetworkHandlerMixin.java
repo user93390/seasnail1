@@ -33,14 +33,14 @@ public class ClientPlayNetworkHandlerMixin {
             if (processedPackets.contains(packet)) return;
 
             processedPackets.add(packet);
-
+            //packet status 35 is totem pop
             switch (packet.getStatus()) {
                 case 35 -> {
                     i++;
                     ChatUtils.info(String.valueOf(i));
                     MeteorClient.EVENT_BUS.post(new TotemPopEvent(i, player));
                 }
-
+                //packet status 3 is player death
                 case 3 -> {
                     boolean selfKilled = player.getLastAttacker() != mc.player;
                     PlayerDeathEvent event = new PlayerDeathEvent(player, player.getBlockPos(), selfKilled);
