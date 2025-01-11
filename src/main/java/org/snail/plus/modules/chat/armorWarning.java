@@ -99,7 +99,6 @@ public class armorWarning extends Module {
     private final Module module = Modules.get().get(autoXP.class);
     private String grammar;
 
-
     Runnable showScreen = Placeholders::showScreen;
     Runnable reset = () -> mc.execute(() -> {
         sent = false;
@@ -119,7 +118,7 @@ public class armorWarning extends Module {
 
     public void getContent() {
         Placeholders.items = List.of("{name} - shows the player's name", "{piece} - shows the piece of armor",
-                "{durability} - shows the durability of the armor");
+                "{durability} - shows the durability of the armor", "{grammar} - shows the grammar for the piece of armor (is/are)");
         Placeholders.title = "Kill Message Placeholders";
     }
 
@@ -171,7 +170,7 @@ public class armorWarning extends Module {
     private void playAlertSounds() {
         if (playSound.get() && !sounds.get().isEmpty()) {
             for (SoundEvent sound : sounds.get()) {
-                mc.player.playSound(sound, 1, 1);
+               WorldUtils.playSound(sound, 1);
             }
         }
     }

@@ -1,3 +1,4 @@
+
 package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
@@ -12,6 +13,7 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Blocks;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.math.BlockPos;
@@ -134,7 +136,7 @@ public class packetMine extends Module {
 
     @EventHandler
     private void onMine(StartBreakingBlockEvent event) {
-        if(mc.player.getBlockPos().getSquaredDistance(event.blockPos) > range.get() * range.get()) return;
+        if(mc.player.getBlockPos().getSquaredDistance(event.blockPos) > range.get() * range.get() || mc.world.getBlockState(event.blockPos).getBlock() == Blocks.BEDROCK) return;
 
         if(position != event.blockPos) {
             reset.run();
@@ -171,13 +173,15 @@ public class packetMine extends Module {
             }
 
             if (progress >= 1.0) {
+                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
+                swapped = false;
+
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - lastMineTime < delay.get() * 50) {
                     return;
                 }
+
                 breakBlock.run();
-                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
-                swapped = false;
                 lastMineTime = currentTime;
             } else {
                 progress += BlockUtils.getBreakDelta(slot, mc.world.getBlockState(position));

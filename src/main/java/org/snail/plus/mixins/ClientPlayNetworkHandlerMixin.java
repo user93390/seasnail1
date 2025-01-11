@@ -5,6 +5,7 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import org.snail.plus.utilities.events.PlayerDeathEvent;
 import org.snail.plus.utilities.events.TotemPopEvent;
@@ -25,7 +26,7 @@ public class ClientPlayNetworkHandlerMixin {
     @Unique
     int i = 0;
     @Unique
-    private final Set<EntityStatusS2CPacket> processedPackets = new HashSet<>();
+    private final Set<Packet<?>> processedPackets = new HashSet<>();
 
     @Inject(method = "onEntityStatus", at = @At("HEAD"))
     private void onEntityStatus(EntityStatusS2CPacket packet, CallbackInfo ci) {
@@ -37,18 +38,13 @@ public class ClientPlayNetworkHandlerMixin {
             switch (packet.getStatus()) {
                 case 35 -> {
                     i++;
-                    ChatUtils.info(String.valueOf(i));
                     MeteorClient.EVENT_BUS.post(new TotemPopEvent(i, player));
                 }
                 //packet status 3 is player death
                 case 3 -> {
-                    boolean selfKilled = player.getLastAttacker() != mc.player;
+                    boolean selfKilled = player.getLastAttacker() == mc.player;
                     PlayerDeathEvent event = new PlayerDeathEvent(player, player.getBlockPos(), selfKilled);
                     MeteorClient.EVENT_BUS.post(event);
-                }
-
-                case 4 -> {
-
                 }
             }
 
