@@ -1,10 +1,5 @@
 package org.snail.plus.utilities;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
-
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -12,6 +7,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class MathUtils {
 
@@ -73,5 +73,7 @@ public class MathUtils {
         return entity.getBoundingBox().offset(entity.getVelocity().multiply(ticks));
     }
 
-
+    public static Vec3d extrapolatePos(PlayerEntity entity, int ticks) {
+        return entity.getPos().add(entity.getVelocity().multiply(ticks));
+    }
 }

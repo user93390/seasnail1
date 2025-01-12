@@ -1,9 +1,7 @@
 package org.snail.plus.mixins;
 
 import meteordevelopment.meteorclient.MeteorClient;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
@@ -15,11 +13,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
-
-
 import java.util.HashSet;
 import java.util.Set;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public class ClientPlayNetworkHandlerMixin {
@@ -40,7 +37,7 @@ public class ClientPlayNetworkHandlerMixin {
                     i++;
                     MeteorClient.EVENT_BUS.post(new TotemPopEvent(i, player));
                 }
-                //packet status 3 is player death
+                //packet status 3 is player deathkk
                 case 3 -> {
                     boolean selfKilled = player.getLastAttacker() == mc.player;
                     PlayerDeathEvent event = new PlayerDeathEvent(player, player.getBlockPos(), selfKilled);

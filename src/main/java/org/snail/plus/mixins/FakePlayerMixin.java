@@ -1,6 +1,5 @@
 package org.snail.plus.mixins;
 
-import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
@@ -10,21 +9,13 @@ import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
-import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.player.FakePlayer;
-import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.Vec3d;
 import org.snail.plus.utilities.events.PlayerMoveEvent;
-import org.snail.plus.utilities.WorldUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -100,76 +91,43 @@ public class FakePlayerMixin {
     @Unique
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        synchronized (this) {
-            mc.execute(() -> {
-                try {
-                    for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
-                        for (PlayerEntity fakePlayerEntity : mc.world.getPlayers()) {
-                            if (fakePlayerEntity == fakePlayer) {
-                                if (recording) {
-                                    recordedMovements.add(new PlayerMoveEvent(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
-                                }
-
-                                fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 9999, 2));
-                                fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 9999, 4));
-                                fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 9999, 1));
-
-                                if (looping && !recordedMovements.isEmpty()) {
-                                    PlayerMoveEvent movement = recordedMovements.get(loopIndex);
-                                    PlayerMoveEvent nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
-
-                                    double t = (double) loopIndex / recordedMovements.size();
-                                    double interpolatedX = movement.x + t * (nextMovement.x - movement.x);
-                                    double interpolatedY = movement.y + t * (nextMovement.y - movement.y);
-                                    double interpolatedZ = movement.z + t * (nextMovement.z - movement.z);
-                                    double interpolatedYaw = movement.yaw + t * (nextMovement.yaw - movement.yaw);
-                                    fakePlayerEntity.updatePosition(interpolatedX, interpolatedY, interpolatedZ);
-                                    fakePlayerEntity.updateTrackedHeadRotation((float) interpolatedYaw, 3);
-                                    fakePlayerEntity.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
-
-                                    loopIndex = (loopIndex + 1) % recordedMovements.size();
-
-                                    if (loopIndex == 0) {
-                                        if (loop.get()) {
-                                            seasnail1$startLooping();
-                                        } else {
-                                            seasnail1$stopLooping();
-                                        }
-                                    }
-                                }
-                            }
+        try {
+            for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
+                for (PlayerEntity fakePlayerEntity : mc.world.getPlayers()) {
+                    if (fakePlayerEntity == fakePlayer) {
+                        if (recording) {
+                            recordedMovements.add(new PlayerMoveEvent(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
                         }
-                    }
-                } catch (Exception e) {
-                    ChatUtils.error("An error occurred while playing the recording.");
-                    throw new RuntimeException(e);
-                }
-            });
-        }
-    }
 
-    @Unique
-    @EventHandler
-    private void onPacket(PacketEvent.Receive event) {
-        mc.execute(() -> {
-            if (event.packet instanceof ExplosionS2CPacket packet) {
-                for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
-                    for (PlayerEntity fakePlayerEntity : mc.world.getPlayers()) {
-                        float damage = DamageUtils.crystalDamage(fakePlayerEntity, new Vec3d(packet.getX(), packet.getY(), packet.getZ()));
-                        if (damage > 0.0F && fakePlayerEntity.timeUntilRegen <= 10) {
-                            fakePlayerEntity.hurtTime = 10;
-                            fakePlayerEntity.timeUntilRegen = 20;
-                            WorldUtils.playSound(SoundEvents.ENTITY_PLAYER_HURT, 1.0F);
-                            fakePlayer.setHealth(fakePlayer.getHealth() - damage);
+                        if (looping && !recordedMovements.isEmpty()) {
+                            PlayerMoveEvent movement = recordedMovements.get(loopIndex);
+                            PlayerMoveEvent nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
 
-                            if(fakePlayer.getHealth() < Modules.get().get(FakePlayer.class).health.get()) {
-                                fakePlayer.setHealth(Modules.get().get(FakePlayer.class).health.get());
+                            double t = (double) loopIndex / recordedMovements.size();
+                            double interpolatedX = movement.x + t * (nextMovement.x - movement.x);
+                            double interpolatedY = movement.y + t * (nextMovement.y - movement.y);
+                            double interpolatedZ = movement.z + t * (nextMovement.z - movement.z);
+
+                            fakePlayerEntity.updatePosition(interpolatedX, interpolatedY, interpolatedZ);
+                            fakePlayerEntity.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
+
+                            loopIndex = (loopIndex + 1) % recordedMovements.size();
+
+                            if (loopIndex == 0) {
+                                if (loop.get()) {
+                                    seasnail1$startLooping();
+                                } else {
+                                    seasnail1$stopLooping();
+                                }
                             }
                         }
                     }
                 }
             }
-        });
+        } catch (Exception e) {
+            ChatUtils.error("An error occurred while playing the recording.");
+            throw new RuntimeException(e);
+        }
     }
 
 
