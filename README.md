@@ -16,7 +16,7 @@
 ## Story line
 Originally snail++ was going to be called 'snailhack.' But to me it sounded too much like 'salhack' (another Minecraft client).
 
-Snail++ used to be developed by two people, Chronosuser and Myself. Later on, Chronosuser would abandon the project and work on his own client. When I first started developing snail++, I wanted to make the client private because I was really bad at coding at the time. After some time, Chronosuser thought it would be a good idea to give someone the non-obfuscated client; it turns out it was a bad idea (because he later cracked the client later on).
+Snail++ used to be developed by two people, Chronosuser and Myself. Later on, Chronosuser would abandon the project and work on his own client. When I first started developing snail++, I wanted to make the client private because I was really bad at coding at the time. After some time, Chronosuser thought it would be a good idea to give someone the non-obfuscated client; it turns out it was a bad idea (because that someone later cracked the client later on).
 Ironically, I was thinking about making the client open source because I didn't like how long it took to add someone's HWID (MAC address). 
 When Chronosuser abandoned the project, I felt really demotivated to do anything because I could not rely on anyone to do anything.(This is around-ish the time when I started to look for developers.) 
 
