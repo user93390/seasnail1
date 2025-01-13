@@ -8,8 +8,8 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.snail.plus.Addon;
+
 import java.util.List;
 import java.util.Random;
 
@@ -42,9 +42,9 @@ public class chatControl extends Module {
             .defaultValue(true)
             .build());
 
-    private final Setting<String> prefixText = sgChat.add(new StringSetting.Builder()
-            .name("prefix-text")
-            .description("The text to add as your prefix when you type in chat.")
+    private final Setting<String> suffixText = sgChat.add(new StringSetting.Builder()
+            .name("suffix-text")
+            .description("The text to add as your suffix when you type in chat.")
             .defaultValue("| snail++")
             .visible(prefix::get)
             .build());
@@ -132,14 +132,14 @@ public class chatControl extends Module {
     @EventHandler
     private void onMessageSend(SendMessageEvent event) {
         try {
-            if (coordsProtection.get() && containsCoords(event.message)) {
+            if (coordsProtection.get() && containsCoordinates(event.message)) {
                 event.cancel();
-                ChatUtils.sendMsg(Text.of(Formatting.RED + "Your message contains coordinates and was not sent."));
+                warning("You cannot send messages with coordinates. ", event.message);
                 return;
             }
 
-            event.message = setPrefix(event.message);
-            event.message = setGreen(event.message);
+            event.message = addSuffix(event.message);
+            event.message = greenText(event.message);
         } catch (Exception e) {
             error("Error in onMessageReceive method: %s", e.getMessage());
         }
@@ -196,15 +196,15 @@ public class chatControl extends Module {
         sentMessage = true;
     }
 
-    private boolean containsCoords(String message) {
+    private boolean containsCoordinates(String message) {
         return message.matches(".*-?\\d{1,6}, -?\\d{1,6}, -?\\d{1,6}.*");
     }
 
-    private String setGreen(String message) {
+    private String greenText(String message) {
         return green.get() ? "> " + message : message;
     }
 
-    private String setPrefix(String message) {
-        return prefix.get() ? message + " " + prefixText.get() : message;
+    private String addSuffix(String message) {
+        return prefix.get() ? message + " " + suffixText.get() : message;
     }
 }

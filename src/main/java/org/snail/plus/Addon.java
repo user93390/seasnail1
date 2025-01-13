@@ -36,7 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Addon extends MeteorAddon {
-    public static final String CLIENT_VERSION = "1.2.5";
+    public static final String CLIENT_VERSION = "1.0.0";
     public static final Logger LOGGER = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
@@ -107,17 +107,15 @@ public class Addon extends MeteorAddon {
         try {
             URI uri = URI.create("https://api.github.com/repos/user93390/seasnail1/releases/latest");
             String latestVersion = getString(uri);
-
             needsUpdate = !CLIENT_VERSION.equals(latestVersion);
             if (needsUpdate) {
-                String message = String.format("Please update your client to the latest version (%s) found at %s", latestVersion, uri);
+                String message = String.format("Please update your client to the latest version (%s) found at https://github.com/user93390/seasnail1/releases", uri);
                 LOGGER.error(message);
-                CrashReport crashReport = CrashReport.create(new RuntimeException("Update available"), message);
-                throw new CrashException(crashReport);
+                throw new CrashException(new CrashReport(message, new Throwable("Client is out of date")));
             } else {
                 LOGGER.info("Client is up to date");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     };
