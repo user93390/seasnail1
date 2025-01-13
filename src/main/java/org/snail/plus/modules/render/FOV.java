@@ -10,6 +10,8 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 
+import java.util.Arrays;
+
 public class FOV extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -27,6 +29,11 @@ public class FOV extends Module {
 
     @EventHandler
     private void FOVModify(GetFovEvent event) {
-        event.fov = Fov.get();
+        try {
+            event.fov = Fov.get();
+        } catch (Exception e) {
+            info("An error occurred while changing the FOV");
+            Addon.LOGGER.error("An error occurred while changing the FOV{}", Arrays.toString(e.getStackTrace()));
+            }
         }
     }

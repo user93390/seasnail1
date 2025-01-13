@@ -19,6 +19,7 @@ import org.snail.plus.utilities.MathUtils;
 import org.snail.plus.utilities.swapUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -157,6 +158,7 @@ public class autoFarmer extends Module {
             }
         } catch (Exception e) {
             error("An error occurred: " + e.getMessage());
+            Addon.LOGGER.error("An error occurred: {}",  Arrays.toString(e.getStackTrace()));
         }
     }
 

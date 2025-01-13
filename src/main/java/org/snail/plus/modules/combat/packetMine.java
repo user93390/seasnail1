@@ -23,6 +23,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.shape.VoxelShape;
 import org.snail.plus.Addon;
 
+import java.util.Arrays;
+
 public class packetMine extends Module {
     private static BlockPos position;
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -147,44 +149,49 @@ public class packetMine extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (breaks >= maxBreaks.get()) {
-            reset.run();
-        }
-
-        if (position != null && mc.world != null) {
-            FindItemResult pickaxe = InvUtils.findFastestTool(mc.world.getBlockState(position));
-            slot = pickaxe.slot();
-
-            if (resync) {
-                InvUtils.swap(mc.player.getInventory().selectedSlot, false);
-                resync = false;
+        try {
+            if (breaks >= maxBreaks.get()) {
+                reset.run();
             }
 
-            if (!pickaxe.found() || mc.player.getInventory().selectedSlot == slot) return;
+            if (position != null && mc.world != null) {
+                FindItemResult pickaxe = InvUtils.findFastestTool(mc.world.getBlockState(position));
+                slot = pickaxe.slot();
 
-            if (autoSwitch.get() && progress >= 0.95 && mc.player.getInventory().selectedSlot != slot && !swapped) {
-                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(slot));
-                swapped = true;
-                if (rotate.get()) {
-                    Rotations.rotate(Rotations.getYaw(position), Rotations.getPitch(position));
+                if (resync) {
+                    InvUtils.swap(mc.player.getInventory().selectedSlot, false);
+                    resync = false;
                 }
-                return;
-            }
 
-            if (progress >= 1.0) {
-                mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
-                swapped = false;
+                if (!pickaxe.found() || mc.player.getInventory().selectedSlot == slot) return;
 
-                long currentTime = System.currentTimeMillis();
-                if (currentTime - lastMineTime < delay.get() * 50) {
+                if (autoSwitch.get() && progress >= 0.95 && mc.player.getInventory().selectedSlot != slot && !swapped) {
+                    mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(slot));
+                    swapped = true;
+                    if (rotate.get()) {
+                        Rotations.rotate(Rotations.getYaw(position), Rotations.getPitch(position));
+                    }
                     return;
                 }
 
-                breakBlock.run();
-                lastMineTime = currentTime;
-            } else {
-                progress += BlockUtils.getBreakDelta(slot, mc.world.getBlockState(position));
+                if (progress >= 1.0) {
+                    mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
+                    swapped = false;
+
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastMineTime < delay.get() * 50) {
+                        return;
+                    }
+
+                    breakBlock.run();
+                    lastMineTime = currentTime;
+                } else {
+                    progress += BlockUtils.getBreakDelta(slot, mc.world.getBlockState(position));
+                }
             }
+        } catch (Exception e) {
+            error("An error occurred while mining: " + e.getMessage());
+            Addon.LOGGER.error("An error occurred while mining: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

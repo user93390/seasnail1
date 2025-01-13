@@ -15,6 +15,7 @@ import org.snail.plus.utilities.WorldUtils;
 import org.snail.plus.utilities.serverUtils;
 import org.snail.plus.utilities.swapUtils;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
@@ -127,32 +128,34 @@ public class autoXP extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        synchronized (this) {
-            mc.executeSync(() -> {
-                if (pauseUse.get() && mc.player.isUsingItem()) return;
-                if (autoDisable.get() && isArmorFullDurability()) {
-                    toggle();
-                    return;
-                }
-                if (isArmorFullDurability() || mc.player.getHealth() <= pauseHealth.get()) return;
+        try {
+            if (pauseUse.get() && mc.player.isUsingItem()) return;
 
-                item = InvUtils.find(Items.EXPERIENCE_BOTTLE);
-                if (!item.found() || item.count() < minXPBottles.get()) {
-                    error("Not enough XP bottles in inventory");
-                    toggle();
-                    return;
-                }
+            if (autoDisable.get() && isArmorFullDurability()) {
+                toggle();
+                return;
+            }
+            if (isArmorFullDurability() || mc.player.getHealth() <= pauseHealth.get()) return;
 
-                long currentTime = System.currentTimeMillis();
-                 double time = tpsSync.get() ? serverUtils.serverTps() : 50;
-                if (currentTime - lastUseTime < cooldownTime.get() * time) return;
+            item = InvUtils.find(Items.EXPERIENCE_BOTTLE);
+            if (!item.found() || item.count() < minXPBottles.get()) {
+                error("Not enough XP bottles in inventory");
+                toggle();
+                return;
+            }
 
-                slot = item.slot();
-                Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
-                MathUtils.updateRotation(3);
+            long currentTime = System.currentTimeMillis();
+            double time = tpsSync.get() ? serverUtils.serverTps() : 50;
+            if (currentTime - lastUseTime < cooldownTime.get() * time) return;
 
-                lastUseTime = currentTime;
-            });
+            slot = item.slot();
+            Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
+            MathUtils.updateRotation(3);
+
+            lastUseTime = currentTime;
+        } catch (Exception e) {
+            error("An error occurred while using XP bottles");
+            Addon.LOGGER.error("An error occurred while using XP bottles {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

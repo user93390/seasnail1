@@ -64,14 +64,13 @@ public class antiBurrow extends Module {
             .defaultValue(new SettingColor(0, 255, 255, 255))
             .build());
 
-    private PlayerEntity target;
     private BlockPos targetPos;
 
     public antiBurrow() {
         super(Addon.Snail, "anti-burrow", "Prevents players from burrowing. Rotations idea");
     }
+
     Runnable runnable = () -> {
-        target = null;
         targetPos = null;
     };
 
@@ -90,7 +89,6 @@ public class antiBurrow extends Module {
         if (mc.world != null && mc.player != null) {
             for (PlayerEntity entity : mc.world.getPlayers()) {
                 if (entity != mc.player && mc.player.distanceTo(entity) <= range.get()) {
-                    target = entity;
                     targetPos = entity.getBlockPos();
                     switch (trapMode.get()) {
                         case trap -> {

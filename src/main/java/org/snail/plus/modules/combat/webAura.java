@@ -2,7 +2,6 @@ package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.mixininterface.IBox;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -20,8 +19,8 @@ import org.snail.plus.utilities.CombatUtils;
 import org.snail.plus.utilities.WorldUtils;
 import org.snail.plus.utilities.swapUtils;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -162,24 +161,29 @@ public class webAura extends Module {
     public void onTick(TickEvent.Post event) {
         lock.lock();
         try {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
-            for (PlayerEntity entity : mc.world.getPlayers()) {
-                if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity)) continue;
-                if (onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
+            try {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
+                for (PlayerEntity entity : mc.world.getPlayers()) {
+                    if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity)) continue;
+                    if (onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
 
-                BestTarget = entity;
-                for (BlockPos blockPos : positions(BestTarget)) {
-                    placed = !WorldUtils.isAir(blockPos, false);
-                    placeWeb(blockPos);
-                    if (doublePlace.get()) {
-                        placeWeb(blockPos.up(1));
+                    BestTarget = entity;
+                    for (BlockPos blockPos : positions(BestTarget)) {
+                        placed = !WorldUtils.isAir(blockPos, false);
+                        placeWeb(blockPos);
+                        if (doublePlace.get()) {
+                            placeWeb(blockPos.up(1));
+                        }
                     }
                 }
+                lastUpdateTime = currentTime;
+            } finally {
+                lock.unlock();
             }
-            lastUpdateTime = currentTime;
-        } finally {
-            lock.unlock();
+        } catch (Exception e) {
+            error("An error occurred while placing webs: " + e.getMessage());
+            Addon.LOGGER.error("An error occurred while placing webs: {}",  Arrays.toString(e.getStackTrace()));
         }
     }
 

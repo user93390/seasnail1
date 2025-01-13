@@ -1,22 +1,9 @@
 package org.snail.plus.modules.render;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.snail.plus.Addon;
-import org.snail.plus.utilities.CombatUtils;
-import org.snail.plus.utilities.MathUtils;
-
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.EnumSetting;
-import meteordevelopment.meteorclient.settings.IntSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -24,6 +11,13 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.snail.plus.Addon;
+import org.snail.plus.utilities.CombatUtils;
+import org.snail.plus.utilities.MathUtils;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class burrowEsp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -91,14 +85,20 @@ public class burrowEsp extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        mc.execute(() -> {
+
+            try {
+                mc.execute(() -> {
                 burrowedPlayers.clear();
                 mc.world.getPlayers().stream()
                         .filter(player -> !(ignoreFriends.get() && Friends.get().isFriend(player)))
                         .filter(player -> CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get())
                         .limit(performance.get() ? maxPlayers.get() : Long.MAX_VALUE)
                         .forEach(burrowedPlayers::add);
-        });
+            });
+        } catch (Exception e) {
+           error("An error occurred while finding burrowed players: " + e.getMessage());
+           Addon.LOGGER.error("An error occurred while finding burrowed players: {}", Arrays.toString(e.getStackTrace()));
+        }
     }
 
     @EventHandler

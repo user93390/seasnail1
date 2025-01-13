@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.utils.Utils;
 import org.snail.plus.Addon;
 import org.snail.plus.utilities.serverUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -67,15 +68,20 @@ public class discordRPC extends Module {
     }
 
     private void updateDetails() {
-        List<String> messages = message.get();
-        String msg = messages.size() > 1 ? messages.get(random.nextInt(messages.size())) : messages.getFirst();
-        msg = msg
-                .replace("{server}", mc.isInSingleplayer() ? Utils.getWorldName() : serverUtils.serverIp())
-                .replace("{players}", String.valueOf(serverUtils.currentPlayers()))
-                .replace("{fps}", String.valueOf(mc.getCurrentFps())
-                .replace("{ping}", String.valueOf(serverUtils.currentPing())));
-        RPC.setDetails(msg);
-        DiscordIPC.setActivity(RPC);
-        scheduleNextUpdate();
+        try {
+            List<String> messages = message.get();
+            String msg = messages.size() > 1 ? messages.get(random.nextInt(messages.size())) : messages.getFirst();
+            msg = msg
+                    .replace("{server}", mc.isInSingleplayer() ? Utils.getWorldName() : serverUtils.serverIp())
+                    .replace("{players}", String.valueOf(serverUtils.currentPlayers()))
+                    .replace("{fps}", String.valueOf(mc.getCurrentFps())
+                            .replace("{ping}", String.valueOf(serverUtils.currentPing())));
+            RPC.setDetails(msg);
+            DiscordIPC.setActivity(RPC);
+            scheduleNextUpdate();
+        } catch (Exception e) {
+            error("An error occurred while updating discord rpc");
+            Addon.LOGGER.error("An error occurred while updating discord rpc {}", Arrays.toString(e.getStackTrace()));
+        }
     }
 }

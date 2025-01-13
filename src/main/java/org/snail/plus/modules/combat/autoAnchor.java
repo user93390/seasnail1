@@ -461,6 +461,7 @@ public class autoAnchor extends Module {
             lastUpdateTime = currentTime;
         } catch (Exception e) {
             error("An error occurred while updating the module: " + e.getMessage());
+            Addon.LOGGER.error("An error occurred while updating the module: {}", Arrays.toString(e.getStackTrace()));
             throw new RuntimeException(e);
         }
     }

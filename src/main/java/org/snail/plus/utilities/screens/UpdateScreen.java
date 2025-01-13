@@ -7,11 +7,7 @@ import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-public class Placeholders {
-
-    public static String title = "Placeholders";
-    public static List<String> items;
-
+public class UpdateScreen {
     public static void showScreen() {
         mc.setScreen(new showScreen());
     }
@@ -21,13 +17,18 @@ public class Placeholders {
             super(GuiThemes.get(), "Placeholders");
         }
 
+        List<String> items = List.of(
+                "Update available for Snail++",
+                "If you do not update, you may experience issues",
+                "In the near future you may not be able to use the client without updating");
+
         @Override
         public void initWidgets() {
             for(String item : items) {
                 this.add(theme.label(item));
             }
 
-            this.add(theme.button("Close")).widget().action = onClose;
+            this.add(theme.button("Okay")).widget().action = onClose;
         }
         Runnable onClose = () -> mc.player.closeScreen();
     }

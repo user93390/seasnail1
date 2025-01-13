@@ -5,7 +5,6 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.systems.modules.world.PacketMine;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -18,10 +17,10 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.snail.plus.Addon;
-import org.snail.plus.modules.combat.packetMine;
 import org.snail.plus.utilities.MathUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class obsidianFarmer extends Module {
@@ -133,23 +132,26 @@ public class obsidianFarmer extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-            mc.execute(() -> {
-                if (autoDisable.get() && mc.player.getInventory().count(Items.OBSIDIAN) >= disableAmount.get()) {
-                    toggle();
-                    return;
-                }
-                posList = getObsidianPositions(mc.player.getBlockPos(), 5);
-                for (BlockPos pos : posList) {
-                    obsidianPosition = pos;
-                    if (mc.world.getBlockState(pos).isAir()) {
-                        place();
-                    } else if (mc.world.getBlockState(pos).getBlock() == Blocks.ENDER_CHEST) {
-                        mineBlock();
-                    }
+        try {
+            if (autoDisable.get() && mc.player.getInventory().count(Items.OBSIDIAN) >= disableAmount.get()) {
+                toggle();
+                return;
+            }
+            posList = getObsidianPositions(mc.player.getBlockPos(), 5);
+            for (BlockPos pos : posList) {
+                obsidianPosition = pos;
+                if (mc.world.getBlockState(pos).isAir()) {
                     place();
+                } else if (mc.world.getBlockState(pos).getBlock() == Blocks.ENDER_CHEST) {
+                    mineBlock();
                 }
-            });
+                place();
+            }
+        }catch (Exception e) {
+            error("An error occurred while mining obsidian: " + e.getMessage());
+            Addon.LOGGER.error("An error occurred while mining obsidian: {}", Arrays.toString(e.getStackTrace()));
         }
+    }
 
     private void mineBlock() {
         FindItemResult pickaxe = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof PickaxeItem);

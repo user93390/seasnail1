@@ -5,22 +5,15 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.systems.modules.combat.BowSpam;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.RailBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArrowItem;
 import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utilities.CombatUtils;
@@ -28,6 +21,7 @@ import org.snail.plus.utilities.MathUtils;
 import org.snail.plus.utilities.WorldUtils;
 import org.snail.plus.utilities.swapUtils;
 
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -176,28 +170,33 @@ public class minecartAura extends Module {
     }
 
     private void shootArrow() {
-        if (isPlacing) return; // Prevent shooting while placing
+        try {
+            if (isPlacing) return; // Prevent shooting while placing
 
-        FindItemResult bow = InvUtils.findInHotbar(Items.BOW);
-        if (!bow.found()) return;
+            FindItemResult bow = InvUtils.findInHotbar(Items.BOW);
+            if (!bow.found()) return;
 
-        //raycast
-        if(MathUtils.rayCast(Vec3d.of(position.up(1)))) return;
+            //raycast
+            if(MathUtils.rayCast(Vec3d.of(position.up(1)))) return;
 
-        InvUtils.swap(bow.slot(), false);
+            InvUtils.swap(bow.slot(), false);
 
-        if (!mc.player.getAbilities().creativeMode && !InvUtils.find(itemStack -> itemStack.getItem() instanceof ArrowItem).found()) return;
+            if (!mc.player.getAbilities().creativeMode && !InvUtils.find(itemStack -> itemStack.getItem() instanceof ArrowItem).found()) return;
 
-        boolean isBow = mc.player.getMainHandStack().getItem() == Items.BOW;
-        if (!isBow) return;
+            boolean isBow = mc.player.getMainHandStack().getItem() == Items.BOW;
+            if (!isBow) return;
 
-        mc.options.useKey.setPressed(true);
-        Executors.newSingleThreadScheduledExecutor().schedule(() -> {
-            mc.interactionManager.stopUsingItem(mc.player);
-            mc.options.useKey.setPressed(false);
-            maxMinecartsReached = false; // Reset after shooting
-            minecartCount = 0; // Reset minecart count
-        }, bowDelay.get(), TimeUnit.MILLISECONDS);
+            mc.options.useKey.setPressed(true);
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+                mc.interactionManager.stopUsingItem(mc.player);
+                mc.options.useKey.setPressed(false);
+                maxMinecartsReached = false; // Reset after shooting
+                minecartCount = 0; // Reset minecart count
+            }, bowDelay.get(), TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            error("An error occurred while shooting the bow: " + e.getMessage());
+            Addon.LOGGER.error("An error occurred while shooting the bow: {}", Arrays.toString(e.getStackTrace()));
+        }
     }
 
     @EventHandler

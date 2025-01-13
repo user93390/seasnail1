@@ -19,6 +19,8 @@ import org.snail.plus.utilities.CombatUtils;
 import org.snail.plus.utilities.WorldUtils;
 import org.snail.plus.utilities.swapUtils;
 
+import java.util.Arrays;
+
 public class selfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -82,30 +84,35 @@ public class selfAnvil extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        FindItemResult anvil = InvUtils.findInHotbar(Items.ANVIL);
+        try {
+            FindItemResult anvil = InvUtils.findInHotbar(Items.ANVIL);
 
-        if (autoCenter.get() && !CombatUtils.isCentered(mc.player)) {
-            PlayerUtils.centerPlayer();
-            info("centered");
-            return;
-        }
+            if (autoCenter.get() && !CombatUtils.isCentered(mc.player)) {
+                PlayerUtils.centerPlayer();
+                info("centered");
+                return;
+            }
 
-        if (mc.world.getBlockState(mc.player.getBlockPos().up(2)).isAir()) {
-            if (anvil.found()) {
-                if (WorldUtils.isAir(mc.player.getBlockPos().up(2), false)) {
-                    if (support.get()) {
-                        PlaceSupportBlocks(mc.player, InvUtils.findInHotbar(Items.OBSIDIAN));
+            if (mc.world.getBlockState(mc.player.getBlockPos().up(2)).isAir()) {
+                if (anvil.found()) {
+                    if (WorldUtils.isAir(mc.player.getBlockPos().up(2), false)) {
+                        if (support.get()) {
+                            PlaceSupportBlocks(mc.player, InvUtils.findInHotbar(Items.OBSIDIAN));
+                        }
+
+                        long time = System.currentTimeMillis();
+                        if ((time - lastPlaceTime) < delay.get() * 1000) return;
+                        lastPlaceTime = time;
+                        WorldUtils.placeBlock(anvil, mc.player.getBlockPos().up(2), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
                     }
-
-                    long time = System.currentTimeMillis();
-                    if ((time - lastPlaceTime) < delay.get() * 1000) return;
-                    lastPlaceTime = time;
-                    WorldUtils.placeBlock(anvil, mc.player.getBlockPos().up(2), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
                 }
             }
-        }
-        if (autoDisable.get() && mc.world.getBlockState(mc.player.getBlockPos().up(2)).getBlock().equals(Blocks.ANVIL)) {
-            toggle();
+            if (autoDisable.get() && mc.world.getBlockState(mc.player.getBlockPos().up(2)).getBlock().equals(Blocks.ANVIL)) {
+                toggle();
+            }
+        } catch (Exception e) {
+            error("An error occurred while placing the anvil: " + e.getMessage());
+            Addon.LOGGER.error("An error occurred while placing the anvil: {}",  Arrays.toString(e.getStackTrace()));
         }
     }
 

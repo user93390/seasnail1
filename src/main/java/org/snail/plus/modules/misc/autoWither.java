@@ -1,15 +1,14 @@
 package org.snail.plus.modules.misc;
+
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.pathing.BaritoneUtils;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -25,7 +24,6 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -140,20 +138,25 @@ public class autoWither extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (currentBlockPos != null) {
-            FindItemResult soulSand = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.SOUL_SAND));
-            FindItemResult witherSkull = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.WITHER_SKELETON_SKULL));
-            if (soulSand.found() && witherSkull.found()) {
-                List<BlockPos> offsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? soulSandOffsetsX : soulSandOffsetsZ;
-                List<BlockPos> skullOffsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? witherSkullOffsetsX : witherSkullOffsetsZ;
-                for (BlockPos offset : offsets) {
-                    if (attemptPlace(currentBlockPos.add(offset), soulSand, Blocks.SOUL_SAND)) return;
+        try {
+            if (currentBlockPos != null) {
+                FindItemResult soulSand = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.SOUL_SAND));
+                FindItemResult witherSkull = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.WITHER_SKELETON_SKULL));
+                if (soulSand.found() && witherSkull.found()) {
+                    List<BlockPos> offsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? soulSandOffsetsX : soulSandOffsetsZ;
+                    List<BlockPos> skullOffsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? witherSkullOffsetsX : witherSkullOffsetsZ;
+                    for (BlockPos offset : offsets) {
+                        if (attemptPlace(currentBlockPos.add(offset), soulSand, Blocks.SOUL_SAND)) return;
+                    }
+                    for (BlockPos offset : skullOffsets) {
+                        if (attemptPlace(currentBlockPos.add(offset), witherSkull, Blocks.WITHER_SKELETON_SKULL)) return;
+                    }
+                    currentBlockPos = null;
                 }
-                for (BlockPos offset : skullOffsets) {
-                    if (attemptPlace(currentBlockPos.add(offset), witherSkull, Blocks.WITHER_SKELETON_SKULL)) return;
-                }
-                currentBlockPos = null;
             }
+        } catch (Exception e) {
+            error("An error occurred while building the wither");
+            Addon.LOGGER.error("An error occurred while building the wither {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

@@ -37,6 +37,9 @@ dependencies {
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    //others
+    implementation 'org.json:json:20210307'
 }
 
 processResources {
