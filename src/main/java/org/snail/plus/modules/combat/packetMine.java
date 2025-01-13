@@ -23,8 +23,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.shape.VoxelShape;
 import org.snail.plus.Addon;
 
-import java.util.Timer;
-
 public class packetMine extends Module {
     private static BlockPos position;
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -113,6 +111,7 @@ public class packetMine extends Module {
         resync = true;
         breaks = 0;
     };
+
     private final Runnable breakBlock = () -> {
         sendPacket.run();
         breaks++;
@@ -199,6 +198,7 @@ public class packetMine extends Module {
                 double shrinkX = box.getLengthX() * clampedValue * 0.5;
                 double shrinkY = box.getLengthY() * clampedValue * 0.5;
                 double shrinkZ = box.getLengthZ() * clampedValue * 0.5;
+
                 //smoothness
                 double smoothness = Math.max(1, 1 / clampedValue);
                 event.renderer.box(

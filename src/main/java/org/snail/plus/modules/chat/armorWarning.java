@@ -10,11 +10,9 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvent;
 import org.snail.plus.Addon;
 import org.snail.plus.modules.misc.autoXP;
@@ -119,7 +117,7 @@ public class armorWarning extends Module {
     public void getContent() {
         Placeholders.items = List.of("{name} - shows the player's name", "{piece} - shows the piece of armor",
                 "{durability} - shows the durability of the armor", "{grammar} - shows the grammar for the piece of armor (is/are)");
-        Placeholders.title = "Kill Message Placeholders";
+        Placeholders.title = "Armor Warning Placeholders";
     }
 
     @Override

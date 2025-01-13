@@ -148,27 +148,35 @@ public class chatControl extends Module {
     @EventHandler
     private void onMessageReceive(ReceiveMessageEvent event) {
         Text message = event.getMessage();
+        String messageString = message.getString();
+
         for (String word : filterWords.get()) {
-            for (String player : playerList.get()) {
-            if (message.getString().contains(word) || message.getString().contains(player)) {
+            if (messageString.contains(word)) {
                 event.cancel();
                 return;
             }
         }
 
-            if(autoReply.get()) {
-                String messageString = message.getString();
-                for (String keyword : triggerKeywords.get()) {
-                    if (messageString.contains(keyword) && requireMcName.get() && messageString.contains(mc.player.getName().getString())) {
-                        if (whiteList.get()) {
-                            for (String player : players.get()) {
-                                if (messageString.contains(player)) {
-                                    sendReply();
-                                }
+        for (String player : playerList.get()) {
+            if (messageString.contains(player)) {
+                event.cancel();
+                return;
+            }
+        }
+
+        if (autoReply.get() && requireMcName.get() && messageString.contains(mc.player.getName().getString())) {
+            for (String keyword : triggerKeywords.get()) {
+                if (messageString.contains(keyword)) {
+                    if (whiteList.get()) {
+                        for (String player : players.get()) {
+                            if (messageString.contains(player)) {
+                                sendReply();
+                                return;
                             }
-                        } else {
-                            sendReply();
                         }
+                    } else {
+                        sendReply();
+                        return;
                     }
                 }
             }

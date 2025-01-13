@@ -99,7 +99,7 @@ public class killMessages extends Module {
     public void getContent() {
         Placeholders.items = List.of("{Entity} - shows the player's name", "{Coords} - shows the player's coordinates",
                 "{totems} - shows the amount of totem pops");
-        Placeholders.title = "Kill Message Placeholders";
+        Placeholders.title = "Kill Messages Placeholders";
     }
 
     @Override

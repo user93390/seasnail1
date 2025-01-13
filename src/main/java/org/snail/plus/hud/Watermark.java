@@ -4,11 +4,9 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import org.snail.plus.Addon;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Watermark extends HudElement {
     private final SettingGroup sgGeneral = this.settings.getDefaultGroup();

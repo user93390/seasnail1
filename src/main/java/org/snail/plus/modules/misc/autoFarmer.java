@@ -26,7 +26,6 @@ import static org.snail.plus.utilities.MathUtils.getCrosshairBlocks;
 
 public class autoFarmer extends Module {
     private final SettingGroup sgBreak = settings.createGroup("Break");
-    private final SettingGroup sgReplant = settings.createGroup("Replant");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
     private final Setting<breakMode> Mode = sgBreak.add(new EnumSetting.Builder<breakMode>()
