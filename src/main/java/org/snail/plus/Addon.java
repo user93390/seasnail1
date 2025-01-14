@@ -36,7 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Addon extends MeteorAddon {
-    public static final String CLIENT_VERSION = "1.0.0";
+    public static final String CLIENT_VERSION = "1.2.6";
     public static final Logger LOGGER = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
