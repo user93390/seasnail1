@@ -32,23 +32,54 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Addon extends MeteorAddon {
-    public static final String CLIENT_VERSION = "1.2.6";
+    public static String CLIENT_VERSION = "1.2.6";
     public static final Logger LOGGER = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     public static boolean needsUpdate = false;
-
     private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Set<String> playerNames = new HashSet<>();
 
     @Override
     public void onInitialize() {
-        LOGGER.info("Initializing Addon");
-        checkForUpdates.run();
-        Initialize.run();
+        try {
+            String sql = "INSERT INTO players(name) VALUES(?)";
+            try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, "examplePlayerName"); // Provide a valid player name
+                pstmt.executeUpdate();
+
+                LOGGER.info("Database initialized");
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+
+            synchronized (this) {
+                checkForUpdates.run();
+                if (!needsUpdate) {
+                    Initialize.run();
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Critical error while initializing: {}", Arrays.toString(e.getStackTrace()));
+            mc.close();
+            System.exit(1);
+        }
+    }
+
+    private Connection connect() throws SQLException {
+        // Example connection string, adjust as needed
+        String url = "https://github.com/user93390/seasnail1.git";
+        return DriverManager.getConnection(url);
     }
 
     @Override

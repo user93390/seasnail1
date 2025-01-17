@@ -1,6 +1,5 @@
 plugins {
     id 'fabric-loom' version '1.9-SNAPSHOT'
-    id 'org.jetbrains.kotlin.jvm'
 }
 
 java {
@@ -36,10 +35,9 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-
+    
     //others
-    implementation 'org.json:json:20210307'
+    implementation 'org.json:json:20231013'
 }
 
 processResources {

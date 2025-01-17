@@ -23,12 +23,13 @@ public class Placeholders {
 
         @Override
         public void initWidgets() {
-            for(String item : items) {
+            for (String item : items) {
                 this.add(theme.label(item));
             }
 
             this.add(theme.button("Close")).widget().action = onClose;
         }
+
         Runnable onClose = () -> mc.player.closeScreen();
     }
 }

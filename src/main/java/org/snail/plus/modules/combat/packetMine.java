@@ -1,4 +1,3 @@
-
 package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
@@ -137,9 +136,10 @@ public class packetMine extends Module {
 
     @EventHandler
     private void onMine(StartBreakingBlockEvent event) {
-        if(mc.player.getBlockPos().getSquaredDistance(event.blockPos) > range.get() * range.get() || mc.world.getBlockState(event.blockPos).getBlock() == Blocks.BEDROCK) return;
+        if (mc.player.getBlockPos().getSquaredDistance(event.blockPos) > range.get() * range.get() || mc.world.getBlockState(event.blockPos).getBlock() == Blocks.BEDROCK)
+            return;
 
-        if(position != event.blockPos) {
+        if (position != event.blockPos) {
             reset.run();
         }
         position = event.blockPos;

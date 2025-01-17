@@ -91,7 +91,7 @@ public class autoXP extends Module {
             .sliderRange(0.0, 1.0)
             .build());
 
-     private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
             .name("auto-disable")
             .description("Automatically disables the module full armour durability.")
             .defaultValue(true)

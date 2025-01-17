@@ -1,17 +1,14 @@
 package org.snail.plus.utilities;
 
-import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import org.snail.plus.modules.chat.visualRange;
 
 import java.util.List;
 
-import static meteordevelopment.meteorclient.MeteorClient.INSTANCE;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static org.snail.plus.modules.chat.visualRange.isValid;
 

@@ -124,18 +124,18 @@ public class minecartAura extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-            mc.execute(() -> {
-                if (mc.world != null) {
-                    PlayerEntity bestTarget = CombatUtils.filter(mc.world.getPlayers(), filterMode.get(), range.get());
-                    if (bestTarget != null) {
-                        position = findPositions(bestTarget);
-                    }
-
-                    if (position != null) {
-                        useMinecart(position);
-                    }
+        mc.execute(() -> {
+            if (mc.world != null) {
+                PlayerEntity bestTarget = CombatUtils.filter(mc.world.getPlayers(), filterMode.get(), range.get());
+                if (bestTarget != null) {
+                    position = findPositions(bestTarget);
                 }
-            });
+
+                if (position != null) {
+                    useMinecart(position);
+                }
+            }
+        });
     }
 
     private void useMinecart(BlockPos pos) {
@@ -177,11 +177,12 @@ public class minecartAura extends Module {
             if (!bow.found()) return;
 
             //raycast
-            if(MathUtils.rayCast(Vec3d.of(position.up(1)))) return;
+            if (MathUtils.rayCast(Vec3d.of(position.up(1)))) return;
 
             InvUtils.swap(bow.slot(), false);
 
-            if (!mc.player.getAbilities().creativeMode && !InvUtils.find(itemStack -> itemStack.getItem() instanceof ArrowItem).found()) return;
+            if (!mc.player.getAbilities().creativeMode && !InvUtils.find(itemStack -> itemStack.getItem() instanceof ArrowItem).found())
+                return;
 
             boolean isBow = mc.player.getMainHandStack().getItem() == Items.BOW;
             if (!isBow) return;

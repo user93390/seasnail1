@@ -82,6 +82,7 @@ public class killMessages extends Module {
     };
 
     Runnable showScreen = Placeholders::showScreen;
+
     public killMessages() {
         super(Addon.Snail, "Auto EZ+", "sends a custom message when a player dies");
     }
@@ -115,7 +116,7 @@ public class killMessages extends Module {
     @EventHandler
     private void onTotemPop(TotemPopEvent event) {
         if (totemPop.get()) {
-            if(event.player != mc.player) {
+            if (event.player != mc.player) {
                 pops = event.totems;
                 sendMessages(event.player, totemMessage.get());
             }
@@ -125,8 +126,8 @@ public class killMessages extends Module {
     @EventHandler
     private void onDeath(PlayerDeathEvent event) {
         if (killMessage.get() && !sentMessage) {
-            if(event.player != mc.player) {
-                if(event.selfKilled) {
+            if (event.player != mc.player) {
+                if (event.selfKilled) {
                     sendMessages(event.player, messages.get());
                 } else {
                     info("didn't kill " + event.player.getName().getString() + "sending message anyway...");

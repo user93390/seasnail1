@@ -1,14 +1,13 @@
 package org.snail.plus.modules.render;
 
 
-import org.snail.plus.Addon;
-
 import meteordevelopment.meteorclient.events.render.GetFovEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
+import org.snail.plus.Addon;
 
 import java.util.Arrays;
 
@@ -33,7 +32,7 @@ public class FOV extends Module {
             event.fov = Fov.get();
         } catch (Exception e) {
             info("An error occurred while changing the FOV");
-            Addon.LOGGER.error("An error occurred while changing the FOV{}", Arrays.toString(e.getStackTrace()));
-            }
+            Addon.LOGGER.error("An error occurred while changing the FOV  {}", Arrays.toString(e.getStackTrace()));
         }
     }
+}

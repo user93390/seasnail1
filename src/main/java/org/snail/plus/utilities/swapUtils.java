@@ -19,7 +19,6 @@ public class swapUtils {
             Managers.swapMng.modifyStartTime = System.currentTimeMillis();
             pickSlot = slot;
             mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(slot));
-
         }
     }
 

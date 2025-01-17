@@ -165,7 +165,8 @@ public class webAura extends Module {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
                 for (PlayerEntity entity : mc.world.getPlayers()) {
-                    if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity)) continue;
+                    if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity))
+                        continue;
                     if (onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
 
                     BestTarget = entity;
@@ -183,7 +184,7 @@ public class webAura extends Module {
             }
         } catch (Exception e) {
             error("An error occurred while placing webs: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred while placing webs: {}",  Arrays.toString(e.getStackTrace()));
+            Addon.LOGGER.error("An error occurred while placing webs: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -209,8 +210,8 @@ public class webAura extends Module {
     @EventHandler
     public void onRender(Render3DEvent event) {
         if (render.get() && BestTarget != null) {
-                for (BlockPos pos : positions(BestTarget)) {
-                    event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            for (BlockPos pos : positions(BestTarget)) {
+                event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
             }
         }
     }

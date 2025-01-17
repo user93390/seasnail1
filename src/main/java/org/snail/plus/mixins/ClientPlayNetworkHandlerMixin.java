@@ -25,19 +25,23 @@ public class ClientPlayNetworkHandlerMixin {
     @Unique
     private final Set<Packet<?>> processedPackets = new HashSet<>();
 
+    /*
+     * This mixin is used to listen for EntityStatusS2CPacket packets and then post events based on the packet status.
+     * 35 is totem pop and 3 is player death.
+     * 3 is player death.
+     */
+
     @Inject(method = "onEntityStatus", at = @At("HEAD"))
     private void onEntityStatus(EntityStatusS2CPacket packet, CallbackInfo ci) {
         if (mc.world != null && packet.getEntity(mc.world) instanceof PlayerEntity player) {
             if (processedPackets.contains(packet)) return;
 
             processedPackets.add(packet);
-            //packet status 35 is totem pop
             switch (packet.getStatus()) {
                 case 35 -> {
                     i++;
                     MeteorClient.EVENT_BUS.post(new TotemPopEvent(i, player));
                 }
-                //packet status 3 is player death
                 case 3 -> {
                     boolean selfKilled = player.getLastAttacker() == mc.player;
                     PlayerDeathEvent event = new PlayerDeathEvent(player, player.getBlockPos(), selfKilled);

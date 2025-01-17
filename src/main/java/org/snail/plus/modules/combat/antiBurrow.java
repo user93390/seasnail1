@@ -104,15 +104,16 @@ public class antiBurrow extends Module {
                             BlockUtils.place(targetPos, item, rotate.get(), 100, false);
                         }
                     }
-                    if(autoDisable.get()) toggle();
+                    if (autoDisable.get()) toggle();
                 }
             }
         }
     }
+
     @EventHandler
     private void onRender(Render3DEvent event) {
         if (mc.world != null && mc.player != null) {
-            if(targetPos != null) {
+            if (targetPos != null) {
                 event.renderer.box(targetPos, sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
             }
         }

@@ -20,7 +20,7 @@ public class chatControl extends Module {
     private final SettingGroup sgReply = settings.createGroup("Reply");
 
     public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder()
-           .name("improved client messages")
+            .name("improved client messages")
             .description("Improves the look of chat messages.")
             .defaultValue(true)
             .build());

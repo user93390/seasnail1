@@ -147,7 +147,7 @@ public class obsidianFarmer extends Module {
                 }
                 place();
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             error("An error occurred while mining obsidian: " + e.getMessage());
             Addon.LOGGER.error("An error occurred while mining obsidian: {}", Arrays.toString(e.getStackTrace()));
         }
@@ -161,7 +161,7 @@ public class obsidianFarmer extends Module {
             }
             switch (mode.get()) {
                 case packet -> {
-                    if(!instant.get()) {
+                    if (!instant.get()) {
                         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
                         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, obsidianPosition, Direction.DOWN));
                     } else {

@@ -112,13 +112,13 @@ public class selfAnvil extends Module {
             }
         } catch (Exception e) {
             error("An error occurred while placing the anvil: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred while placing the anvil: {}",  Arrays.toString(e.getStackTrace()));
+            Addon.LOGGER.error("An error occurred while placing the anvil: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 
     private void PlaceSupportBlocks(PlayerEntity player, FindItemResult obsidian) {
         for (int i = 0; i <= 2; i++) {
-            WorldUtils.placeBlock(obsidian,  player.getBlockPos().north(1).up(i), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
+            WorldUtils.placeBlock(obsidian, player.getBlockPos().north(1).up(i), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
         }
     }
 

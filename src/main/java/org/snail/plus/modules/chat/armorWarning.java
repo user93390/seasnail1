@@ -115,9 +115,10 @@ public class armorWarning extends Module {
     }
 
     public void getContent() {
+        Placeholders.title = "Armor Warning Placeholders";
+
         Placeholders.items = List.of("{name} - shows the player's name", "{piece} - shows the piece of armor",
                 "{durability} - shows the durability of the armor", "{grammar} - shows the grammar for the piece of armor (is/are)");
-        Placeholders.title = "Armor Warning Placeholders";
     }
 
     @Override
@@ -168,7 +169,7 @@ public class armorWarning extends Module {
     private void playAlertSounds() {
         if (playSound.get() && !sounds.get().isEmpty()) {
             for (SoundEvent sound : sounds.get()) {
-               WorldUtils.playSound(sound, 1);
+                WorldUtils.playSound(sound, 1);
             }
         }
     }
@@ -176,11 +177,11 @@ public class armorWarning extends Module {
     private void sendMessage(PlayerEntity entity, Integer friendDurability) {
         for (ItemStack stack : entity.getArmorItems()) {
             if (stack.getItem() instanceof ArmorItem armorItem) {
-                grammar = switch (armorItem.getSlotType()) {
-                    case HEAD, CHEST -> "is";
-                    case LEGS, FEET -> "are";
-                    default -> "NaN";
-                };
+                if(armorItem.toString().endsWith("s")) {
+                    grammar = "are";
+                } else {
+                    grammar = "is";
+                }
             }
         }
 
@@ -212,7 +213,7 @@ public class armorWarning extends Module {
         try {
             mc.execute(() -> {
                 if (mc.player != null) {
-                   handleArmor();
+                    handleArmor();
                 }
             });
         } catch (Exception e) {

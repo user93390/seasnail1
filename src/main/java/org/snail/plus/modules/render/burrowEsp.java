@@ -85,9 +85,8 @@ public class burrowEsp extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-
-            try {
-                mc.execute(() -> {
+        try {
+            mc.execute(() -> {
                 burrowedPlayers.clear();
                 mc.world.getPlayers().stream()
                         .filter(player -> !(ignoreFriends.get() && Friends.get().isFriend(player)))
@@ -96,8 +95,8 @@ public class burrowEsp extends Module {
                         .forEach(burrowedPlayers::add);
             });
         } catch (Exception e) {
-           error("An error occurred while finding burrowed players: " + e.getMessage());
-           Addon.LOGGER.error("An error occurred while finding burrowed players: {}", Arrays.toString(e.getStackTrace()));
+            error("An error occurred while finding burrowed players: " + e.getMessage());
+            Addon.LOGGER.error("An error occurred while finding burrowed players: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -105,7 +104,7 @@ public class burrowEsp extends Module {
     public void onRender3D(Render3DEvent event) {
         burrowedPlayers.forEach(player -> {
             Vec3d pos = new Vec3d(player.getX(), player.getY() + 0.4, player.getZ());
-            if(performance.get() && MathUtils.rayCast(pos)){
+            if (performance.get() && MathUtils.rayCast(pos)) {
                 event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
             }
         });

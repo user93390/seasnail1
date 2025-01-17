@@ -15,9 +15,10 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class CapeRenderMixin {
     @Unique
     private static final Identifier CUSTOM_CAPE = Identifier.of("snail-plus", "textures/cape.png");
+
     @Inject(method = "get", at = @At("HEAD"), cancellable = true)
-    private static void onGet(PlayerEntity player, CallbackInfoReturnable<Identifier> cir) {
-        if(player == mc.player) {
+    private static void get(PlayerEntity player, CallbackInfoReturnable<Identifier> cir) {
+        if (player == mc.player) {
             cir.setReturnValue(CUSTOM_CAPE);
         }
     }

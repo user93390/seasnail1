@@ -38,37 +38,37 @@ public class autoWither extends Module {
     private final SettingGroup sgRender = settings.createGroup("Render");
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
-        .name("Rotate")
-        .description("Rotate to place blocks")
-        .defaultValue(true)
-        .build());
+            .name("Rotate")
+            .description("Rotate to place blocks")
+            .defaultValue(true)
+            .build());
 
     private final Setting<Boolean> renderBlock = sgRender.add(new BoolSetting.Builder()
-        .name("Render Block")
-        .description("Render placed blocks")
-        .defaultValue(true)
-        .build());
+            .name("Render Block")
+            .description("Render placed blocks")
+            .defaultValue(true)
+            .build());
 
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
-        .name("Shape Mode")
-        .description("Should it display the outline or fill")
-        .defaultValue(ShapeMode.Both)
-        .visible(() -> renderBlock.get())
-        .build());
+            .name("Shape Mode")
+            .description("Should it display the outline or fill")
+            .defaultValue(ShapeMode.Both)
+            .visible(() -> renderBlock.get())
+            .build());
 
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
-        .name("Side Color")
-        .description("Color of the inside of the rendered block")
-        .defaultValue(new SettingColor(0, 255, 255, 100))
-        .visible(() -> renderBlock.get())
-        .build());
+            .name("Side Color")
+            .description("Color of the inside of the rendered block")
+            .defaultValue(new SettingColor(0, 255, 255, 100))
+            .visible(() -> renderBlock.get())
+            .build());
 
     private final Setting<SettingColor> LineColor = sgRender.add(new ColorSetting.Builder()
-        .name("Line Color")
-        .description("Color of the outlines on the rendered block")
-        .defaultValue(new SettingColor(0, 255, 255, 255))
-        .visible(() -> renderBlock.get())
-        .build());
+            .name("Line Color")
+            .description("Color of the outlines on the rendered block")
+            .defaultValue(new SettingColor(0, 255, 255, 255))
+            .visible(() -> renderBlock.get())
+            .build());
 
     public autoWither() {
         super(Addon.Snail, "Auto Wither", "Automatically builds a wither");
@@ -149,7 +149,8 @@ public class autoWither extends Module {
                         if (attemptPlace(currentBlockPos.add(offset), soulSand, Blocks.SOUL_SAND)) return;
                     }
                     for (BlockPos offset : skullOffsets) {
-                        if (attemptPlace(currentBlockPos.add(offset), witherSkull, Blocks.WITHER_SKELETON_SKULL)) return;
+                        if (attemptPlace(currentBlockPos.add(offset), witherSkull, Blocks.WITHER_SKELETON_SKULL))
+                            return;
                     }
                     currentBlockPos = null;
                 }

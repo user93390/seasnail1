@@ -361,7 +361,7 @@ public class autoAnchor extends Module {
      * Calculates the positions for placing anchors around a target entity.
      *
      * @param entity The target player entity.
-     * @param start The starting position for calculations.
+     * @param start  The starting position for calculations.
      * @return A list of valid block positions for placing anchors.
      */
     private List<BlockPos> positions(PlayerEntity entity, Vec3d start) {
@@ -394,10 +394,10 @@ public class autoAnchor extends Module {
                             return false;
                         }
 
-                        if (!WorldUtils.isAir(pos, false)) return false;
+                        if (!WorldUtils.isAir(pos, liquidPlace.get())) return false;
                         if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
-
                         if (selfDropoff < maxDamageError.get() && targetDropoff < maxDamageError.get()) {
+
                             if (selfDamage < maxDamage.get() && targetDamage > minDamage.get() && WorldUtils.hitBoxCheck(pos, true)) {
                                 if (debugCalculations.get())
                                     info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
@@ -442,8 +442,9 @@ public class autoAnchor extends Module {
             if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
 
             PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), targetRange.get());
-            if (debugCalculations.get()) info("found target: %s", player.getName().getString().toLowerCase());
             if (player == null) return;
+
+            if (debugCalculations.get()) info("found target: %s", player.getName().getString().toLowerCase());
             executor.execute(() -> {
                 //should we extrapolate the player's position? if so, we do it here.
                 start = predictMovement.get() ? MathUtils.extrapolatePos(player, steps.get()) : player.getPos();
@@ -537,14 +538,14 @@ public class autoAnchor extends Module {
                         }
 
                         if (renderBoxTwo instanceof IBox) {
-                            ((IBox) renderBoxTwo).set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
+                            ((IBox) renderBoxTwo).meteor$set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
                         }
 
                         double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
                         double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
                         double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
 
-                        ((IBox) renderBoxOne).set(
+                        ((IBox) renderBoxOne).meteor$set(
                                 renderBoxOne.minX + offsetX,
                                 renderBoxOne.minY + offsetY,
                                 renderBoxOne.minZ + offsetZ,

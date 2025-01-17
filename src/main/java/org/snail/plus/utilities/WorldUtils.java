@@ -23,12 +23,8 @@ import java.util.List;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class WorldUtils {
-    public static boolean isAir(BlockPos position, boolean Liquid) {
-        if(Liquid) {
-            return mc.world.getBlockState(position).isLiquid();
-        } else {
-            return mc.world.getBlockState(position).isAir();
-        }
+    public static boolean isAir(BlockPos position, boolean liquid) {
+        return liquid ? !mc.world.getBlockState(position).getFluidState().isEmpty() || mc.world.getBlockState(position).isAir() : mc.world.getBlockState(position).isAir();
     }
 
     public static boolean strictDirection(BlockPos position, DirectionMode Direction) {
