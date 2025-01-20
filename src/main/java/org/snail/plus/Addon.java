@@ -1,5 +1,11 @@
 package org.snail.plus;
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.Firestore;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.cloud.FirestoreClient;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.config.Config;
@@ -27,13 +33,10 @@ import org.snail.plus.modules.render.FOV;
 import org.snail.plus.modules.render.burrowEsp;
 import org.snail.plus.modules.render.spawnerExploit;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class Addon extends MeteorAddon {
     public static String CLIENT_VERSION = "1.2.6";
@@ -42,20 +45,49 @@ public class Addon extends MeteorAddon {
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     public static boolean needsUpdate = false;
     private static final MinecraftClient mc = MinecraftClient.getInstance();
+    public static List<UUID> users = new ArrayList<>();
+    public static File file = new File("external.json").getAbsoluteFile();
 
     @Override
     public void onInitialize() {
         try {
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(new FileInputStream(file)))
+                    .build();
+            FirebaseApp.initializeApp(options);
+
+            Firestore db = FirestoreClient.getFirestore();
+
+            // Create a document reference for the player
+            DocumentReference docRef = db.collection("Minecraft").document("Players");
+
+            // Create a map to store the player's data
+            Map<String, Object> playerData = new HashMap<>();
+            playerData.put(mc.getSession().getUsername(), " " + mc.getSession().getUuidOrNull().toString());
+            docRef.set(playerData);
+
+            Map<String, Object> data = docRef.get().get().getData();
+            if (data != null) {
+                for (Map.Entry<String, Object> entry : data.entrySet()) {
+                    users.add(UUID.fromString(entry.getValue().toString().trim()));
+                }
+            }
 
             synchronized (this) {
                 checkForUpdates.run();
                 if (!needsUpdate) {
                     Initialize.run();
+                    UUID uuid = mc.getSession().getUuidOrNull();
+                    if (uuid != null) {
+                        users.add(uuid);
+                    }
+
+                    LOGGER.warn(String.valueOf(users));
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Critical error while initializing: {}", Arrays.toString(e.getStackTrace()));
-            mc.close();
+            LOGGER.error("Critical error while initializing", e);
+            e.printStackTrace();
             System.exit(1);
         }
     }

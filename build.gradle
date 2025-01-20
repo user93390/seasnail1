@@ -16,8 +16,6 @@ repositories {
         name = 'Fabric'
         url = 'https://maven.fabricmc.net/'
     }
-    mavenCentral()
-    gradlePluginPortal()
     maven {
         name = 'Meteor Dev Releases'
         url = 'https://maven.meteordev.org/releases'
@@ -26,6 +24,12 @@ repositories {
         name = 'Meteor Dev Snapshots'
         url = 'https://maven.meteordev.org/snapshots'
     }
+    maven {
+        name = 'Google'
+        url = 'https://maven.google.com/'
+    }
+    mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {
@@ -38,6 +42,7 @@ dependencies {
     
     //others
     implementation 'org.json:json:20231013'
+    implementation 'com.google.firebase:firebase-admin:9.4.3'
 }
 
 processResources {
