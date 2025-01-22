@@ -6,3 +6,6 @@ build
 
 #ignore run configurations e.g Minecraft servers and client
 run
+
+#remove .idea folder because it is not needed
+.idea

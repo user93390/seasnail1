@@ -84,7 +84,7 @@ public class discordRPC extends Module {
             scheduleNextUpdate();
         } catch (Exception e) {
             error("An error occurred while updating discord rpc");
-            Addon.LOGGER.error("An error occurred while updating discord rpc {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while updating discord rpc {}", Arrays.toString(e.getStackTrace()));
         }
     }
 }

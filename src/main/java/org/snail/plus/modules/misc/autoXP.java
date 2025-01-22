@@ -155,7 +155,7 @@ public class autoXP extends Module {
             lastUseTime = currentTime;
         } catch (Exception e) {
             error("An error occurred while using XP bottles");
-            Addon.LOGGER.error("An error occurred while using XP bottles {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while using XP bottles {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

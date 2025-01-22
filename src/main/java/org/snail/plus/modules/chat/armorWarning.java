@@ -177,7 +177,7 @@ public class armorWarning extends Module {
     private void sendMessage(PlayerEntity entity, Integer friendDurability) {
         for (ItemStack stack : entity.getArmorItems()) {
             if (stack.getItem() instanceof ArmorItem armorItem) {
-                if(armorItem.toString().endsWith("s")) {
+                if (armorItem.toString().endsWith("s")) {
                     grammar = "are";
                 } else {
                     grammar = "is";

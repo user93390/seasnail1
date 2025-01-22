@@ -158,7 +158,7 @@ public class autoFarmer extends Module {
             }
         } catch (Exception e) {
             error("An error occurred: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred: {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

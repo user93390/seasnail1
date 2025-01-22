@@ -96,7 +96,7 @@ public class burrowEsp extends Module {
             });
         } catch (Exception e) {
             error("An error occurred while finding burrowed players: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred while finding burrowed players: {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while finding burrowed players: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

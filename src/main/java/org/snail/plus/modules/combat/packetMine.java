@@ -191,7 +191,7 @@ public class packetMine extends Module {
             }
         } catch (Exception e) {
             error("An error occurred while mining: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred while mining: {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while mining: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

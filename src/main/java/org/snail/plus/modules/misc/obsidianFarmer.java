@@ -149,7 +149,7 @@ public class obsidianFarmer extends Module {
             }
         } catch (Exception e) {
             error("An error occurred while mining obsidian: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred while mining obsidian: {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while mining obsidian: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

@@ -32,7 +32,7 @@ public class FOV extends Module {
             event.fov = Fov.get();
         } catch (Exception e) {
             info("An error occurred while changing the FOV");
-            Addon.LOGGER.error("An error occurred while changing the FOV  {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while changing the FOV  {}", Arrays.toString(e.getStackTrace()));
         }
     }
 }

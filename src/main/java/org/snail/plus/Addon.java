@@ -1,11 +1,5 @@
 package org.snail.plus;
 
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.Firestore;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
-import com.google.firebase.cloud.FirestoreClient;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.config.Config;
@@ -33,60 +27,34 @@ import org.snail.plus.modules.render.FOV;
 import org.snail.plus.modules.render.burrowEsp;
 import org.snail.plus.modules.render.spawnerExploit;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.*;
 
 public class Addon extends MeteorAddon {
+    private static final MinecraftClient mc = MinecraftClient.getInstance();
+
     public static String CLIENT_VERSION = "1.2.6";
-    public static final Logger LOGGER = LoggerFactory.getLogger("Snail++");
+    public static final Logger Logger = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     public static boolean needsUpdate = false;
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
-    public static List<UUID> users = new ArrayList<>();
-    public static File file = new File("external.json").getAbsoluteFile();
 
     @Override
     public void onInitialize() {
         try {
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(new FileInputStream(file)))
-                    .build();
-            FirebaseApp.initializeApp(options);
-
-            Firestore db = FirestoreClient.getFirestore();
-
-            // Create a document reference for the player
-            DocumentReference docRef = db.collection("Minecraft").document("Players");
-
-            // Create a map to store the player's data
-            Map<String, Object> playerData = new HashMap<>();
-            playerData.put(mc.getSession().getUsername(), " " + mc.getSession().getUuidOrNull().toString());
-            docRef.set(playerData);
-
-            Map<String, Object> data = docRef.get().get().getData();
-            if (data != null) {
-                for (Map.Entry<String, Object> entry : data.entrySet()) {
-                    users.add(UUID.fromString(entry.getValue().toString().trim()));
-                }
-            }
-
             synchronized (this) {
                 checkForUpdates.run();
                 if (!needsUpdate) {
                     Initialize.run();
-                    UUID uuid = mc.getSession().getUuidOrNull();
-                    if (uuid != null) {
-                        users.add(uuid);
-                    }
-
-                    LOGGER.warn(String.valueOf(users));
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Critical error while initializing", e);
+            Logger.error("Critical error while initializing", e);
             e.printStackTrace();
             System.exit(1);
         }
@@ -99,7 +67,7 @@ public class Addon extends MeteorAddon {
 
     // Load modules
     public void loadModules() {
-        LOGGER.warn("Loading modules");
+        Logger.warn("Loading modules");
         List<Module> moduleList = List.of(
                 new visualRange(),
                 new burrowEsp(),
@@ -128,7 +96,7 @@ public class Addon extends MeteorAddon {
         Hud.get().register(Watermark.INFO);
         Commands.add(new swapCommand());
         Config.get().load();
-        LOGGER.warn("Modules and config loaded");
+        Logger.warn("Modules and config loaded");
     }
 
     Runnable Initialize = () -> {
@@ -139,22 +107,22 @@ public class Addon extends MeteorAddon {
             mc.options.advancedItemTooltips = true;
             mc.options.getAutoJump().setValue(false);
         } catch (Exception e) {
-            LOGGER.error("Critical error while loading: {}", Arrays.toString(e.getStackTrace()));
+            Logger.error("Critical error while loading: {}", Arrays.toString(e.getStackTrace()));
         }
     };
 
     Runnable checkForUpdates = () -> {
-        LOGGER.info("Checking for updates");
+        Logger.info("Checking for updates");
         try {
             URI uri = URI.create("https://api.github.com/repos/user93390/seasnail1/releases/latest");
             String latestVersion = getString(uri);
             needsUpdate = !CLIENT_VERSION.equals(latestVersion);
             if (needsUpdate) {
                 String message = String.format("Please update your client to the latest version (%s) found at https://github.com/user93390/seasnail1/releases", uri);
-                LOGGER.error(message);
+                Logger.error(message);
                 throw new CrashException(new CrashReport(message, new Throwable("Client is out of date")));
             } else {
-                LOGGER.info("Client is up to date");
+                Logger.info("Client is up to date {}", latestVersion);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -176,6 +144,7 @@ public class Addon extends MeteorAddon {
         JSONObject json = new JSONObject(content.toString());
         return json.getString("tag_name");
     }
+
 
     @Override
     public String getPackage() {

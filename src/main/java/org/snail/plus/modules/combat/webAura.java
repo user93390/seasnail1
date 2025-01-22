@@ -184,7 +184,7 @@ public class webAura extends Module {
             }
         } catch (Exception e) {
             error("An error occurred while placing webs: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred while placing webs: {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while placing webs: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

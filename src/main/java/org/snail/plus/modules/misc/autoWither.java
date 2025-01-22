@@ -157,7 +157,7 @@ public class autoWither extends Module {
             }
         } catch (Exception e) {
             error("An error occurred while building the wither");
-            Addon.LOGGER.error("An error occurred while building the wither {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while building the wither {}", Arrays.toString(e.getStackTrace()));
         }
     }
 

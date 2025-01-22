@@ -1,21 +1,12 @@
 plugins {
     id 'fabric-loom' version '1.9-SNAPSHOT'
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+    id 'java'
 }
 
 version = project.mod_version
 group = project.maven_group
 
 repositories {
-    maven {
-        name = 'Fabric'
-        url = 'https://maven.fabricmc.net/'
-    }
     maven {
         name = 'Meteor Dev Releases'
         url = 'https://maven.meteordev.org/releases'
@@ -25,11 +16,9 @@ repositories {
         url = 'https://maven.meteordev.org/snapshots'
     }
     maven {
-        name = 'Google'
-        url = 'https://maven.google.com/'
+        url 'https://maven.google.com/'
+        name 'Google'
     }
-    mavenCentral()
-    gradlePluginPortal()
 }
 
 dependencies {
@@ -39,10 +28,10 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
-    
-    //others
+
+    // Other dependencies
     implementation 'org.json:json:20231013'
-    implementation 'com.google.firebase:firebase-admin:9.4.3'
+    include 'org.json:json:20231013'
 }
 
 processResources {

@@ -411,7 +411,7 @@ public class autoAnchor extends Module {
                         }
                     } catch (Exception e) {
                         error("An error occurred while calculating the positions: " + e.getMessage());
-                        Addon.LOGGER.error(Arrays.toString(e.getStackTrace()));
+                        Addon.Logger.error(Arrays.toString(e.getStackTrace()));
                         throw new RuntimeException(e);
                     }
                     return false;
@@ -462,7 +462,7 @@ public class autoAnchor extends Module {
             lastUpdateTime = currentTime;
         } catch (Exception e) {
             error("An error occurred while updating the module: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred while updating the module: {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while updating the module: {}", Arrays.toString(e.getStackTrace()));
             throw new RuntimeException(e);
         }
     }

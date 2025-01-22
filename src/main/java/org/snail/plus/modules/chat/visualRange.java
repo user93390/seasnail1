@@ -52,6 +52,7 @@ public class visualRange extends Module {
             .defaultValue(1.0)
             .sliderRange(0.0, 2.0)
             .build());
+
     private final List<Entity> entitiesList = new ArrayList<>();
     private final Random random = new Random();
     public double x, y, z;
@@ -62,6 +63,7 @@ public class visualRange extends Module {
         z = 0;
         random.setSeed(System.currentTimeMillis());
     });
+
 
     public visualRange() {
         super(Addon.Snail, "Visual Range", "warns you when certain entities are within render distance");

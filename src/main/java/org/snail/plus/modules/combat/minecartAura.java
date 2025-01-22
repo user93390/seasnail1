@@ -196,7 +196,7 @@ public class minecartAura extends Module {
             }, bowDelay.get(), TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             error("An error occurred while shooting the bow: " + e.getMessage());
-            Addon.LOGGER.error("An error occurred while shooting the bow: {}", Arrays.toString(e.getStackTrace()));
+            Addon.Logger.error("An error occurred while shooting the bow: {}", Arrays.toString(e.getStackTrace()));
         }
     }
 
