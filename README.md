@@ -10,7 +10,7 @@
 1. Java 21
 2. Meteor client
 3. Fabric
-2. Minecraft 1.20.4 - 1.21.1
+2. Minecraft 1.21.1 - 1.21.4
 
 
 ## Story line
