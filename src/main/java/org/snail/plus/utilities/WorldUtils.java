@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.entity.ItemEntity;
@@ -24,7 +25,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class WorldUtils {
     public static boolean isAir(BlockPos position, boolean liquid) {
-        return liquid ? !mc.world.getBlockState(position).getFluidState().isEmpty() || mc.world.getBlockState(position).isAir() : mc.world.getBlockState(position).isAir();
+        return liquid ? !mc.world.getBlockState(position).getFluidState().isEmpty() || mc.world.getBlockState(position).isAir() : mc.world.getBlockState(position).isAir() || mc.world.getBlockState(position).getBlock() == Blocks.FIRE;
     }
 
     public static boolean strictDirection(BlockPos position, DirectionMode Direction) {

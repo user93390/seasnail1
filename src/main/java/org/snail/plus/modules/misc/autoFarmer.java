@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.snail.plus.utilities.MathUtils.getCrosshairBlocks;
+import static org.snail.plus.utilities.MathUtils.getCrosshairBlock;
 
 public class autoFarmer extends Module {
     private final SettingGroup sgBreak = settings.createGroup("Break");
@@ -138,7 +138,7 @@ public class autoFarmer extends Module {
                             if (mc.world != null && mc.player != null) {
                                 hoe = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof HoeItem);
                                 //check if crosshair is on crop
-                                crosshairBlock = getCrosshairBlocks();
+                                crosshairBlock = getCrosshairBlock();
                                 if (crosshairBlock != null && mc.world.getBlockState(crosshairBlock).getBlock() instanceof CropBlock) {
                                     blocks.clear();
                                     blocks.add(crosshairBlock);

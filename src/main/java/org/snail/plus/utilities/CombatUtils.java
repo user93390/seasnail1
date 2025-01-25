@@ -1,10 +1,12 @@
 package org.snail.plus.utilities;
 
+import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
@@ -55,8 +57,23 @@ public class CombatUtils {
     }
 
     public static boolean isSurrounded(PlayerEntity target) {
-        BlockPos blockPos = target.getBlockPos();
-        return isValidBlock(blockPos.north()) && isValidBlock(blockPos.south()) && isValidBlock(blockPos.east()) && isValidBlock(blockPos.west());
+        //TODO: make this actually work lol
+
+        //get the outline of the hitbox of the player
+        for(Direction direction : Direction.values()) {
+            BlockPos blockPos = target.getBlockPos().offset(direction);
+            //get the blocks effected by the players hitbox
+            for(double x = 0; x < 0.6; x += 0.6) {
+                for(double z = 0; z < 0.6; z += 0.6) {
+                    Vec3d pos = new Vec3d(blockPos.getX() + x, target.getY(), blockPos.getZ() + z);
+                    boolean valid = Math.abs(target.getX() - pos.getX()) < 0.3 && Math.abs(target.getZ() - pos.getZ()) < 0.3;
+                    if(isValidBlock(BlockPos.ofFloored(pos)) && !valid) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public enum filterMode {

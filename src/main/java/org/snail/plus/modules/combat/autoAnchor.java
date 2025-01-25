@@ -1,3 +1,4 @@
+
 package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render2DEvent;
@@ -375,8 +376,8 @@ public class autoAnchor extends Module {
 
                         Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
 
-                        targetDamage = DamageUtils.explosionDamage(entity, entity.getPos(), entity.getBoundingBox(), vec, 10f, HIT_FACTORY);
-                        selfDamage = DamageUtils.explosionDamage(mc.player, mc.player.getPos(), mc.player.getBoundingBox(), vec, 10f, HIT_FACTORY);
+                        targetDamage =  DamageUtils.anchorDamage(entity,  start);
+                        selfDamage = DamageUtils.anchorDamage(mc.player,  start);
 
                         damageValue = targetDamage;
                         selfDamageValue = selfDamage;
@@ -397,7 +398,6 @@ public class autoAnchor extends Module {
                         if (!WorldUtils.isAir(pos, liquidPlace.get())) return false;
                         if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
                         if (selfDropoff < maxDamageError.get() && targetDropoff < maxDamageError.get()) {
-
                             if (selfDamage < maxDamage.get() && targetDamage > minDamage.get() && WorldUtils.hitBoxCheck(pos, true)) {
                                 if (debugCalculations.get())
                                     info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
@@ -416,7 +416,6 @@ public class autoAnchor extends Module {
                     }
                     return false;
                 })
-                .limit(threads.get())
                 .map(BlockPos::toImmutable)
                 .toList();
     }

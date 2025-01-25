@@ -8,4 +8,4 @@ build
 run
 
 #remove .idea folder because it is not needed
-.idea
+.idea/

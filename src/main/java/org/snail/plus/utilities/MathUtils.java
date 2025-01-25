@@ -4,7 +4,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
@@ -45,7 +44,7 @@ public class MathUtils {
         return Math.sqrt(zx * zx + y * y);
     }
 
-    public static BlockPos getCrosshairBlocks() {
+    public static BlockPos getCrosshairBlock() {
         HitResult hitResult = mc.crosshairTarget;
         if (hitResult.getType() == HitResult.Type.BLOCK) {
             return ((BlockHitResult) hitResult).getBlockPos();
@@ -67,10 +66,6 @@ public class MathUtils {
             mc.player.setPitch(interpolatedPitch);
             currentStep++;
         }
-    }
-
-    public static Box extrapolateBox(PlayerEntity entity, int ticks) {
-        return entity.getBoundingBox().offset(entity.getVelocity().multiply(ticks));
     }
 
     public static Vec3d extrapolatePos(PlayerEntity entity, int ticks) {
