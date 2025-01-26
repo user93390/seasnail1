@@ -1,4 +1,3 @@
-
 package org.snail.plus.modules.combat;
 
 import meteordevelopment.meteorclient.events.render.Render2DEvent;
@@ -26,7 +25,7 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utilities.CombatUtils;
-import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.MathHelper;
 import org.snail.plus.utilities.WorldUtils;
 import org.snail.plus.utilities.swapUtils;
 
@@ -36,8 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static meteordevelopment.meteorclient.utils.entity.DamageUtils.HIT_FACTORY;
+import java.util.stream.Collectors;
 
 /**
  * Author: seasnail1
@@ -304,7 +302,7 @@ public class autoAnchor extends Module {
     Runnable doBreak = () -> {
         for (BlockPos pos : AnchorPos) {
             if (rotate.get()) {
-                Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, () -> MathUtils.updateRotation(rotationSteps.get()));
+                Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, () -> MathHelper.updateRotation(rotationSteps.get()));
                 breakAnchor();
             } else {
                 breakAnchor();
@@ -366,7 +364,7 @@ public class autoAnchor extends Module {
      * @return A list of valid block positions for placing anchors.
      */
     private List<BlockPos> positions(PlayerEntity entity, Vec3d start) {
-        return MathUtils.getSphere(BlockPos.ofFloored(start), MathUtils.getRadius((int) Math.sqrt(placeBreak.get()), (int) Math.sqrt(placeBreak.get())))
+        return MathHelper.getSphere(BlockPos.ofFloored(start), MathHelper.getRadius((int) Math.sqrt(placeBreak.get()), (int) Math.sqrt(placeBreak.get())))
                 .parallelStream()
                 .sorted(Comparator.comparingDouble(pos -> pos.getSquaredDistance(start)))
                 .filter(pos -> {
@@ -376,8 +374,8 @@ public class autoAnchor extends Module {
 
                         Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
 
-                        targetDamage =  DamageUtils.anchorDamage(entity,  start);
-                        selfDamage = DamageUtils.anchorDamage(mc.player,  start);
+                        targetDamage = DamageUtils.anchorDamage(entity, start);
+                        selfDamage = DamageUtils.anchorDamage(mc.player, start);
 
                         damageValue = targetDamage;
                         selfDamageValue = selfDamage;
@@ -385,7 +383,7 @@ public class autoAnchor extends Module {
                         double selfDropoff = (selfDamage - maxSelfError.get()) / selfDamage;
                         double targetDropoff = (targetDamage - maxDamageError.get()) / targetDamage;
 
-                        if (rayCast.get() && MathUtils.rayCast(vec)) {
+                        if (rayCast.get() && MathHelper.rayCast(vec)) {
                             if (debugCalculations.get()) info("failed raycast check");
                             return false;
                         }
@@ -416,8 +414,9 @@ public class autoAnchor extends Module {
                     }
                     return false;
                 })
+                .limit(threads.get())
                 .map(BlockPos::toImmutable)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @EventHandler
@@ -446,7 +445,7 @@ public class autoAnchor extends Module {
             if (debugCalculations.get()) info("found target: %s", player.getName().getString().toLowerCase());
             executor.execute(() -> {
                 //should we extrapolate the player's position? if so, we do it here.
-                start = predictMovement.get() ? MathUtils.extrapolatePos(player, steps.get()) : player.getPos();
+                start = predictMovement.get() ? MathHelper.extrapolatePos(player, steps.get()) : player.getPos();
                 List<BlockPos> positions = positions(player, start);
                 lock.lock();
                 try {
@@ -517,7 +516,7 @@ public class autoAnchor extends Module {
                 }
 
                 if (renderOutline.get()) {
-                    Vec3d box = MathUtils.extrapolatePos(entity, steps.get());
+                    Vec3d box = MathHelper.extrapolatePos(entity, steps.get());
                     event.renderer.box(new Box(box, box), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 }
 

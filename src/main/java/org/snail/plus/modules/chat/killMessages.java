@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Random;
 
 public class killMessages extends Module {
-
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> chatDelay = sgGeneral.add(new DoubleSetting.Builder()
@@ -38,7 +37,7 @@ public class killMessages extends Module {
 
     private final Setting<List<String>> totemMessage = sgGeneral.add(new StringListSetting.Builder()
             .name("totem message")
-            .description("Custom message to send. placeholders: %Entity%")
+            .description("Custom message to send.")
             .defaultValue("")
             .visible(totemPop::get)
             .build());
@@ -51,7 +50,7 @@ public class killMessages extends Module {
 
     private final Setting<List<String>> messages = sgGeneral.add(new StringListSetting.Builder()
             .name("message")
-            .description("Custom message to send. placeholders: %Entity%, %Coords%")
+            .description("Custom message to send.")
             .defaultValue("")
             .visible(killMessage::get)
             .build());
@@ -59,6 +58,12 @@ public class killMessages extends Module {
     private final Setting<Boolean> directMessage = sgGeneral.add(new BoolSetting.Builder()
             .name("direct message")
             .description("sends the message directly to the player")
+            .defaultValue(false)
+            .build());
+
+    private final Setting<Boolean> sendInfo = sgGeneral.add(new BoolSetting.Builder()
+            .name("send info")
+            .description("sends info to the chat")
             .defaultValue(false)
             .build());
 
@@ -98,9 +103,10 @@ public class killMessages extends Module {
     }
 
     public void getContent() {
+        Placeholders.title = "Kill Messages Placeholders";
+
         Placeholders.items = List.of("{Entity} - shows the player's name", "{Coords} - shows the player's coordinates",
                 "{totems} - shows the amount of totem pops");
-        Placeholders.title = "Kill Messages Placeholders";
     }
 
     @Override
@@ -130,7 +136,7 @@ public class killMessages extends Module {
                 if (event.selfKilled) {
                     sendMessages(event.player, messages.get());
                 } else {
-                    info("didn't kill " + event.player.getName().getString() + "sending message anyway...");
+                    if(sendInfo.get()) info("didn't kill " + event.player.getName().getString() + "sending message anyway...");
                     sendMessages(event.player, messages.get());
                 }
                 sentMessage = true;
@@ -154,7 +160,7 @@ public class killMessages extends Module {
                     .replace("{totems}", pops.toString());
 
             ChatUtils.sendPlayerMsg(directMessage.get() ? "/msg " + victim + " " + message : message);
-            lastMessageTime = currentTime;
         }
+        lastMessageTime = currentTime;
     }
 }

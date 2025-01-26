@@ -17,7 +17,7 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.snail.plus.Addon;
-import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.MathHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,7 +111,7 @@ public class obsidianFarmer extends Module {
     }
 
     private List<BlockPos> getObsidianPositions(BlockPos starting, double radius) {
-        return MathUtils.getSphere(starting, radius).stream()
+        return MathHelper.getSphere(starting, radius).stream()
                 .filter(blockPos -> blockPos.isWithinDistance(mc.player.getBlockPos(), mineRange.get()) && isValid(blockPos))
                 .findFirst()
                 .map(List::of)

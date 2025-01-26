@@ -13,7 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utilities.CombatUtils;
-import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.MathHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -104,9 +104,15 @@ public class burrowEsp extends Module {
     public void onRender3D(Render3DEvent event) {
         burrowedPlayers.forEach(player -> {
             Vec3d pos = new Vec3d(player.getX(), player.getY() + 0.4, player.getZ());
-            if (performance.get() && MathUtils.rayCast(pos)) {
+            if (performance.get() && MathHelper.rayCast(pos)) {
                 event.renderer.box(BlockPos.ofFloored(pos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
             }
         });
+    }
+
+
+    @Override
+    public String getInfoString() {
+        return String.valueOf(burrowedPlayers.size());
     }
 }

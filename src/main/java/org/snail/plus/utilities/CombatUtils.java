@@ -1,6 +1,5 @@
 package org.snail.plus.utilities;
 
-import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -60,14 +59,14 @@ public class CombatUtils {
         //TODO: make this actually work lol
 
         //get the outline of the hitbox of the player
-        for(Direction direction : Direction.values()) {
+        for (Direction direction : Direction.values()) {
             BlockPos blockPos = target.getBlockPos().offset(direction);
             //get the blocks effected by the players hitbox
-            for(double x = 0; x < 0.6; x += 0.6) {
-                for(double z = 0; z < 0.6; z += 0.6) {
+            for (double x = 0; x < 0.6; x += 0.6) {
+                for (double z = 0; z < 0.6; z += 0.6) {
                     Vec3d pos = new Vec3d(blockPos.getX() + x, target.getY(), blockPos.getZ() + z);
                     boolean valid = Math.abs(target.getX() - pos.getX()) < 0.3 && Math.abs(target.getZ() - pos.getZ()) < 0.3;
-                    if(isValidBlock(BlockPos.ofFloored(pos)) && !valid) {
+                    if (isValidBlock(BlockPos.ofFloored(pos)) && !valid) {
                         return true;
                     }
                 }

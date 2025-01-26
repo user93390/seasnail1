@@ -8,12 +8,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-public class MathUtils {
-
+public class MathHelper {
+    static Set<Vec3d> movements = new HashSet<>();
     private static float currentYaw;
     private static float currentPitch;
     private static float targetYaw;
@@ -21,6 +23,7 @@ public class MathUtils {
     private static int currentStep;
 
     public static List<BlockPos> getSphere(BlockPos pos, double radius) {
+
         List<BlockPos> sphere = new ArrayList<>();
         int cx = pos.getX();
         int cy = pos.getY();
@@ -69,6 +72,18 @@ public class MathUtils {
     }
 
     public static Vec3d extrapolatePos(PlayerEntity entity, int ticks) {
-        return entity.getPos().add(entity.getVelocity().multiply(ticks));
+        if (entity.forwardSpeed != 0 || entity.sidewaysSpeed != 0) {
+            movements.add(new Vec3d(entity.getX(), entity.getEyeY(), entity.getZ()));
+        }
+
+        if (movements.isEmpty()) {
+            return entity.getPos();
+        }
+
+        Vec3d totalMovement = movements.stream().reduce(Vec3d.ZERO, Vec3d::add);
+        int count = movements.size();
+
+        Vec3d averageMovement = totalMovement.multiply(1.0 / count);
+        return entity.getPos().add(averageMovement.multiply(ticks));
     }
 }

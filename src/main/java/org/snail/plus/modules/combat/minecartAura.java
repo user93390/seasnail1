@@ -17,7 +17,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.snail.plus.Addon;
 import org.snail.plus.utilities.CombatUtils;
-import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.MathHelper;
 import org.snail.plus.utilities.WorldUtils;
 import org.snail.plus.utilities.swapUtils;
 
@@ -177,7 +177,7 @@ public class minecartAura extends Module {
             if (!bow.found()) return;
 
             //raycast
-            if (MathUtils.rayCast(Vec3d.of(position.up(1)))) return;
+            if (MathHelper.rayCast(Vec3d.of(position.up(1)))) return;
 
             InvUtils.swap(bow.slot(), false);
 

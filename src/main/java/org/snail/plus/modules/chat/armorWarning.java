@@ -50,6 +50,7 @@ public class armorWarning extends Module {
             .description("The armor value at which to warn your friends.")
             .defaultValue(10)
             .sliderRange(0, 100)
+            .visible(friends::get)
             .build());
 
     private final Setting<Double> maxFriendRange = sgGeneral.add(new DoubleSetting.Builder()
@@ -57,6 +58,7 @@ public class armorWarning extends Module {
             .description("The maximum range to warn your friends.")
             .defaultValue(7)
             .sliderRange(0, 100)
+            .visible(friends::get)
             .build());
 
     private final Setting<Double> threshold = sgGeneral.add(new DoubleSetting.Builder()
@@ -94,7 +96,7 @@ public class armorWarning extends Module {
     Integer armorDurability;
     private long lastAlertTime = 0;
     private final long alertIntervalMillis = remind.get() * 1000;
-    private final Module module = Modules.get().get(autoXP.class);
+    private Module module;
     private String grammar;
 
     Runnable showScreen = Placeholders::showScreen;
@@ -147,6 +149,7 @@ public class armorWarning extends Module {
             playAlertSounds();
             if (enableXP.get() && !module.isActive()) {
                 module.toggle();
+                info("Enabling auto-XP+");
             }
             warning("Your armor is low! (%s)", armorDurability.toString());
             lastAlertTime = currentTime;
@@ -200,7 +203,8 @@ public class armorWarning extends Module {
     private ItemStack getArmorPiece(PlayerEntity entity) {
         for (ItemStack stack : entity.getArmorItems()) {
             if (stack != null && !stack.isEmpty() && stack.isDamageable()) {
-                if (stack.getMaxDamage() - 100 * (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage() == armorDurability) {
+                double damage = stack.getMaxDamage() - 100 * (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
+                if (damage == armorDurability && damage > 0) {
                     return stack;
                 }
             }
@@ -211,20 +215,29 @@ public class armorWarning extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
-            mc.execute(() -> {
-                if (mc.player != null) {
-                    handleArmor();
-                }
-            });
+            if (module == null) {
+                info("auto-XP+ not found, Finding module...");
+                module = Modules.get().get(autoXP.class);
+            }
+
+            if (mc.player != null) {
+                handleArmor();
+            }
         } catch (Exception e) {
             error("Error in armorWarning", e);
+            Addon.Logger.error("Unexpected error in armorWarning: {}", String.valueOf(e));
+            e.printStackTrace();
+            throw e;
         }
     }
 
     private Integer getDurability(PlayerEntity entity) {
         for (ItemStack stack : entity.getArmorItems()) {
             if (stack != null && !stack.isEmpty() && stack.isDamageable()) {
-                return 100 * (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
+                double damage = (double) (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
+                if (damage < threshold.get() && damage > 0) {
+                    return (int) (damage * 100);
+                }
             }
         }
         return 0;

@@ -8,8 +8,6 @@ import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.tutorial.TutorialStep;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import org.json.JSONObject;
@@ -29,15 +27,13 @@ import org.snail.plus.modules.render.spawnerExploit;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 public class Addon extends MeteorAddon {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
-
     public static String CLIENT_VERSION = "1.2.6";
     public static final Logger Logger = LoggerFactory.getLogger("Snail++");
     public static final Category Snail = new Category("Snail++");
@@ -102,10 +98,6 @@ public class Addon extends MeteorAddon {
     Runnable Initialize = () -> {
         try {
             loadModules();
-            mc.getTutorialManager().setStep(TutorialStep.NONE);
-            mc.options.skipMultiplayerWarning = true;
-            mc.options.advancedItemTooltips = true;
-            mc.options.getAutoJump().setValue(false);
         } catch (Exception e) {
             Logger.error("Critical error while loading: {}", Arrays.toString(e.getStackTrace()));
         }
@@ -118,7 +110,7 @@ public class Addon extends MeteorAddon {
             String latestVersion = getString(uri);
             needsUpdate = !CLIENT_VERSION.equals(latestVersion);
             if (needsUpdate) {
-                String message = String.format("Please update your client to the latest version (%s) found at https://github.com/user93390/seasnail1/releases", uri);
+                String message = String.format("Please update your client to the latest version (%s) found at https://github.com/user93390/seasnail1/releases", latestVersion);
                 Logger.error(message);
                 throw new CrashException(new CrashReport(message, new Throwable("Client is out of date")));
             } else {

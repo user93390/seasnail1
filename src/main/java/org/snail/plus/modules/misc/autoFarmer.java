@@ -15,7 +15,7 @@ import net.minecraft.block.CropBlock;
 import net.minecraft.item.HoeItem;
 import net.minecraft.util.math.BlockPos;
 import org.snail.plus.Addon;
-import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.MathHelper;
 import org.snail.plus.utilities.swapUtils;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.snail.plus.utilities.MathUtils.getCrosshairBlock;
+import static org.snail.plus.utilities.MathHelper.getCrosshairBlock;
 
 public class autoFarmer extends Module {
     private final SettingGroup sgBreak = settings.createGroup("Break");
@@ -118,7 +118,7 @@ public class autoFarmer extends Module {
     }
 
     public List<BlockPos> getBlocks(BlockPos center, double radius) {
-        return MathUtils.getSphere(center, radius).stream().filter(pos -> {
+        return MathHelper.getSphere(center, radius).stream().filter(pos -> {
                     if (mc.world.getBlockState(pos).getBlock() instanceof CropBlock crop) {
                         return crop.getMaxAge() - mc.world.getBlockState(pos).get(CropBlock.AGE) >= minAge.get();
                     }

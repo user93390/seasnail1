@@ -3,14 +3,11 @@ package org.snail.plus.mixins;
 import meteordevelopment.meteorclient.utils.network.Capes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
-import org.snail.plus.Addon;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import java.util.List;
-import java.util.UUID;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -21,7 +18,7 @@ public class CapeRenderMixin {
 
     @Inject(method = "get", at = @At("HEAD"), cancellable = true)
     private static void get(PlayerEntity player, CallbackInfoReturnable<Identifier> cir) {
-        if(player == mc.player) {
+        if (player == mc.player) {
             cir.setReturnValue(CUSTOM_CAPE);
         }
     }

@@ -10,7 +10,7 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import org.snail.plus.Addon;
-import org.snail.plus.utilities.MathUtils;
+import org.snail.plus.utilities.MathHelper;
 import org.snail.plus.utilities.WorldUtils;
 import org.snail.plus.utilities.serverUtils;
 import org.snail.plus.utilities.swapUtils;
@@ -21,12 +21,20 @@ import java.util.stream.StreamSupport;
 
 public class autoXP extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgPause = settings.createGroup("Pause");
 
     private final Setting<Double> pitch = sgGeneral.add(new DoubleSetting.Builder()
             .name("pitch")
             .description("Pitch to look at when using XP bottles.")
             .defaultValue(-90.0)
             .sliderRange(-90.0, 90.0)
+            .build());
+
+    private final Setting<Integer> rotationSteps = sgGeneral.add(new IntSetting.Builder()
+            .name("rotation-steps")
+            .description("The number of steps to rotate. 1 or 2 recommended.")
+            .defaultValue(1)
+            .sliderRange(1, 10)
             .build());
 
     public final Setting<Double> pauseHealth = sgGeneral.add(new DoubleSetting.Builder()
@@ -38,7 +46,7 @@ public class autoXP extends Module {
 
     private final Setting<swapUtils.swapMode> autoSwitch = sgGeneral.add(new EnumSetting.Builder<swapUtils.swapMode>()
             .name("swap-mode")
-            .description("Swapping method. IGNORE MOVE")
+            .description("Swapping method. IGNORE MOVE MODE.")
             .defaultValue(swapUtils.swapMode.silent)
             .build());
 
@@ -56,24 +64,12 @@ public class autoXP extends Module {
             .defaultValue(WorldUtils.HandMode.MainHand)
             .build());
 
-    private final Setting<Boolean> pauseUse = sgGeneral.add(new BoolSetting.Builder()
-            .name("pause-use")
-            .description("Pause using xp bottles when using other items.")
-            .defaultValue(false)
-            .build());
-
     private final Setting<Integer> cooldownTime = sgGeneral.add(new IntSetting.Builder()
             .name("cooldown-time")
             .description("Cooldown time between using XP bottles (in ticks).")
             .defaultValue(20)
             .min(0)
             .sliderMax(100)
-            .build());
-
-    private final Setting<Boolean> tpsSync = sgGeneral.add(new BoolSetting.Builder()
-            .name("TPS-sync")
-            .description("syncs the delay ( " + cooldownTime.get() + ") with the server tps")
-            .defaultValue(true)
             .build());
 
     private final Setting<Integer> minXPBottles = sgGeneral.add(new IntSetting.Builder()
@@ -97,10 +93,23 @@ public class autoXP extends Module {
             .defaultValue(true)
             .build());
 
+    private final Setting<Boolean> damagePause = sgPause.add(new BoolSetting.Builder()
+            .name("damage-pause")
+            .description("Pause when taking damage.")
+            .defaultValue(false)
+            .build());
+
+    private final Setting<Boolean> pauseUse = sgPause.add(new BoolSetting.Builder()
+            .name("pause-use")
+            .description("Pause using xp bottles when using other items.")
+            .defaultValue(false)
+            .build());
+
+
     private int slot = -1;
     private FindItemResult item;
     private long lastUseTime = 0;
-
+    float health = 0;
     private final Runnable reset = () -> {
         slot = -1;
         item = null;
@@ -119,6 +128,7 @@ public class autoXP extends Module {
     @Override
     public void onActivate() {
         reset.run();
+        health = mc.player.getHealth() + mc.player.getAbsorptionAmount();
     }
 
     @Override
@@ -129,6 +139,8 @@ public class autoXP extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
+            if(damagePause.get() && health > mc.player.getHealth() + mc.player.getAbsorptionAmount()) return;
+
             if (pauseUse.get() && mc.player.isUsingItem()) return;
 
             if (autoDisable.get() && isArmorFullDurability()) {
@@ -145,14 +157,16 @@ public class autoXP extends Module {
             }
 
             long currentTime = System.currentTimeMillis();
-            double time = tpsSync.get() ? serverUtils.serverTps() : 50;
+            double time = 50;
             if (currentTime - lastUseTime < cooldownTime.get() * time) return;
 
             slot = item.slot();
             Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
-            MathUtils.updateRotation(3);
+            MathHelper.updateRotation(rotationSteps.get());
 
             lastUseTime = currentTime;
+
+            health = mc.player.getHealth() + mc.player.getAbsorptionAmount();
         } catch (Exception e) {
             error("An error occurred while using XP bottles");
             Addon.Logger.error("An error occurred while using XP bottles {}", Arrays.toString(e.getStackTrace()));
@@ -180,8 +194,13 @@ public class autoXP extends Module {
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
             }
 
-            case Move -> {
+            case Move  -> {
                 error("Move is not a valid option for this module");
+                toggle();
+            }
+
+            case null, default -> {
+                error("Invalid swap mode");
                 toggle();
             }
         }
