@@ -70,20 +70,26 @@ public class MathHelper {
             currentStep++;
         }
     }
+    /**
+         * Extrapolates the position of a player entity based on its movement over a number of ticks.
+         *
+         * @param entity The player entity whose position is to be extrapolated.
+         * @param ticks The number of ticks over which to extrapolate the position.
+         * @return The extrapolated position of the player entity.
+         */
+        public static Vec3d extrapolatePos(PlayerEntity entity, int ticks) {
+            if (entity.forwardSpeed != 0 || entity.sidewaysSpeed != 0) {
+                movements.add(new Vec3d(entity.getX(), entity.getEyeY(), entity.getZ()));
+            }
 
-    public static Vec3d extrapolatePos(PlayerEntity entity, int ticks) {
-        if (entity.forwardSpeed != 0 || entity.sidewaysSpeed != 0) {
-            movements.add(new Vec3d(entity.getX(), entity.getEyeY(), entity.getZ()));
+            if (movements.isEmpty()) {
+                return entity.getPos();
+            }
+
+            Vec3d totalMovement = movements.stream().reduce(Vec3d.ZERO, Vec3d::add);
+            int count = movements.size();
+
+            Vec3d averageMovement = totalMovement.multiply(1.0 / count);
+            return entity.getPos().add(averageMovement.multiply(ticks));
         }
-
-        if (movements.isEmpty()) {
-            return entity.getPos();
-        }
-
-        Vec3d totalMovement = movements.stream().reduce(Vec3d.ZERO, Vec3d::add);
-        int count = movements.size();
-
-        Vec3d averageMovement = totalMovement.multiply(1.0 / count);
-        return entity.getPos().add(averageMovement.multiply(ticks));
-    }
 }

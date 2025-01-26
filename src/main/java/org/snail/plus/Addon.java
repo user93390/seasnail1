@@ -1,5 +1,7 @@
 package org.snail.plus;
 
+import meteordevelopment.discordipc.DiscordIPC;
+import meteordevelopment.discordipc.RichPresence;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.config.Config;
@@ -20,7 +22,10 @@ import org.snail.plus.modules.chat.chatControl;
 import org.snail.plus.modules.chat.killMessages;
 import org.snail.plus.modules.chat.visualRange;
 import org.snail.plus.modules.combat.*;
-import org.snail.plus.modules.misc.*;
+import org.snail.plus.modules.misc.autoFarmer;
+import org.snail.plus.modules.misc.autoWither;
+import org.snail.plus.modules.misc.autoXP;
+import org.snail.plus.modules.misc.obsidianFarmer;
 import org.snail.plus.modules.render.FOV;
 import org.snail.plus.modules.render.burrowEsp;
 import org.snail.plus.modules.render.spawnerExploit;
@@ -36,6 +41,7 @@ import java.util.List;
 public class Addon extends MeteorAddon {
     public static String CLIENT_VERSION = "1.2.6";
     public static final Logger Logger = LoggerFactory.getLogger("Snail++");
+    private static final RichPresence RPC = new RichPresence();
     public static final Category Snail = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     public static boolean needsUpdate = false;
@@ -44,10 +50,14 @@ public class Addon extends MeteorAddon {
     public void onInitialize() {
         try {
             synchronized (this) {
+                DiscordIPC.start(1289704022231617659L, null);
                 checkForUpdates.run();
                 if (!needsUpdate) {
                     Initialize.run();
                 }
+
+                RPC.setDetails("Playing snail++ " + CLIENT_VERSION);
+                DiscordIPC.setActivity(RPC);
             }
         } catch (Exception e) {
             Logger.error("Critical error while initializing", e);
@@ -63,12 +73,10 @@ public class Addon extends MeteorAddon {
 
     // Load modules
     public void loadModules() {
-        Logger.warn("Loading modules");
         List<Module> moduleList = List.of(
                 new visualRange(),
                 new burrowEsp(),
                 new FOV(),
-                new discordRPC(),
                 new autoAnchor(),
                 new autoXP(),
                 new webAura(),

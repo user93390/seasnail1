@@ -36,6 +36,13 @@ public class WorldUtils {
         };
     }
 
+    /**
+     * Checks if the hitbox at the specified position intersects with any entities.
+     *
+     * @param pos The position to check for entity intersections.
+     * @param ignoreItem Whether to ignore item entities in the intersection check.
+     * @return true if the hitbox does not intersect with any entities, false otherwise.
+     */
     public static boolean hitBoxCheck(BlockPos pos, boolean ignoreItem) {
         return !EntityUtils.intersectsWithEntity(new Box(pos), ignoreItem ? entity -> !(entity instanceof ItemEntity) : entity -> true);
     }
@@ -60,6 +67,17 @@ public class WorldUtils {
         return "%s, %s, %s".formatted(pos.getX(), pos.getY(), pos.getZ());
     }
 
+    /**
+     * Places a block at the specified position with various options for hand, direction, and mode.
+     *
+     * @param item The item to be placed.
+     * @param pos The position where the block will be placed.
+     * @param hand The hand mode to use (main hand or offhand).
+     * @param directionMode The direction mode for block placement.
+     * @param packet Whether to use packet placement.
+     * @param Mode The swap mode to use.
+     * @param rotate Whether to rotate the player to face the block position.
+     */
     public static void placeBlock(FindItemResult item, BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, swapUtils.swapMode Mode, boolean rotate) {
         if (rotate) {
             Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
