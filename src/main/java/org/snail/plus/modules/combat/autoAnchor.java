@@ -17,24 +17,23 @@ import meteordevelopment.meteorclient.utils.render.NametagUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Blocks;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.explosion.Explosion;
 import org.joml.Vector3d;
 import org.snail.plus.Addon;
-import org.snail.plus.utilities.CombatUtils;
-import org.snail.plus.utilities.MathHelper;
-import org.snail.plus.utilities.WorldUtils;
-import org.snail.plus.utilities.swapUtils;
+import org.snail.plus.utilities.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -286,18 +285,20 @@ public class autoAnchor extends Module {
             .defaultValue(false)
             .build());
 
+    public autoAnchor() {
+        super(Addon.CATEGORY, "Auto-anchor+", "Blows up respawn anchors to deal massive damage to targets");
+    }
+
     private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(threads.get());
-    private final ReentrantLock lock = new ReentrantLock();
     private Box renderBoxOne, renderBoxTwo;
-    private List<BlockPos> AnchorPos = new ArrayList<>();
+    private Set<BlockPos> AnchorPos = new HashSet<>();
     private long lastPlacedTime;
     private PlayerEntity entity;
-    Vec3d start;
-    private double damageValue;
-    private double selfDamageValue;
     private long lastUpdateTime;
-    private double selfDamage;
-    private double targetDamage;
+    private double selfDamage = Float.NEGATIVE_INFINITY;
+    private double targetDamage = Float.NEGATIVE_INFINITY;
+
+    Vec3d start;
 
     Runnable doBreak = () -> {
         for (BlockPos pos : AnchorPos) {
@@ -316,21 +317,17 @@ public class autoAnchor extends Module {
     };
 
     Runnable reset = () -> {
+        resetDamageValues.run();
         if (executor != null) {
             executor.shutdown();
         }
+
         start = null;
         entity = null;
-        selfDamage = 0;
-        targetDamage = 0;
-        damageValue = 0;
-        selfDamageValue = 0;
-        AnchorPos = new ArrayList<>();
+        if (AnchorPos != null) {
+            AnchorPos.clear();
+        }
     };
-
-    public autoAnchor() {
-        super(Addon.Snail, "Anchor aura+", "blows up respawn anchors to damage enemies");
-    }
 
     @Override
     public void onActivate() {
@@ -355,68 +352,58 @@ public class autoAnchor extends Module {
         }
     }
 
-
     /**
      * Calculates the positions for placing anchors around a target entity.
      *
-     * @param entity The target player entity.
-     * @param start  The starting position for calculations.
+     * @param start The starting position for calculations.
      * @return A list of valid block positions for placing anchors.
+     * @see MathHelper#getSphere(BlockPos, double)
      */
-    private List<BlockPos> positions(PlayerEntity entity, Vec3d start) {
-        return MathHelper.getSphere(BlockPos.ofFloored(start), MathHelper.getRadius((int) Math.sqrt(placeBreak.get()), (int) Math.sqrt(placeBreak.get())))
-                .parallelStream()
-                .sorted(Comparator.comparingDouble(pos -> pos.getSquaredDistance(start)))
-                .filter(pos -> {
-                    try {
-                        if (pos.getSquaredDistance(mc.player.getBlockPos()) > placeBreak.get() * placeBreak.get())
-                            return false;
+    private Set<BlockPos> positions(Vec3d start) {
+        synchronized (this) {
+            double placeBreakSquared = placeBreak.get() * placeBreak.get();
+            int radius = (int) Math.sqrt(placeBreak.get());
+
+            return MathHelper.getSphere(BlockPos.ofFloored(start), MathHelper.getRadius(radius, radius))
+                    .parallelStream()
+                    .sorted(Comparator.comparingDouble(pos -> pos.getSquaredDistance(start)))
+                    .filter(pos -> {
+                        double distanceSquared = pos.getSquaredDistance(mc.player.getBlockPos());
+                        if (distanceSquared > placeBreakSquared) return false;
 
                         Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-
-                        targetDamage = DamageUtils.anchorDamage(entity, start);
-                        selfDamage = DamageUtils.anchorDamage(mc.player, start);
-
-                        damageValue = targetDamage;
-                        selfDamageValue = selfDamage;
-
-                        double selfDropoff = (selfDamage - maxSelfError.get()) / selfDamage;
-                        double targetDropoff = (targetDamage - maxDamageError.get()) / targetDamage;
-
                         if (rayCast.get() && MathHelper.rayCast(vec)) {
-                            if (debugCalculations.get()) info("failed raycast check");
+                            logDebug("failed raycast check");
                             return false;
                         }
 
                         if (strictDirection.get() && !WorldUtils.strictDirection(pos, directionMode.get())) {
-                            if (debugCalculations.get()) info("failed direction check");
+                            logDebug("failed direction check");
                             return false;
                         }
 
-                        if (!WorldUtils.isAir(pos, liquidPlace.get())) return false;
-                        if (!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) return false;
-                        if (selfDropoff < maxDamageError.get() && targetDropoff < maxDamageError.get()) {
-                            if (selfDamage < maxDamage.get() && targetDamage > minDamage.get() && WorldUtils.hitBoxCheck(pos, true)) {
-                                if (debugCalculations.get())
-                                    info("passed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
-                                damageValue = targetDamage;
-                                selfDamageValue = selfDamage;
-                                return true;
-                            } else {
-                                if (debugCalculations.get())
-                                    info("failed damage check %s %s", Math.round(selfDamage), Math.round(targetDamage));
-                            }
+                        if (WorldUtils.isAir(pos, liquidPlace.get()) || (mc.world.getBlockState(pos).getBlock() == Blocks.FIRE)) {
+                            if ((!airPlace.get() && WorldUtils.isAir(pos.down(1), false))) return false;
+                            float anchordmg = DamageUtils.anchorDamage(entity, vec);
+                            float selfAnchor = DamageUtils.anchorDamage(mc.player, vec);
+
+                            targetDamage = anchordmg;
+                            selfDamage = selfAnchor;
+
+                            return !(selfAnchor > maxDamage.get()) && !(anchordmg < minDamage.get()) && WorldUtils.intersectCheck(pos, true);
                         }
-                    } catch (Exception e) {
-                        error("An error occurred while calculating the positions: " + e.getMessage());
-                        Addon.Logger.error(Arrays.toString(e.getStackTrace()));
-                        throw new RuntimeException(e);
-                    }
-                    return false;
-                })
-                .limit(threads.get())
-                .map(BlockPos::toImmutable)
-                .collect(Collectors.toList());
+                        return false;
+                    })
+                    .limit(threads.get())
+                    .map(BlockPos::toImmutable)
+                    .collect(Collectors.toSet());
+        }
+    }
+
+    private void logDebug(String message, Object... args) {
+        if (debugCalculations.get()) {
+            info(message, args);
+        }
     }
 
     @EventHandler
@@ -426,10 +413,9 @@ public class autoAnchor extends Module {
         }
 
         try {
-            executor.execute(resetDamageValues);
+            resetDamageValues.run();
+            logDebug("Reset damage values");
             if (updateEat()) return;
-            targetDamage = 0;
-            selfDamage = 0;
 
             if (mc.world.getDimension().respawnAnchorWorks()) {
                 error("You are in the wrong dimension!");
@@ -443,20 +429,23 @@ public class autoAnchor extends Module {
             if (player == null) return;
 
             if (debugCalculations.get()) info("found target: %s", player.getName().getString().toLowerCase());
-            executor.execute(() -> {
-                //should we extrapolate the player's position? if so, we do it here.
-                start = predictMovement.get() ? MathHelper.extrapolatePos(player, steps.get()) : player.getPos();
-                List<BlockPos> positions = positions(player, start);
-                lock.lock();
-                try {
-                    AnchorPos = positions;
-                    entity = player;
-                    doBreak.run();
-                } finally {
-                    lock.unlock();
-                }
-            });
 
+            start = predictMovement.get() ? MathHelper.extrapolatePos(player, steps.get()) : player.getPos();
+
+            executor.execute(() -> {
+                AnchorPos = positions(start);
+                for (BlockPos pos : AnchorPos) {
+                    targetDamage = DamageUtils.anchorDamage(entity, new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
+                    selfDamage = DamageUtils.anchorDamage(mc.player, new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
+
+                    if (debugCalculations.get()) {
+                        info("Calculated target damage at position %s: %s", pos, targetDamage);
+                        info("Calculated self damage at position %s: %s", pos, selfDamage);
+                    }
+                }
+                entity = player;
+                doBreak.run();
+            });
             lastUpdateTime = currentTime;
         } catch (Exception e) {
             error("An error occurred while updating the module: " + e.getMessage());
@@ -466,9 +455,7 @@ public class autoAnchor extends Module {
     }
 
     public void breakAnchor() {
-        lock.lock();
         try {
-
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) return;
             if (mc.player == null || mc.player.getHealth() <= pauseHealth.get()) return;
@@ -498,8 +485,6 @@ public class autoAnchor extends Module {
             lastPlacedTime = currentTime;
         } catch (Exception e) {
             error("An error occurred while breaking the anchor: " + e.getMessage());
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -576,7 +561,7 @@ public class autoAnchor extends Module {
                 NametagUtils.begin(vec);
                 TextRenderer.get().begin(1, false, true);
 
-                String text = String.format("%.1f / %.1f", damageValue, selfDamageValue);
+                String text = String.format("%.1f / %.1f", targetDamage, selfDamage);
                 double w = TextRenderer.get().getWidth(text) / 2;
                 TextRenderer.get().render(text, -w, 0, damageColor.get(), false);
 

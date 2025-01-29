@@ -15,9 +15,7 @@ import org.snail.plus.Addon;
 import org.snail.plus.utilities.CombatUtils;
 import org.snail.plus.utilities.MathHelper;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class burrowEsp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -67,11 +65,11 @@ public class burrowEsp extends Module {
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
 
-    private final List<PlayerEntity> burrowedPlayers = new ArrayList<>();
-
     public burrowEsp() {
-        super(Addon.Snail, "Burrow ESP", "Highlights players that are in burrows (inside blocks)");
+        super(Addon.CATEGORY, "Burrow-ESP", "Highlights players that are in burrows (inside blocks)");
     }
+
+    private final Set<PlayerEntity> burrowedPlayers = new HashSet<>();
 
     @Override
     public void onActivate() {
@@ -89,6 +87,7 @@ public class burrowEsp extends Module {
             mc.execute(() -> {
                 burrowedPlayers.clear();
                 mc.world.getPlayers().stream()
+                        .parallel()
                         .filter(player -> !(ignoreFriends.get() && Friends.get().isFriend(player)))
                         .filter(player -> CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get())
                         .limit(performance.get() ? maxPlayers.get() : Long.MAX_VALUE)

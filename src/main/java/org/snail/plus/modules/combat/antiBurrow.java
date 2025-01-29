@@ -67,7 +67,7 @@ public class antiBurrow extends Module {
     private BlockPos targetPos;
 
     public antiBurrow() {
-        super(Addon.Snail, "anti-burrow", "Prevents players from burrowing. Rotations idea");
+        super(Addon.CATEGORY, "anti-burrow", "Prevents players from burrowing. Rotations idea");
     }
 
     Runnable runnable = () -> {

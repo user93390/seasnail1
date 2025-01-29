@@ -96,7 +96,7 @@ public class obsidianFarmer extends Module {
     };
 
     public obsidianFarmer() {
-        super(Addon.Snail, "Obsidian Farmer", "Automatically mines obsidian.");
+        super(Addon.CATEGORY, "obsidian-Farmer", "Automatically mines ender-chests for obsidian");
     }
 
 

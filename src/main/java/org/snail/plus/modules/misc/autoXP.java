@@ -12,7 +12,6 @@ import net.minecraft.util.Hand;
 import org.snail.plus.Addon;
 import org.snail.plus.utilities.MathHelper;
 import org.snail.plus.utilities.WorldUtils;
-import org.snail.plus.utilities.serverUtils;
 import org.snail.plus.utilities.swapUtils;
 
 import java.util.Arrays;
@@ -105,6 +104,9 @@ public class autoXP extends Module {
             .defaultValue(false)
             .build());
 
+    public autoXP() {
+        super(Addon.CATEGORY, "armor-Repair", "Automatically interacts with xp bottles to repair armor");
+    }
 
     private int slot = -1;
     private FindItemResult item;
@@ -120,10 +122,6 @@ public class autoXP extends Module {
         interact();
         mc.player.swingHand(WorldUtils.swingHand(handSwing.get()));
     };
-
-    public autoXP() {
-        super(Addon.Snail, "Auto-XP+", "Automatically interacts with xp bottles to repair armour");
-    }
 
     @Override
     public void onActivate() {

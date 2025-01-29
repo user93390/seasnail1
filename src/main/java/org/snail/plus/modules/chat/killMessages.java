@@ -38,7 +38,7 @@ public class killMessages extends Module {
     private final Setting<List<String>> totemMessage = sgGeneral.add(new StringListSetting.Builder()
             .name("totem message")
             .description("Custom message to send.")
-            .defaultValue("")
+            .defaultValue("", "")
             .visible(totemPop::get)
             .build());
 
@@ -51,7 +51,7 @@ public class killMessages extends Module {
     private final Setting<List<String>> messages = sgGeneral.add(new StringListSetting.Builder()
             .name("message")
             .description("Custom message to send.")
-            .defaultValue("")
+            .defaultValue("", "")
             .visible(killMessage::get)
             .build());
 
@@ -61,16 +61,17 @@ public class killMessages extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<Boolean> sendInfo = sgGeneral.add(new BoolSetting.Builder()
-            .name("send info")
-            .description("sends info to the chat")
+    private final Setting<Boolean> sendAnyway = sgGeneral.add(new BoolSetting.Builder()
+            .name("send anyway")
+            .description("sends the message even if the player didn't kill the victim")
             .defaultValue(false)
             .build());
 
+    long currentTime = System.currentTimeMillis();
+    Integer pops = 0;
     Random random = new Random();
     boolean sentMessage = false;
     PlayerEntity victim;
-    Integer pops = 0;
     private long lastMessageTime = 0;
     Runnable tickReset = () -> mc.execute(() -> {
         sentMessage = false;
@@ -80,6 +81,7 @@ public class killMessages extends Module {
     });
 
     Runnable reset = () -> {
+        currentTime = System.currentTimeMillis();
         random = new Random();
         sentMessage = false;
         pops = 0;
@@ -89,7 +91,7 @@ public class killMessages extends Module {
     Runnable showScreen = Placeholders::showScreen;
 
     public killMessages() {
-        super(Addon.Snail, "Auto EZ+", "sends a custom message when a player dies");
+        super(Addon.CATEGORY, "kill-Messages", "sends a custom message when a player dies");
     }
 
     public WWidget getWidget(GuiTheme theme) {
@@ -105,8 +107,12 @@ public class killMessages extends Module {
     public void getContent() {
         Placeholders.title = "Kill Messages Placeholders";
 
-        Placeholders.items = List.of("{Entity} - shows the player's name", "{Coords} - shows the player's coordinates",
-                "{totems} - shows the amount of totem pops");
+        Placeholders.items = List.of(
+                "{name} - shows the player's name",
+                "{coordinates} - shows where the player died",
+                "{totems} - shows the amount of totem pops", "{world} - shows the world the player died in",
+                "{weapon} - shows the weapon used to kill the player"
+        );
     }
 
     @Override
@@ -120,7 +126,7 @@ public class killMessages extends Module {
     }
 
     @EventHandler
-    private void onTotemPop(TotemPopEvent event) {
+    private void onActivateTotem(TotemPopEvent event) {
         if (totemPop.get()) {
             if (event.player != mc.player) {
                 pops = event.totems;
@@ -130,14 +136,16 @@ public class killMessages extends Module {
     }
 
     @EventHandler
-    private void onDeath(PlayerDeathEvent event) {
+    private void onPlayerDeath(PlayerDeathEvent event) {
         if (killMessage.get() && !sentMessage) {
             if (event.player != mc.player) {
                 if (event.selfKilled) {
                     sendMessages(event.player, messages.get());
                 } else {
-                    if(sendInfo.get()) info("didn't kill " + event.player.getName().getString() + "sending message anyway...");
-                    sendMessages(event.player, messages.get());
+                    if(sendAnyway.get()) {
+                        info("didn't kill " + event.player.getName().getString() + "sending message anyway...");
+                        sendMessages(event.player, messages.get());
+                    }
                 }
                 sentMessage = true;
             }
@@ -152,12 +160,15 @@ public class killMessages extends Module {
     }
 
     private void sendMessages(PlayerEntity entity, List<String> messages) {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastMessageTime >= chatDelay.get() * 20) {
+
+        if (currentTime - lastMessageTime >= chatDelay.get() * 50) {
             String message = messages.get(random.nextInt(messages.size()));
-            message = message.replace("{Entity}", entity.getName().getString())
-                    .replace("{Coords}", WorldUtils.getCoords(entity.getBlockPos()))
-                    .replace("{totems}", pops.toString());
+            message = message.replace("{name}", entity.getName().getString())
+                    .replace("{coordinates}", WorldUtils.getCoords(entity.getBlockPos()))
+                    .replace("{totems}", pops.toString())
+                    .replace("{world}", mc.player.getWorld().asString())
+                    .replace("{weapon}", mc.player.getMainHandStack().getName().getString());
+
 
             ChatUtils.sendPlayerMsg(directMessage.get() ? "/msg " + victim + " " + message : message);
         }

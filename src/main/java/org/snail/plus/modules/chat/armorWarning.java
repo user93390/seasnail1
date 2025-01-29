@@ -86,20 +86,25 @@ public class armorWarning extends Module {
             .visible(playSound::get)
             .build());
 
-    private final Setting<Integer> remind = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> reminderTime = sgGeneral.add(new IntSetting.Builder()
             .name("reminder time")
             .description("how long to remind you of the armor value before warning you again. (In seconds)")
             .defaultValue(10)
             .build());
 
+    public armorWarning() {
+        super(Addon.CATEGORY, "armor-warning", "Warns you when your armor is low. Can be paired with armorRepair");
+    }
+
     boolean sent = false;
     Integer armorDurability;
     private long lastAlertTime = 0;
-    private final long alertIntervalMillis = remind.get() * 1000;
+    private final long alertIntervalMillis = reminderTime.get() * 1000;
     private Module module;
     private String grammar;
 
     Runnable showScreen = Placeholders::showScreen;
+
     Runnable reset = () -> mc.execute(() -> {
         sent = false;
         armorDurability = 0;
@@ -131,10 +136,6 @@ public class armorWarning extends Module {
     @Override
     public void onDeactivate() {
         reset.run();
-    }
-
-    public armorWarning() {
-        super(Addon.Snail, "armor-warning", "Warns you when your armor is low.");
     }
 
     private void handleArmor() {

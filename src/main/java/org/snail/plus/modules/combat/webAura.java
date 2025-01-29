@@ -136,7 +136,7 @@ public class webAura extends Module {
     private PlayerEntity BestTarget;
 
     public webAura() {
-        super(Addon.Snail, "web Aura+", "Places cobwebs at players feet to slow them down");
+        super(Addon.CATEGORY, "web-aura", "Places cobwebs at players feet to slow them down");
     }
 
     @Override

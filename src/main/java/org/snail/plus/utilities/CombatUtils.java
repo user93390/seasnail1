@@ -9,6 +9,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
+import java.util.Set;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static org.snail.plus.modules.chat.visualRange.isValid;
@@ -35,7 +36,7 @@ public class CombatUtils {
 
     public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode mode, double range) {
         playerEntities.remove(mc.player);
-        playerEntities.removeAll(WorldUtils.getAllFriends());
+        WorldUtils.getAllFriends().forEach(playerEntities::remove);
         return playerEntities.stream()
                 .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range && isValid(player))
                 .min((player1, player2) -> {

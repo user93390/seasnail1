@@ -123,7 +123,7 @@ public class chatControl extends Module {
             .build());
 
     public chatControl() {
-        super(Addon.Snail, "Chat Control", "allows you to have more control over client messages and server messages\n");
+        super(Addon.CATEGORY, "Chat-control+", "allows you to have more control over client messages and server messages\n");
     }
 
     Random random = new Random();

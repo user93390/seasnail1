@@ -43,12 +43,14 @@ public class WorldUtils {
      * @param ignoreItem Whether to ignore item entities in the intersection check.
      * @return true if the hitbox does not intersect with any entities, false otherwise.
      */
-    public static boolean hitBoxCheck(BlockPos pos, boolean ignoreItem) {
+    public static boolean intersectCheck(BlockPos pos, boolean ignoreItem) {
         return !EntityUtils.intersectsWithEntity(new Box(pos), ignoreItem ? entity -> !(entity instanceof ItemEntity) : entity -> true);
     }
 
     public static List<AbstractClientPlayerEntity> getAllFriends() {
-        return mc.world.getPlayers().stream().filter(Friends.get()::isFriend).toList();
+        return mc.world.getPlayers().stream().filter(
+                Friends.get()::isFriend
+        ).toList();
     }
 
     public static void playSound(SoundEvent sound, float pitch) {

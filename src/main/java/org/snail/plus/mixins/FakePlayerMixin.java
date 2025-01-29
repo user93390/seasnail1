@@ -74,8 +74,8 @@ public class FakePlayerMixin {
 
         clear.action = () -> {
             seasnail1$stopRecording();
-            recordedMovements.clear();
             seasnail1$stopLooping();
+            recordedMovements.clear();
         };
 
         stop.action = this::seasnail1$stopRecording;
@@ -94,31 +94,44 @@ public class FakePlayerMixin {
         try {
             for (FakePlayerEntity fakePlayer : FakePlayerManager.getFakePlayers()) {
                 for (PlayerEntity fakePlayerEntity : mc.world.getPlayers()) {
-                    if (fakePlayerEntity == fakePlayer) {
-                        if (recording) {
-                            recordedMovements.add(new PlayerMoveEvent(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
-                        }
+                    if (fakePlayerEntity != fakePlayer) continue;
 
-                        if (looping && !recordedMovements.isEmpty()) {
-                            PlayerMoveEvent movement = recordedMovements.get(loopIndex);
-                            PlayerMoveEvent nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
+                    if (recording) {
+                        recordedMovements.add(new PlayerMoveEvent(
+                                mc.player.getX(), mc.player.getY(), mc.player.getZ(),
+                                mc.player.getYaw(), mc.player.getPitch(),
+                                mc.player.getMovementDirection(), mc.player.limbAnimator.getSpeed(),
+                                mc.player.getHeadYaw(), mc.player.getBodyYaw()
+                        ));
+                    }
 
-                            double t = (double) loopIndex / recordedMovements.size();
-                            double interpolatedX = movement.x + t * (nextMovement.x - movement.x);
-                            double interpolatedY = movement.y + t * (nextMovement.y - movement.y);
-                            double interpolatedZ = movement.z + t * (nextMovement.z - movement.z);
+                    if (looping && !recordedMovements.isEmpty()) {
+                        PlayerMoveEvent movement = recordedMovements.get(loopIndex);
+                        PlayerMoveEvent nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
 
-                            fakePlayerEntity.updatePosition(interpolatedX, interpolatedY, interpolatedZ);
-                            fakePlayerEntity.setVelocity(mc.player.getVelocity().x, mc.player.getVelocity().y, mc.player.getVelocity().z);
+                        double t = (double) loopIndex / recordedMovements.size();
+                        double interpolatedX = movement.x + t * (nextMovement.x - movement.x);
+                        double interpolatedY = movement.y + t * (nextMovement.y - movement.y);
+                        double interpolatedZ = movement.z + t * (nextMovement.z - movement.z);
 
-                            loopIndex = (loopIndex + 1) % recordedMovements.size();
+                        fakePlayerEntity.updatePosition(interpolatedX, interpolatedY, interpolatedZ);
+                        fakePlayerEntity.setAngles(movement.yaw, movement.pitch);
+                        fakePlayerEntity.setYaw(movement.yaw);
+                        fakePlayerEntity.setPitch(movement.pitch);
 
-                            if (loopIndex == 0) {
-                                if (loop.get()) {
-                                    seasnail1$startLooping();
-                                } else {
-                                    seasnail1$stopLooping();
-                                }
+                        float interpolatedLimbSpeed = (float) (movement.limbSpeed + t * (nextMovement.limbSpeed - movement.limbSpeed));
+                        float scale = 1.0f;
+                        fakePlayerEntity.limbAnimator.updateLimbs(interpolatedLimbSpeed, 1, scale);
+                        fakePlayerEntity.headYaw = movement.headYaw;
+                        fakePlayerEntity.bodyYaw = movement.bodyYaw;
+
+                        loopIndex = (loopIndex + 1) % recordedMovements.size();
+
+                        if (loopIndex == 0) {
+                            if (loop.get()) {
+                                seasnail1$startLooping();
+                            } else {
+                                seasnail1$stopLooping();
                             }
                         }
                     }
@@ -129,7 +142,6 @@ public class FakePlayerMixin {
             throw new RuntimeException(e);
         }
     }
-
 
     @Unique
     public void seasnail1$startRecording() {

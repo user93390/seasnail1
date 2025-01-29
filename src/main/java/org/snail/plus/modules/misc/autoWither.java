@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.combat.KillAura;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -27,14 +28,12 @@ import org.snail.plus.Addon;
 import java.util.Arrays;
 import java.util.List;
 
-
 /**
- * Author: TurtleWithaBlock
+ @author TurtleWithaBlock
  */
 
 public class autoWither extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-
     private final SettingGroup sgRender = settings.createGroup("Render");
 
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
@@ -53,47 +52,47 @@ public class autoWither extends Module {
             .name("Shape Mode")
             .description("Should it display the outline or fill")
             .defaultValue(ShapeMode.Both)
-            .visible(() -> renderBlock.get())
+            .visible(renderBlock::get)
             .build());
 
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("Side Color")
             .description("Color of the inside of the rendered block")
             .defaultValue(new SettingColor(0, 255, 255, 100))
-            .visible(() -> renderBlock.get())
+            .visible(renderBlock::get)
             .build());
 
-    private final Setting<SettingColor> LineColor = sgRender.add(new ColorSetting.Builder()
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("Line Color")
             .description("Color of the outlines on the rendered block")
             .defaultValue(new SettingColor(0, 255, 255, 255))
-            .visible(() -> renderBlock.get())
+            .visible(renderBlock::get)
             .build());
 
     public autoWither() {
-        super(Addon.Snail, "Auto Wither", "Automatically builds a wither");
+        super(Addon.CATEGORY, "wither-aura", "Automatically builds a wither");
     }
 
-    BlockPos currentBlockPos = null;
+    private BlockPos currentBlockPos = null;
 
-    List<BlockPos> soulSandOffsetsX = Arrays.asList(
+    private final List<BlockPos> soulSandOffsetsX = Arrays.asList(
             new BlockPos(0, 0, 0),
             new BlockPos(0, 1, 0),
             new BlockPos(1, 1, 0),
             new BlockPos(-1, 1, 0));
 
-    List<BlockPos> soulSandOffsetsZ = Arrays.asList(
+    private final List<BlockPos> soulSandOffsetsZ = Arrays.asList(
             new BlockPos(0, 0, 0),
             new BlockPos(0, 1, 0),
             new BlockPos(0, 1, 1),
             new BlockPos(0, 1, -1));
 
-    List<BlockPos> witherSkullOffsetsX = Arrays.asList(
+    private final List<BlockPos> witherSkullOffsetsX = Arrays.asList(
             new BlockPos(0, 2, 0),
             new BlockPos(1, 2, 0),
             new BlockPos(-1, 2, 0));
 
-    List<BlockPos> witherSkullOffsetsZ = Arrays.asList(
+    private final List<BlockPos> witherSkullOffsetsZ = Arrays.asList(
             new BlockPos(0, 2, 0),
             new BlockPos(0, 2, 1),
             new BlockPos(0, 2, -1));
@@ -138,39 +137,28 @@ public class autoWither extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        try {
-            if (currentBlockPos != null) {
-                FindItemResult soulSand = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.SOUL_SAND));
-                FindItemResult witherSkull = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.WITHER_SKELETON_SKULL));
-                if (soulSand.found() && witherSkull.found()) {
-                    List<BlockPos> offsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? soulSandOffsetsX : soulSandOffsetsZ;
-                    List<BlockPos> skullOffsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? witherSkullOffsetsX : witherSkullOffsetsZ;
-                    for (BlockPos offset : offsets) {
-                        if (attemptPlace(currentBlockPos.add(offset), soulSand, Blocks.SOUL_SAND)) return;
-                    }
-                    for (BlockPos offset : skullOffsets) {
-                        if (attemptPlace(currentBlockPos.add(offset), witherSkull, Blocks.WITHER_SKELETON_SKULL))
-                            return;
-                    }
-                    currentBlockPos = null;
+        if (currentBlockPos != null) {
+            FindItemResult soulSand = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.SOUL_SAND));
+            FindItemResult witherSkull = InvUtils.findInHotbar(BlockItem.BLOCK_ITEMS.get(Blocks.WITHER_SKELETON_SKULL));
+            if (soulSand.found() && witherSkull.found()) {
+                List<BlockPos> offsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? soulSandOffsetsX : soulSandOffsetsZ;
+                List<BlockPos> skullOffsets = Math.abs(mc.player.getBlockPos().getZ() - currentBlockPos.getZ()) > Math.abs(mc.player.getBlockPos().getX() - currentBlockPos.getX()) ? witherSkullOffsetsX : witherSkullOffsetsZ;
+
+                for (BlockPos offset : offsets) {
+                    if (attemptPlace(currentBlockPos.add(offset), soulSand, Blocks.SOUL_SAND)) return;
                 }
+                for (BlockPos offset : skullOffsets) {
+                    if (attemptPlace(currentBlockPos.add(offset), witherSkull, Blocks.WITHER_SKELETON_SKULL)) return;
+                }
+                currentBlockPos = null;
             }
-        } catch (Exception e) {
-            error("An error occurred while building the wither");
-            Addon.Logger.error("An error occurred while building the wither {}", Arrays.toString(e.getStackTrace()));
         }
     }
 
     @EventHandler
     private void onRender(Render3DEvent event) {
         if (currentBlockPos != null && renderBlock.get()) {
-            event.renderer.box(currentBlockPos, sideColor.get(), LineColor.get(), shapeMode.get(), 0);
+            event.renderer.box(currentBlockPos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
         }
     }
 }
-
-
-
-
-
-

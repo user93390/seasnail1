@@ -23,7 +23,7 @@ public class FOV extends Module {
             .build());
 
     public FOV() {
-        super(Addon.Snail, "fov+", "Allows you to change your field of view");
+        super(Addon.CATEGORY, "fov-control", "Allows you to change your field of view");
     }
 
     @EventHandler

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "snail-plus",
+  "id": "seasnail1",
   "version": "${version}",
   "name": "snail++",
   "description": "meteor client addon",
@@ -8,7 +8,8 @@
     "seasnail1"
   ],
   "contact": {
-    "repo": "https://github.com/user93390/seasnail1"
+    "repo": "https://github.com/user93390/seasnail1",
+    "issues": "https://github.com/user93390/seasnail1/issues"
   },
   "icon": "assets/logo.png",
   "environment": "client",

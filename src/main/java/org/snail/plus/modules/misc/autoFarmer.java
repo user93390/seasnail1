@@ -18,10 +18,7 @@ import org.snail.plus.Addon;
 import org.snail.plus.utilities.MathHelper;
 import org.snail.plus.utilities.swapUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.snail.plus.utilities.MathHelper.getCrosshairBlock;
 
@@ -72,40 +69,32 @@ public class autoFarmer extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
 
-    private final List<BlockPos> blocks = Collections.synchronizedList(new ArrayList<>());
+    public autoFarmer() {
+        super(Addon.CATEGORY, "Farmer", "Automatically breaks crop blocks");
+    }
+
+    private final Set<BlockPos> blocks = new HashSet<>();
     private FindItemResult hoe;
     private BlockPos crosshairBlock;
     private BlockPos bestPos;
     Runnable breakBlock = () -> {
-        synchronized (this) {
-            mc.executeSync(() -> {
-                for (BlockPos pos : blocks) {
-                    if (mc.player.getBlockPos().isWithinDistance(pos, range.get())) {
-                        bestPos = pos;
-                        InvUtils.swap(hoe.slot(), true);
-                        breakCrop(bestPos);
-                        InvUtils.swapBack();
-                    }
-                }
-            });
+        for (BlockPos pos : blocks) {
+            if (mc.player.getBlockPos().isWithinDistance(pos, range.get())) {
+                bestPos = pos;
+                InvUtils.swap(hoe.slot(), true);
+                breakCrop(bestPos);
+                InvUtils.swapBack();
+            }
         }
     };
 
     Runnable reset = () -> {
-        synchronized (this) {
-            mc.executeSync(() -> {
-                crosshairBlock = null;
-                synchronized (blocks) {
-                    blocks.clear();
-                }
-                bestPos = null;
-            });
+        crosshairBlock = null;
+        synchronized (blocks) {
+            blocks.clear();
         }
+        bestPos = null;
     };
-
-    public autoFarmer() {
-        super(Addon.Snail, "Auto farmer", "Automatically breaks crop blocks");
-    }
 
     @Override
     public void onActivate() {
@@ -131,31 +120,27 @@ public class autoFarmer extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
-            synchronized (this) {
-                mc.executeSync(() -> {
-                    switch (Mode.get()) {
-                        case crosshair -> {
-                            if (mc.world != null && mc.player != null) {
-                                hoe = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof HoeItem);
-                                //check if crosshair is on crop
-                                crosshairBlock = getCrosshairBlock();
-                                if (crosshairBlock != null && mc.world.getBlockState(crosshairBlock).getBlock() instanceof CropBlock) {
-                                    blocks.clear();
-                                    blocks.add(crosshairBlock);
-                                }
-                            }
-                        }
-
-                        case radius -> {
-                            if (mc.player != null) {
-                                blocks.clear();
-                                blocks.addAll(getBlocks(mc.player.getBlockPos(), range.get()));
-                            }
+            switch (Mode.get()) {
+                case crosshair -> {
+                    if (mc.world != null && mc.player != null) {
+                        hoe = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof HoeItem);
+                        //check if crosshair is on crop
+                        crosshairBlock = getCrosshairBlock();
+                        if (crosshairBlock != null && mc.world.getBlockState(crosshairBlock).getBlock() instanceof CropBlock) {
+                            blocks.clear();
+                            blocks.add(crosshairBlock);
                         }
                     }
-                    breakBlock.run();
-                });
+                }
+
+                case radius -> {
+                    if (mc.player != null) {
+                        blocks.clear();
+                        blocks.addAll(getBlocks(mc.player.getBlockPos(), range.get()));
+                    }
+                }
             }
+            breakBlock.run();
         } catch (Exception e) {
             error("An error occurred: " + e.getMessage());
             Addon.Logger.error("An error occurred: {}", Arrays.toString(e.getStackTrace()));

@@ -105,7 +105,7 @@ public class minecartAura extends Module {
     };
 
     public minecartAura() {
-        super(Addon.Snail, "minecart-aura", "Automatically blows up minecarts around targets.");
+        super(Addon.CATEGORY, "minecart-aura", "Automatically blows up minecarts around targets.");
     }
 
     @Override
@@ -124,18 +124,16 @@ public class minecartAura extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        mc.execute(() -> {
-            if (mc.world != null) {
-                PlayerEntity bestTarget = CombatUtils.filter(mc.world.getPlayers(), filterMode.get(), range.get());
-                if (bestTarget != null) {
-                    position = findPositions(bestTarget);
-                }
-
-                if (position != null) {
-                    useMinecart(position);
-                }
+        if (mc.world != null) {
+            PlayerEntity bestTarget = CombatUtils.filter(mc.world.getPlayers(), filterMode.get(), range.get());
+            if (bestTarget != null) {
+                position = findPositions(bestTarget);
             }
-        });
+
+            if (position != null) {
+                useMinecart(position);
+            }
+        }
     }
 
     private void useMinecart(BlockPos pos) {

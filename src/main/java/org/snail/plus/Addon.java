@@ -39,12 +39,38 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Addon extends MeteorAddon {
-    public static String CLIENT_VERSION = "1.2.6";
+    public static final Category CATEGORY = new Category("Snail++");
+    public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     public static final Logger Logger = LoggerFactory.getLogger("Snail++");
     private static final RichPresence RPC = new RichPresence();
-    public static final Category Snail = new Category("Snail++");
-    public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
-    public static boolean needsUpdate = false;
+    public static String CLIENT_VERSION = "1.2.7";
+    public static boolean needsUpdate;
+
+    Runnable Initialize = () -> {
+        try {
+            loadModules();
+        } catch (Exception e) {
+            Logger.error("Critical error while loading: {}", Arrays.toString(e.getStackTrace()));
+        }
+    };
+
+    Runnable checkForUpdates = () -> {
+        Logger.info("Checking for updates");
+        try {
+            URI uri = URI.create("https://api.github.com/repos/user93390/seasnail1/releases/latest");
+            String latestVersion = getString(uri);
+            needsUpdate = !CLIENT_VERSION.equals(latestVersion);
+            if (needsUpdate) {
+                String message = String.format("Please update your client to the latest version (%s) found at https://github.com/user93390/seasnail1/releases", latestVersion);
+                Logger.error(message);
+                throw new CrashException(new CrashReport(message, new Throwable("Client is out of date")));
+            } else {
+                Logger.info("Client is up to date {}", latestVersion);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    };
 
     @Override
     public void onInitialize() {
@@ -68,7 +94,7 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onRegisterCategories() {
-        Modules.registerCategory(Snail);
+        Modules.registerCategory(CATEGORY);
     }
 
     // Load modules
@@ -103,32 +129,6 @@ public class Addon extends MeteorAddon {
         Logger.warn("Modules and config loaded");
     }
 
-    Runnable Initialize = () -> {
-        try {
-            loadModules();
-        } catch (Exception e) {
-            Logger.error("Critical error while loading: {}", Arrays.toString(e.getStackTrace()));
-        }
-    };
-
-    Runnable checkForUpdates = () -> {
-        Logger.info("Checking for updates");
-        try {
-            URI uri = URI.create("https://api.github.com/repos/user93390/seasnail1/releases/latest");
-            String latestVersion = getString(uri);
-            needsUpdate = !CLIENT_VERSION.equals(latestVersion);
-            if (needsUpdate) {
-                String message = String.format("Please update your client to the latest version (%s) found at https://github.com/user93390/seasnail1/releases", latestVersion);
-                Logger.error(message);
-                throw new CrashException(new CrashReport(message, new Throwable("Client is out of date")));
-            } else {
-                Logger.info("Client is up to date {}", latestVersion);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    };
-
     private static String getString(URI uri) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
         connection.setRequestMethod("GET");
@@ -144,7 +144,6 @@ public class Addon extends MeteorAddon {
         JSONObject json = new JSONObject(content.toString());
         return json.getString("tag_name");
     }
-
 
     @Override
     public String getPackage() {

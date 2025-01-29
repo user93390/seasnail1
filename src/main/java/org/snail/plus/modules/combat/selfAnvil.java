@@ -79,7 +79,7 @@ public class selfAnvil extends Module {
     private long lastPlaceTime = 0;
 
     public selfAnvil() {
-        super(Addon.Snail, "Self Anvil+", "Places an anvil on the top of your head to burrow yourself.");
+        super(Addon.CATEGORY, "self-Anvil", "Places an anvil on the top of your head to burrow yourself.");
     }
 
     @EventHandler
