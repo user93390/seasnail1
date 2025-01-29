@@ -15,7 +15,7 @@
   "environment": "client",
   "entrypoints": {
     "meteor": [
-      "org.snail.plus.Addon"
+      "org.seasnail1.Addon"
     ]
   },
   "mixins": [
