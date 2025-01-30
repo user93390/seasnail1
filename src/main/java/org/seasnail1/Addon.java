@@ -147,6 +147,6 @@ public class Addon extends MeteorAddon {
 
     @Override
     public String getPackage() {
-        return "org.snail.plus";
+        return "org.seasnail1";
     }
 }
