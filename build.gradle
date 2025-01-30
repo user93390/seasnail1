@@ -15,9 +15,10 @@ repositories {
         name = 'Meteor Dev Snapshots'
         url = 'https://maven.meteordev.org/snapshots'
     }
+
     maven {
-        url 'https://maven.google.com/'
-        name 'Google'
+        name "jaqobbRepositoryReleases"
+        url "https://repository.jaqobb.dev/releases"
     }
 }
 
@@ -31,7 +32,10 @@ dependencies {
 
     // Other dependencies
     implementation 'org.json:json:20231013'
+    implementation "dev.jaqobb:namemc:3.0.1"
+
     include 'org.json:json:20231013'
+    include "dev.jaqobb:namemc:3.0.1"\
 }
 
 processResources {

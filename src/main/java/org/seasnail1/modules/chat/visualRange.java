@@ -2,10 +2,11 @@ package org.seasnail1.modules.chat;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
-import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.gui.screen.multiplayer.SocialInteractionsScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -67,31 +68,32 @@ public class visualRange extends Module {
         random.setSeed(System.currentTimeMillis());
     });
 
-
-    public static boolean isValid(Entity entity) {
-        //ignore if uuid is invalid or name is invalid
-        return validUuid(entity) && validName(entity);
+    public boolean isValid(Entity entity) {
+        return correctName(entity) && correctUuid(entity) && tabCheck(entity);
     }
 
     /**
-     usernames only contain letters, numbers, and underscores and a minimum of 3 characters
+     usernames only contain letters, numbers, and underscores and a minimum of 3 characters.
+     For cross-play, bedrock users have a . as a prefix to their name
+
      @param entity  the entity to check
      @return true if the entity is a valid player
      */
-    public static boolean validName(Entity entity) {
+    public boolean correctName(Entity entity) {
+        if(entity.getName().getString().isEmpty()) return false;
 
-        for (FakePlayerEntity fakePlayerEntity : FakePlayerManager.getFakePlayers()) {
-            if (entity == fakePlayerEntity) {
-                return true;
-            } else {
-                return entity.getName().getString().matches("[a-zA-Z0-9_]{3,16}");
-            }
+        if(entity.getName().getString().charAt(0) == '.') {
+            return true;
         }
-        return false;
+
+        return entity.getName().getString().matches("[a-zA-Z0-9_]{3,16}");
+    }
+    public boolean tabCheck(Entity entity) {
+        return mc.getNetworkHandler().getPlayerList().stream().anyMatch(player -> player.getProfile().getName().equals(entity.getName().getString()));
     }
 
-    public static boolean validUuid(Entity entity) {
-        return entity.getUuid() != null;
+    public boolean correctUuid(Entity entity) {
+        return entity.getUuidAsString().matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
     }
 
     @Override
@@ -104,23 +106,30 @@ public class visualRange extends Module {
         reset.run();
     }
 
+    @EventHandler
     private void onTick(TickEvent.Post event) {
         if (mc.player == null || mc.world == null) return;
 
         List<SoundEvent> soundList = sounds.get();
         for (Entity entity : mc.world.getEntities()) {
-            if (entity == mc.player) continue;
+            if (entity == mc.player || Friends.get().isFriend((PlayerEntity) entity)) continue;
 
             boolean inRenderDistance = EntityUtils.isInRenderDistance(entity);
             boolean isTrackedEntity = entities.get().contains(entity.getType());
             boolean isNewEntity = !entitiesList.contains(entity);
             boolean canAddMoreEntities = entitiesList.size() < maxAmount.get();
-            boolean shouldCheckUuid = checkUuid.get() && isValid(entity);
+            boolean isValidEntity = isValid(entity);
 
-            if (inRenderDistance && isTrackedEntity && isNewEntity && canAddMoreEntities && (shouldCheckUuid || !checkUuid.get())) {
+            if (checkUuid.get() && !isValidEntity) {
+                Remover(entity).run();
+                continue;
+            }
+
+            if (inRenderDistance && isTrackedEntity && isNewEntity && canAddMoreEntities && (isValidEntity || !checkUuid.get())) {
                 if (!soundList.isEmpty()) {
                     WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
                 }
+
                 if (entity instanceof PlayerEntity) {
                     warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
                 }
@@ -129,11 +138,20 @@ public class visualRange extends Module {
                 if (!soundList.isEmpty()) {
                     WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
                 }
+
                 if (entity instanceof PlayerEntity) {
                     warning("Entity left %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
                 }
                 entitiesList.remove(entity);
             }
         }
+    }
+
+    Runnable Remover(Entity entity) {
+        return () -> mc.execute(() -> {
+            if(!correctName(entity) || !correctUuid(entity) || !tabCheck(entity)) {
+                entitiesList.remove(entity);
+            }
+        });
     }
 }

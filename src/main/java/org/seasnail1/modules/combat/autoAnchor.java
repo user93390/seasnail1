@@ -176,20 +176,6 @@ public class autoAnchor extends Module {
             .sliderRange(0.0, 36.0)
             .build());
 
-    private final Setting<Double> maxSelfError = sgDamage.add(new DoubleSetting.Builder()
-            .name("max-self dropoff")
-            .description("The maximum error in self damage calculations. (percentage error)")
-            .defaultValue(0.5)
-            .sliderRange(0.0, 1)
-            .build());
-
-    private final Setting<Double> maxDamageError = sgDamage.add(new DoubleSetting.Builder()
-            .name("max-damage dropoff")
-            .description("The maximum error in damage calculations. (percentage error)")
-            .defaultValue(0.5)
-            .sliderRange(0.0, 1)
-            .build());
-
     private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
             .name("pause health")
             .description("Pauses the module when your health is below this value.")

@@ -36,6 +36,7 @@ public class FakePlayerMixin {
     @Unique
     @Final
     public Setting<String> name;
+
     @Final
     private SettingGroup sgGeneral;
     @Unique

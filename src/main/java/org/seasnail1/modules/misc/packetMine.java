@@ -1,4 +1,4 @@
-package org.seasnail1.modules.combat;
+package org.seasnail1.modules.misc;
 
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;

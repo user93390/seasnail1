@@ -7,14 +7,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import org.seasnail1.modules.chat.visualRange;
 
 import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-import static org.seasnail1.modules.chat.visualRange.isValid;
 
 public class CombatUtils {
-
+    static visualRange visualRange = new visualRange(); 
     public static boolean isValidBlock(BlockPos pos) {
         Block block = mc.world.getBlockState(pos).getBlock();
         return block.equals(Blocks.OBSIDIAN) || block.equals(Blocks.BEDROCK) || block.equals(Blocks.REINFORCED_DEEPSLATE) || block.equals(Blocks.NETHERITE_BLOCK) || block.equals(Blocks.CRYING_OBSIDIAN) || block.equals(Blocks.ENDER_CHEST) || block.equals(Blocks.ANVIL);
@@ -34,10 +34,11 @@ public class CombatUtils {
     }
 
     public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode mode, double range) {
+        
         playerEntities.remove(mc.player);
         WorldUtils.getAllFriends().forEach(playerEntities::remove);
         return playerEntities.stream()
-                .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range && isValid(player))
+                .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range && visualRange.isValid(player))
                 .min((player1, player2) -> {
                     double distance1 = mc.player.distanceTo(player1);
                     double distance2 = mc.player.distanceTo(player2);

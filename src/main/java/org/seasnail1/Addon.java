@@ -13,6 +13,7 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import org.json.JSONObject;
+import org.seasnail1.commands.lookup;
 import org.seasnail1.commands.swapCommand;
 import org.seasnail1.hud.Watermark;
 import org.seasnail1.modules.chat.armorWarning;
@@ -20,10 +21,7 @@ import org.seasnail1.modules.chat.chatControl;
 import org.seasnail1.modules.chat.killMessages;
 import org.seasnail1.modules.chat.visualRange;
 import org.seasnail1.modules.combat.*;
-import org.seasnail1.modules.misc.autoFarmer;
-import org.seasnail1.modules.misc.autoWither;
-import org.seasnail1.modules.misc.autoXP;
-import org.seasnail1.modules.misc.obsidianFarmer;
+import org.seasnail1.modules.misc.*;
 import org.seasnail1.modules.render.FOV;
 import org.seasnail1.modules.render.burrowEsp;
 import org.seasnail1.modules.render.spawnerExploit;
@@ -125,6 +123,7 @@ public class Addon extends MeteorAddon {
 
         Hud.get().register(Watermark.INFO);
         Commands.add(new swapCommand());
+        Commands.add(new lookup());
         Config.get().load();
         Logger.warn("Modules and config loaded");
     }
