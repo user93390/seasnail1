@@ -42,6 +42,7 @@ public class ClientPlayNetworkHandlerMixin {
                     i++;
                     MeteorClient.EVENT_BUS.post(new TotemPopEvent(i, player));
                 }
+
                 case 3 -> {
                     boolean selfKilled = player.getLastAttacker() == mc.player;
                     PlayerDeathEvent event = new PlayerDeathEvent(player, player.getBlockPos(), selfKilled);

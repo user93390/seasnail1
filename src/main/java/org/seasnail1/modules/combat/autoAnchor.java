@@ -82,22 +82,26 @@ public class autoAnchor extends Module {
             .description("Enables rotation towards the block when placing anchors.")
             .defaultValue(false)
             .build());
+
     private final Setting<Integer> rotationSteps = sgAntiCheat.add(new IntSetting.Builder()
             .name("rotation steps")
             .description("The amount of steps to rotate.")
             .sliderRange(5, 25)
             .visible(rotate::get)
             .build());
+
     private final Setting<Boolean> airPlace = sgPlacement.add(new BoolSetting.Builder()
             .name("air place")
             .description("Allows placing anchors in the air.")
             .defaultValue(true)
             .build());
+
     private final Setting<Boolean> predictMovement = sgPlacement.add(new BoolSetting.Builder()
             .name("predict movement")
             .description("Predicts the movement of the target.")
             .defaultValue(false)
             .build());
+
     private final Setting<Integer> steps = sgPlacement.add(new IntSetting.Builder()
             .name("steps")
             .description("The amount of steps to predict.")
@@ -105,23 +109,27 @@ public class autoAnchor extends Module {
             .sliderRange(1, 10)
             .visible(predictMovement::get)
             .build());
+
     private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
             .name("anchor speed")
             .description("The speed at which anchors are placed, in anchors per second.")
             .defaultValue(1.75)
             .sliderRange(0.1, 10.0)
             .build());
+
     private final Setting<Boolean> strictDirection = sgAntiCheat.add(new BoolSetting.Builder()
             .name("strict direction")
             .description("Only places anchors in the direction you are facing.")
             .defaultValue(false)
             .build());
+
     private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
             .name("direction")
             .description("The mode used for direction.")
             .defaultValue(WorldUtils.DirectionMode.Down)
-            .visible(strictDirection::get)
+            .visible(() -> !strictDirection.get())
             .build());
+
     private final Setting<Integer> threads = sgPlacement.add(new IntSetting.Builder()
             .name("threads")
             .description("The amount of threads to use for calculations.")
@@ -134,44 +142,47 @@ public class autoAnchor extends Module {
             .description("Allows placing anchors in liquids.")
             .defaultValue(false)
             .build());
+
     private final Setting<swapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<swapUtils.swapMode>()
             .name("swap mode")
             .description("The mode used for swapping items when placing anchors.")
             .defaultValue(swapUtils.swapMode.Move)
             .build());
+
     private final Setting<Boolean> swing = sgPlacement.add(new BoolSetting.Builder()
             .name("swing")
             .description("Swings your hand.")
             .defaultValue(true)
             .build());
+
     private final Setting<WorldUtils.HandMode> swingMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.HandMode>()
             .name("swing mode")
             .description("The mode used for swinging your hand.")
             .defaultValue(WorldUtils.HandMode.MainHand)
             .visible(swing::get)
             .build());
+
     private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder()
             .name("min damage")
             .description("The minimum damage required to place an anchor.")
             .defaultValue(0.5)
             .sliderRange(0.0, 36.0)
             .build());
+
     private final Setting<Double> maxDamage = sgDamage.add(new DoubleSetting.Builder()
             .name("max damage")
             .description("The maximum damage towards you")
             .defaultValue(5.0)
             .sliderRange(0.0, 36.0)
             .build());
+
     private final Setting<Double> pauseHealth = sgDamage.add(new DoubleSetting.Builder()
             .name("pause health")
             .description("Pauses the module when your health is below this value.")
             .defaultValue(1)
             .sliderRange(0.0, 36.0)
             .build());
-    private final Setting<Boolean> rayCast = sgAntiCheat.add(new BoolSetting.Builder()
-            .name("raytrace")
-            .defaultValue(false)
-            .build());
+
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
             .name("side color")
             .description("The color of the sides of the rendered anchor box.")
@@ -182,34 +193,27 @@ public class autoAnchor extends Module {
             .description("The color of the lines of the rendered anchor box.")
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
-    private final Setting<SettingColor> damageColor = sgRender.add(new ColorSetting.Builder()
-            .name("damage color")
-            .description("The color of the damage text.")
-            .defaultValue(new SettingColor(255, 255, 255, 255))
-            .build());
-    private final Setting<Double> damageTextScale = sgRender.add(new DoubleSetting.Builder()
-            .name("damage text scale")
-            .description("The scale of the damage text.")
-            .defaultValue(1.0)
-            .sliderRange(0.1, 2.0)
-            .build());
+
     private final Setting<Boolean> renderOutline = sgRender.add(new BoolSetting.Builder()
             .name("render outline")
             .description("Renders an outline around the anchor box.")
             .defaultValue(true)
             .build());
+
     private final Setting<RenderMode> renderMode = sgRender.add(new EnumSetting.Builder<RenderMode>()
             .name("render mode")
             .description("The mode used for rendering the anchor box.")
             .defaultValue(RenderMode.smooth)
             .build());
-    private final Setting<Integer> rendertime = sgRender.add(new IntSetting.Builder()
+
+    private final Setting<Integer> duration = sgRender.add(new IntSetting.Builder()
             .name("render time")
             .description("The duration for which the anchor box is rendered, in ticks.")
             .defaultValue(3)
             .sliderRange(1, 100)
             .visible(() -> renderMode.get() == RenderMode.fading)
             .build());
+
     private final Setting<Integer> Smoothness = sgRender.add(new IntSetting.Builder()
             .name("smoothness")
             .description("The smoothness of the anchor box rendering in smooth mode.")
@@ -217,21 +221,25 @@ public class autoAnchor extends Module {
             .sliderRange(1, 100)
             .visible(() -> renderMode.get() == RenderMode.smooth)
             .build());
+
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
             .name("shape mode")
             .description("The shape mode used for rendering the anchor box.")
             .defaultValue(ShapeMode.Both)
             .build());
+
     private final Setting<Boolean> pauseUse = sgMisc.add(new BoolSetting.Builder()
             .name("pause on use")
             .description("Pauses the module when you are using an item.")
             .defaultValue(false)
             .build());
+
     private final Setting<Boolean> debugCalculations = sgDebug.add(new BoolSetting.Builder()
             .name("debug calculations")
             .description("Enables debug information for calculations.")
             .defaultValue(false)
             .build());
+
     private final Setting<Boolean> debugBreak = sgDebug.add(new BoolSetting.Builder()
             .name("debug break")
             .description("Enables debug information for breaking anchors.")
@@ -242,7 +250,7 @@ public class autoAnchor extends Module {
 
     Set<PlayerEntity> entities = new HashSet<>();
     Set<BlockPos> AnchorPos = new HashSet<>();
-    Map<BlockPos, Float> damages = new HashMap<>();
+    Map<Float, Float> damages = new HashMap<>();
 
     Vec3d start;
     BlockPos pos;
@@ -348,16 +356,15 @@ public class autoAnchor extends Module {
                 .filter(this::validBlock)
                 .toList());
 
-        for (BlockPos pos : sphere) {
-            executor.schedule(() -> {
+            sphere.forEach(pos -> executor.schedule(() -> {
                 calculateDamage(pos);
 
-                damages.put(pos, selfDamage);
+                damages.put(targetDamage, selfDamage);
 
                 //remove if the damage is less than the max damage or the damage is less than the min damage
                 damages.entrySet().removeIf(entry -> entry.getValue() > maxDamage.get() || entry.getValue() < minDamage.get());
 
-                //best damage equals the highest damage value with the lowest self damage value
+                //best damage equals the highest damage value
                 bestDamage = damages.values().stream()
                         .max(Float::compareTo)
                         .orElse(0f);
@@ -365,9 +372,12 @@ public class autoAnchor extends Module {
                 if (dmgCheck()) {
                     AnchorPos.add(pos);
                     logDebug(String.valueOf(AnchorPos.size()));
+
+                    //make the best anchor position the current position
+                    this.pos = pos;
                 }
-            }, 1, java.util.concurrent.TimeUnit.MILLISECONDS);
-        }
+            }, 1, java.util.concurrent.TimeUnit.MILLISECONDS));
+
         sphere.clear();
     }
 
@@ -402,11 +412,8 @@ public class autoAnchor extends Module {
             entities.add(player);
 
             calculate(start);
-            if (!AnchorPos.isEmpty()) {
+            if (!AnchorPos.isEmpty() && pos != null) {
                 //set pos to best damage position
-                pos = AnchorPos.stream()
-                        .max(Comparator.comparing(damages::get))
-                        .orElse(null);
                 doBreak.run();
             }
             lastUpdateTime = currentTime;
@@ -466,7 +473,7 @@ public class autoAnchor extends Module {
     public void render(Render3DEvent event) {
         try {
             for (PlayerEntity entity : entities) {
-                if (entities == mc.player || Friends.get().isFriend(entity) || mc.player.distanceTo(entity) > targetRange.get()) {
+                if (entity == mc.player || Friends.get().isFriend(entity) || mc.player.distanceTo(entity) > targetRange.get()) {
                     continue;
                 }
 
@@ -479,7 +486,7 @@ public class autoAnchor extends Module {
                     switch (renderMode.get()) {
                         case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                         case fading ->
-                                RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, rendertime.get(), true, false);
+                                RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, duration.get(), true, false);
                         case smooth -> {
                             if (renderBoxOne == null) {
                                 renderBoxOne = new Box(pos);

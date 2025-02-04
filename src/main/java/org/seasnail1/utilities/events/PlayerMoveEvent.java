@@ -15,12 +15,10 @@ public class PlayerMoveEvent {
     public float yaw;
     public float pitch;
     public Direction direction;
-    public float limbSpeed;
     public float headYaw;
     public float bodyYaw;
 
-    public PlayerMoveEvent(double x, double y, double z, float yaw, float pitch, Direction direction, float limbSpeed, float headYaw, float bodyYaw) {
-        this.limbSpeed = limbSpeed;
+    public PlayerMoveEvent(double x, double y, double z, float yaw, float pitch, Direction direction, float headYaw) {
         this.direction = direction;
         this.x = x;
         this.y = y;

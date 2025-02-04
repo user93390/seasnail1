@@ -1,5 +1,6 @@
 package org.seasnail1.mixins;
 
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
@@ -10,11 +11,17 @@ import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.player.FakePlayer;
+import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.sound.SoundEvent;
+import org.seasnail1.utilities.WorldUtils;
 import org.seasnail1.utilities.events.PlayerMoveEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,6 +46,7 @@ public class FakePlayerMixin {
 
     @Final
     private SettingGroup sgGeneral;
+
     @Unique
     private Setting<Boolean> loop = null;
 
@@ -101,9 +109,8 @@ public class FakePlayerMixin {
                         recordedMovements.add(new PlayerMoveEvent(
                                 mc.player.getX(), mc.player.getY(), mc.player.getZ(),
                                 mc.player.getYaw(), mc.player.getPitch(),
-                                mc.player.getMovementDirection(), mc.player.limbAnimator.getSpeed(),
-                                mc.player.getHeadYaw(), mc.player.getBodyYaw()
-                        ));
+                                mc.player.getMovementDirection(),
+                                mc.player.getHeadYaw()));
                     }
 
                     if (looping && !recordedMovements.isEmpty()) {
@@ -116,16 +123,13 @@ public class FakePlayerMixin {
                         double interpolatedZ = movement.z + t * (nextMovement.z - movement.z);
 
                         fakePlayerEntity.updatePosition(interpolatedX, interpolatedY, interpolatedZ);
+
                         fakePlayerEntity.setAngles(movement.yaw, movement.pitch);
                         fakePlayerEntity.setYaw(movement.yaw);
                         fakePlayerEntity.setPitch(movement.pitch);
 
-                        float interpolatedLimbSpeed = (float) (movement.limbSpeed + t * (nextMovement.limbSpeed - movement.limbSpeed));
-                        float scale = 1.0f;
-                        fakePlayerEntity.limbAnimator.updateLimbs(interpolatedLimbSpeed, 1, scale);
                         fakePlayerEntity.headYaw = movement.headYaw;
                         fakePlayerEntity.bodyYaw = movement.bodyYaw;
-
                         loopIndex = (loopIndex + 1) % recordedMovements.size();
 
                         if (loopIndex == 0) {
@@ -141,6 +145,36 @@ public class FakePlayerMixin {
         } catch (Exception e) {
             ChatUtils.error("An error occurred while playing the recording.");
             throw new RuntimeException(e);
+        }
+    }
+
+    @Unique
+    @EventHandler
+    private void onPacket(PacketEvent.Receive event) {
+        Packet<?> var3 = event.packet;
+        if (var3 instanceof ExplosionS2CPacket packet) {
+            FakePlayerManager.forEach(entity -> {
+                float damage = DamageUtils.explosionDamage(entity,
+                        entity.getPos(),
+                        entity.getBoundingBox(),
+                        ((ExplosionS2CPacket) var3).center(),
+                        10,
+                        DamageUtils.HIT_FACTORY);
+
+                if (damage > 0) {
+                    if (entity.timeUntilRegen <= 10) {
+                        mc.particleManager.addEmitter(entity, ParticleTypes.TOTEM_OF_UNDYING, 30);
+                        SoundEvent sound = packet.explosionSound().value();
+
+                        WorldUtils.playSound(sound, 1.0f);
+
+                        entity.hurtTime = 10;
+                        entity.timeUntilRegen = 20;
+
+                    }
+                    entity.limbAnimator.updateLimbs(0.75f, 1f, 2f);
+                }
+            });
         }
     }
 

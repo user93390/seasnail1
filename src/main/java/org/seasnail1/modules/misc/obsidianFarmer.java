@@ -116,6 +116,7 @@ public class obsidianFarmer extends Module {
                 .findFirst()
                 .map(List::of)
                 .orElse(new ArrayList<>());
+
     }
 
     private boolean isValid(BlockPos pos) {
