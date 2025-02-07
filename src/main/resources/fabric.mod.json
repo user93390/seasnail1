@@ -3,7 +3,7 @@
   "id": "seasnail1",
   "version": "${version}",
   "name": "snail++",
-  "description": "meteor client addon",
+  "description": "Meteor-client addon",
   "authors": [
     "seasnail1"
   ],
@@ -15,7 +15,7 @@
   "environment": "client",
   "entrypoints": {
     "meteor": [
-      "org.seasnail1.Addon"
+      "dev.seasnail1.Addon"
     ]
   },
   "mixins": [

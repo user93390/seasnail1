@@ -32,10 +32,10 @@ dependencies {
 
     // Other dependencies
     implementation 'org.json:json:20231013'
-    implementation "dev.jaqobb:namemc:3.0.1"
+    implementation 'dev.jaqobb:namemc:3.0.1'
 
     include 'org.json:json:20231013'
-    include "dev.jaqobb:namemc:3.0.1"\
+    include "dev.jaqobb:namemc:3.0.1"
 }
 
 processResources {
