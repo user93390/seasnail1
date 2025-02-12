@@ -1,5 +1,7 @@
 package dev.seasnail1.modules.chat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.WorldUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -11,10 +13,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.WorldUtils;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 public class visualRange extends Module {
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
@@ -27,10 +30,9 @@ public class visualRange extends Module {
             .build());
 
     private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
-            .name("ignore invalid")
+            .name("ignore invalid entities")
             .description("Ignores bots and other invalid entities.")
             .defaultValue(true)
-            .visible(() -> entities.get().contains(EntityType.PLAYER))
             .build());
 
     private final Setting<Integer> maxAmount = sgVisualRange.add(new IntSetting.Builder()
@@ -49,7 +51,7 @@ public class visualRange extends Module {
             .name("pitch")
             .description("The pitch of the sound.")
             .defaultValue(1.0)
-            .sliderRange(0.0, 2.0)
+            .sliderRange(0.0, 10.0)
             .build());
 
     public visualRange() {
@@ -69,18 +71,21 @@ public class visualRange extends Module {
     });
 
     public boolean isValid(Entity entity) {
-        if(entity instanceof FakePlayerEntity) return true;
+        if (entity instanceof PlayerEntity) {
+            if (entity instanceof FakePlayerEntity) return true;
 
-        return correctName(entity) && tabCheck(entity);
+            return correctName(entity) && tabCheck(entity);
+        } else {
+            return true;
+        }
     }
 
     public boolean correctName(Entity entity) {
-        if(entity.getName().getString().isEmpty()) return false;
+        if (entity.getName().getString().isEmpty()) return false;
         //if the username starts with a dot, it's usually a bedrock player
-        if(entity.getName().getString().charAt(0) == '.') {
+        if (entity.getName().getString().charAt(0) == '.') {
             return true;
         }
-
         return entity.getName().getString().matches("[a-zA-Z0-9_]{3,16}");
     }
 
@@ -106,7 +111,9 @@ public class visualRange extends Module {
 
         List<SoundEvent> soundList = sounds.get();
         for (Entity entity : mc.world.getEntities()) {
-            if (entity == mc.player || Friends.get().isFriend((PlayerEntity) entity)) continue;
+            if (entity instanceof PlayerEntity playerEntity) {
+                if (entity == mc.player || Friends.get().isFriend(playerEntity)) continue;
+            }
 
             boolean inRenderDistance = EntityUtils.isInRenderDistance(entity);
             boolean isTrackedEntity = entities.get().contains(entity.getType());
@@ -115,37 +122,50 @@ public class visualRange extends Module {
             boolean isValidEntity = isValid(entity);
 
             if (checkUuid.get() && !isValidEntity) {
-                Remover(entity).run();
+                remover(entity).run();
                 continue;
             }
 
             if (inRenderDistance && isTrackedEntity && isNewEntity && canAddMoreEntities && (isValidEntity || !checkUuid.get())) {
-                if (!soundList.isEmpty()) {
-                    WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
-                }
-
-                if (entity instanceof PlayerEntity) {
-                    warning("Entity entered %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
-                }
+                playSound(soundList);
+                logEntityAction(l.Entered, entity);
                 entitiesList.add(entity);
             } else if (!inRenderDistance && isTrackedEntity && !isNewEntity) {
-                if (!soundList.isEmpty()) {
-                    WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
-                }
-
-                if (entity instanceof PlayerEntity) {
-                    warning("Entity left %s", entity.getName().getString() + " at " + WorldUtils.getCoords((PlayerEntity) entity));
-                }
+                playSound(soundList);
+                logEntityAction(l.Left, entity);
                 entitiesList.remove(entity);
             }
         }
     }
 
-    Runnable Remover(Entity entity) {
+    private void playSound(List<SoundEvent> soundList) {
+        if (!soundList.isEmpty()) {
+            WorldUtils.playSound(soundList.get(random.nextInt(soundList.size())), pitch.get().floatValue());
+        }
+    }
+
+    private void logEntityAction(l mode, Entity entity) {
+        String message = switch (mode) {
+            case Entered ->
+                    String.format("%s spotted at (%s)", entity.getName().getString(), WorldUtils.getCoords(entity.getBlockPos()));
+            case Left ->
+                    String.format("%s left at (%s)", entity.getName().getString(), WorldUtils.getCoords(entity.getBlockPos()));
+
+            case null -> "NaN";
+        };
+        warning(message);
+    }
+
+    private Runnable remover(Entity entity) {
         return () -> mc.execute(() -> {
-            if(!correctName(entity) || !tabCheck(entity)) {
+            if (!correctName(entity) || !tabCheck(entity)) {
                 entitiesList.remove(entity);
             }
         });
+    }
+
+    enum l {
+        Entered,
+        Left
     }
 }

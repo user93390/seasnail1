@@ -1,5 +1,6 @@
 package dev.seasnail1.modules.combat;
 
+import dev.seasnail1.Addon;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -14,7 +15,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
-import dev.seasnail1.Addon;
 
 public class antiBurrow extends Module {
 
@@ -43,12 +43,6 @@ public class antiBurrow extends Module {
     private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
             .name("auto-disable")
             .description("Disables the module when placed")
-            .defaultValue(true)
-            .build());
-
-    private final Setting<Boolean> renderBlock = sgRender.add(new BoolSetting.Builder()
-            .name("render block")
-            .description("Render the block where the player is burrowed.")
             .defaultValue(true)
             .build());
 

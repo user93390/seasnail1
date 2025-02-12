@@ -2,14 +2,12 @@ package dev.seasnail1.commands;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import dev.jaqobb.namemc.NameMC;
 import dev.jaqobb.namemc.cache.CacheSettings;
 import dev.jaqobb.namemc.profile.Friend;
 import dev.jaqobb.namemc.profile.Profile;
 import dev.jaqobb.namemc.profile.ProfileRepository;
 import meteordevelopment.meteorclient.commands.Command;
 import net.minecraft.command.CommandSource;
-import net.minecraft.entity.player.PlayerEntity;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;

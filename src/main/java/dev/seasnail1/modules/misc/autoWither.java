@@ -1,5 +1,6 @@
 package dev.seasnail1.modules.misc;
 
+import dev.seasnail1.Addon;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -22,13 +23,12 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import dev.seasnail1.Addon;
 
 import java.util.Arrays;
 import java.util.List;
 
 /**
- @author TurtleWithaBlock
+ * @author TurtleWithaBlock
  */
 
 public class autoWither extends Module {

@@ -1,12 +1,12 @@
 package dev.seasnail1.utilities;
 
+import dev.seasnail1.managers.Managers;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
-import dev.seasnail1.managers.Managers;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -39,7 +39,7 @@ public class swapUtils {
         Int2ObjectArrayMap<ItemStack> stack = new Int2ObjectArrayMap<>();
         stack.put(to, toStack);
 
-        mc.getNetworkHandler().sendPacket(new ClickSlotC2SPacket(handler.syncId, handler.getRevision(), from, to, SlotActionType.SWAP, fromStack, stack));
+        mc.getNetworkHandler().sendPacket(new ClickSlotC2SPacket(handler.syncId, handler.getRevision(), from, to, SlotActionType.QUICK_MOVE, fromStack, stack));
     }
 
     public enum swapMode {

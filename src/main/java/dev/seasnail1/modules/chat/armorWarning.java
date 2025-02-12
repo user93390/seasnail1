@@ -1,5 +1,9 @@
 package dev.seasnail1.modules.chat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.modules.misc.autoXP;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.screens.placeholderScreen;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
@@ -14,10 +18,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
-import dev.seasnail1.Addon;
-import dev.seasnail1.modules.misc.autoXP;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.screens.Placeholders;
 
 import java.util.List;
 
@@ -103,7 +103,7 @@ public class armorWarning extends Module {
     private Module module;
     private String grammar;
 
-    Runnable showScreen = Placeholders::showScreen;
+    Runnable showScreen = placeholderScreen::showScreen;
 
     Runnable reset = () -> mc.execute(() -> {
         sent = false;
@@ -122,9 +122,9 @@ public class armorWarning extends Module {
     }
 
     public void getContent() {
-        Placeholders.title = "Armor Warning Placeholders";
+        placeholderScreen.title = "Armor Warning Placeholders";
 
-        Placeholders.items = List.of("{name} - shows the player's name", "{piece} - shows the piece of armor",
+        placeholderScreen.items = List.of("{name} - shows the player's name", "{piece} - shows the piece of armor",
                 "{durability} - shows the durability of the armor", "{grammar} - shows the grammar for the piece of armor (is/are)");
     }
 
@@ -150,8 +150,8 @@ public class armorWarning extends Module {
             playAlertSounds();
             if (enableXP.get() && !module.isActive()) {
                 module.toggle();
-                info("Enabling auto-XP+");
             }
+
             warning("Your armor is low! (%s)", armorDurability.toString());
             lastAlertTime = currentTime;
         }

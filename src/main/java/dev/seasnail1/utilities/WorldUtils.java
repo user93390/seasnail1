@@ -28,18 +28,10 @@ public class WorldUtils {
         return liquid ? !mc.world.getBlockState(position).getFluidState().isEmpty() || mc.world.getBlockState(position).isAir() : mc.world.getBlockState(position).isAir() || mc.world.getBlockState(position).getBlock() == Blocks.FIRE;
     }
 
-    public static boolean strictDirection(BlockPos position, DirectionMode Direction) {
-        return switch (Direction) {
-            case Down, Up -> mc.player.getEyePos().y <= position.getY() + 0.5;
-            case North, West -> mc.player.getZ() < position.getZ();
-            case East, South -> mc.player.getX() >= position.getX() + 1;
-        };
-    }
-
     /**
      * Checks if the hitbox at the specified position intersects with any entities.
      *
-     * @param pos The position to check for entity intersections.
+     * @param pos        The position to check for entity intersections.
      * @param ignoreItem Whether to ignore item entities in the intersection check.
      * @return true if the hitbox does not intersect with any entities, false otherwise.
      */
@@ -61,10 +53,6 @@ public class WorldUtils {
         return entity.getName().getString();
     }
 
-    public static String getCoords(PlayerEntity player) {
-        return "%s, %s, %s".formatted(Math.round(player.getX()), Math.round(player.getY()), Math.round(player.getZ()));
-    }
-
     public static String getCoords(BlockPos pos) {
         return "%s, %s, %s".formatted(pos.getX(), pos.getY(), pos.getZ());
     }
@@ -72,13 +60,13 @@ public class WorldUtils {
     /**
      * Places a block at the specified position with various options for hand, direction, and mode.
      *
-     * @param item The item to be placed.
-     * @param pos The position where the block will be placed.
-     * @param hand The hand mode to use (main hand or offhand).
+     * @param item          The item to be placed.
+     * @param pos           The position where the block will be placed.
+     * @param hand          The hand mode to use (main hand or offhand).
      * @param directionMode The direction mode for block placement.
-     * @param packet Whether to use packet placement.
-     * @param Mode The swap mode to use.
-     * @param rotate Whether to rotate the player to face the block position.
+     * @param packet        Whether to use packet placement.
+     * @param Mode          The swap mode to use.
+     * @param rotate        Whether to rotate the player to face the block position.
      */
     public static void placeBlock(FindItemResult item, BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, swapUtils.swapMode Mode, boolean rotate) {
         if (rotate) {
@@ -108,6 +96,7 @@ public class WorldUtils {
                 InvUtils.swap(item.slot(), true);
                 placeAction.run();
             }
+
             case Move -> {
                 swapUtils.moveSwitch(item.slot(), mc.player.getInventory().selectedSlot);
                 placeAction.run();

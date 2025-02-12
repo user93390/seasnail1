@@ -1,5 +1,8 @@
 package dev.seasnail1.modules.render;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.CombatUtils;
+import dev.seasnail1.utilities.MathUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -11,9 +14,6 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.CombatUtils;
-import dev.seasnail1.utilities.MathHelper;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -113,8 +113,8 @@ public class burrowEsp extends Module {
 
                 mc.world.getPlayers().stream()
                         .filter(player -> CombatUtils.isBurrowed(player) && mc.player.distanceTo(player) <= range.get() &&
-                           burrowedPlayers.stream().noneMatch(p -> p.getBlockPos().equals(player.getBlockPos())) &&
-                           !ignoreFriends.get() || !Friends.get().isFriend(player))
+                                burrowedPlayers.stream().noneMatch(p -> p.getBlockPos().equals(player.getBlockPos())) &&
+                                !ignoreFriends.get() || !Friends.get().isFriend(player))
                         .limit(performance.get() ? maxPlayers.get() : Long.MAX_VALUE)
                         .forEach(burrowedPlayers::add);
             });
@@ -129,7 +129,7 @@ public class burrowEsp extends Module {
         synchronized (this) {
             burrowedPlayers.forEach(player -> {
                 BlockPos blockPos = BlockPos.ofFloored(player.getX(), player.getY() + 0.4, player.getZ());
-                if (performance.get() && MathHelper.rayCast(Vec3d.of(blockPos.up(1)))) return;
+                if (performance.get() && MathUtils.rayCast(Vec3d.of(blockPos.up(1)))) return;
                 event.renderer.box(blockPos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
             });
         }

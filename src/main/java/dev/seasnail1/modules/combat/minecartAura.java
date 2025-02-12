@@ -1,5 +1,10 @@
 package dev.seasnail1.modules.combat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.CombatUtils;
+import dev.seasnail1.utilities.MathUtils;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.swapUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -15,11 +20,6 @@ import net.minecraft.item.ArrowItem;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.CombatUtils;
-import dev.seasnail1.utilities.MathHelper;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
 
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -133,12 +133,12 @@ public class minecartAura extends Module {
             }
 
             if (position != null) {
-                useMinecart(position);
+                use(position);
             }
         }
     }
 
-    private void useMinecart(BlockPos pos) {
+    private void use(BlockPos pos) {
         FindItemResult minecart = InvUtils.find(Items.TNT_MINECART);
         FindItemResult rail = InvUtils.find(Items.RAIL);
 
@@ -177,7 +177,7 @@ public class minecartAura extends Module {
             if (!bow.found()) return;
 
             //raycast
-            if (MathHelper.rayCast(Vec3d.of(position.up(1)))) return;
+            if (MathUtils.rayCast(Vec3d.of(position.up(1)))) return;
 
             InvUtils.swap(bow.slot(), false);
 

@@ -1,5 +1,10 @@
 package dev.seasnail1.modules.chat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.events.PlayerDeathEvent;
+import dev.seasnail1.utilities.events.TotemPopEvent;
+import dev.seasnail1.utilities.screens.placeholderScreen;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
@@ -10,11 +15,6 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.events.PlayerDeathEvent;
-import dev.seasnail1.utilities.events.TotemPopEvent;
-import dev.seasnail1.utilities.screens.Placeholders;
 
 import java.util.List;
 import java.util.Random;
@@ -88,7 +88,7 @@ public class killMessages extends Module {
         lastMessageTime = 0;
     };
 
-    Runnable showScreen = Placeholders::showScreen;
+    Runnable showScreen = placeholderScreen::showScreen;
 
     public killMessages() {
         super(Addon.CATEGORY, "kill-Messages", "sends a custom message when a player dies");
@@ -105,9 +105,9 @@ public class killMessages extends Module {
     }
 
     public void getContent() {
-        Placeholders.title = "Kill Messages Placeholders";
+        placeholderScreen.title = "Kill Messages Placeholders";
 
-        Placeholders.items = List.of(
+        placeholderScreen.items = List.of(
                 "{name} - shows the player's name",
                 "{coordinates} - shows where the player died",
                 "{totems} - shows the amount of totem pops", "{world} - shows the world the player died in",
@@ -142,7 +142,7 @@ public class killMessages extends Module {
                 if (event.selfKilled) {
                     sendMessages(event.player, messages.get());
                 } else {
-                    if(sendAnyway.get()) {
+                    if (sendAnyway.get()) {
                         info("didn't kill " + event.player.getName().getString() + "sending message anyway...");
                         sendMessages(event.player, messages.get());
                     }
@@ -168,7 +168,6 @@ public class killMessages extends Module {
                     .replace("{totems}", pops.toString())
                     .replace("{world}", mc.player.getWorld().asString())
                     .replace("{weapon}", mc.player.getMainHandStack().getName().getString());
-
 
             ChatUtils.sendPlayerMsg(directMessage.get() ? "/msg " + victim + " " + message : message);
         }

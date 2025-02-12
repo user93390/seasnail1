@@ -7,7 +7,7 @@ import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-public class Placeholders {
+public class placeholderScreen {
 
     public static String title = "Placeholders";
     public static List<String> items;
@@ -23,6 +23,8 @@ public class Placeholders {
 
         @Override
         public void initWidgets() {
+            //Items are whats being displayed in the screen (text)
+
             for (String item : items) {
                 this.add(theme.label(item));
             }
