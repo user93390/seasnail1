@@ -1,10 +1,5 @@
 package dev.seasnail1.modules.combat;
 
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.CombatUtils;
-import dev.seasnail1.utilities.MathUtils;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IBox;
@@ -26,6 +21,11 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.CombatUtils;
+import dev.seasnail1.utilities.MathHelper;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.swapUtils;
 
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -266,7 +266,7 @@ public class autoAnchor extends Module {
 
     Runnable doBreak = () -> {
         if (rotate.get()) {
-            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, () -> MathUtils.updateRotation(rotationSteps.get()));
+            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, () -> MathHelper.updateRotation(rotationSteps.get()));
             breakAnchor();
         } else {
             breakAnchor();
@@ -354,7 +354,7 @@ public class autoAnchor extends Module {
 
         int radius = (int) Math.sqrt(placeBreak.get());
 
-        List<BlockPos> sphere = new ArrayList<>(MathUtils.getSphere(BlockPos.ofFloored(start), MathUtils.getRadius(radius, radius))
+        List<BlockPos> sphere = new ArrayList<>(MathHelper.getSphere(BlockPos.ofFloored(start), MathHelper.getRadius(radius, radius))
                 .stream()
                 .filter(this::validBlock)
                 .toList());
@@ -380,7 +380,7 @@ public class autoAnchor extends Module {
                 // get the closest position to the target
                 if (!AnchorPos.isEmpty()) {
                     // get the closest position to the target
-                    for (PlayerEntity entity : entities) {
+                    for(PlayerEntity entity : entities) {
                         this.pos = AnchorPos.stream()
                                 .min(Comparator.comparingDouble(value ->
                                         entity.getPos().distanceTo(new Vec3d(value.getX(), value.getY(), value.getZ())))).orElse(null);
@@ -400,7 +400,7 @@ public class autoAnchor extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (broken) {
+        if(broken) {
             resetDamageValues.run();
             AnchorPos.clear();
             this.pos = null;
@@ -425,7 +425,7 @@ public class autoAnchor extends Module {
             PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), targetRange.get());
             if (player == null) return;
 
-            start = predictMovement.get() ? MathUtils.extrapolatePos(player, steps.get()) : player.getPos();
+            start = predictMovement.get() ? MathHelper.extrapolatePos(player, steps.get()) : player.getPos();
             entities.add(player);
 
             calculate(start);
@@ -496,7 +496,7 @@ public class autoAnchor extends Module {
                 }
 
                 if (renderOutline.get()) {
-                    Vec3d box = MathUtils.extrapolatePos(entity, steps.get());
+                    Vec3d box = MathHelper.extrapolatePos(entity, steps.get());
                     event.renderer.box(new Box(box, box), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 }
 

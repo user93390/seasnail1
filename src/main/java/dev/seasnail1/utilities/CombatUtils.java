@@ -32,6 +32,7 @@ public class CombatUtils {
     }
 
     public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode mode, double range) {
+
         playerEntities.remove(mc.player);
         WorldUtils.getAllFriends().forEach(playerEntities::remove);
         return playerEntities.stream()

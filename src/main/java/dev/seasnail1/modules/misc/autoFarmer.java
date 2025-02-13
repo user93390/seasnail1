@@ -1,8 +1,5 @@
 package dev.seasnail1.modules.misc;
 
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.MathUtils;
-import dev.seasnail1.utilities.swapUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -17,10 +14,13 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.CropBlock;
 import net.minecraft.item.HoeItem;
 import net.minecraft.util.math.BlockPos;
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.MathHelper;
+import dev.seasnail1.utilities.swapUtils;
 
 import java.util.*;
 
-import static dev.seasnail1.utilities.MathUtils.getCrosshairBlock;
+import static dev.seasnail1.utilities.MathHelper.getCrosshairBlock;
 
 public class autoFarmer extends Module {
     private final SettingGroup sgBreak = settings.createGroup("Break");
@@ -107,7 +107,7 @@ public class autoFarmer extends Module {
     }
 
     public List<BlockPos> getBlocks(BlockPos center, double radius) {
-        return MathUtils.getSphere(center, radius).stream().filter(pos -> {
+        return MathHelper.getSphere(center, radius).stream().filter(pos -> {
                     if (mc.world.getBlockState(pos).getBlock() instanceof CropBlock crop) {
                         return crop.getMaxAge() - mc.world.getBlockState(pos).get(CropBlock.AGE) >= minAge.get();
                     }

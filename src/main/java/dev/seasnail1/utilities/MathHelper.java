@@ -1,5 +1,6 @@
 package dev.seasnail1.utilities;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -7,12 +8,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-public class MathUtils {
+public class MathHelper {
+    static Map<Vec3d, Entity> movements = new HashMap<>();
     private static float currentYaw;
     private static float currentPitch;
     private static float targetYaw;
@@ -67,12 +68,18 @@ public class MathUtils {
             currentStep++;
         }
     }
+    /**
+         * Extrapolates the position of a player entity based on its movement over a number of ticks.
+         *
+         * @param entity The player entity whose position is to be extrapolated.
+         * @param ticks The number of ticks over which to extrapolate the position.
+         * @return The extrapolated position of the player entity.
+         */
+        public static Vec3d extrapolatePos(PlayerEntity entity, int ticks) {
+            double x = entity.getVelocity().multiply(ticks).x;
+            double y = entity.getVelocity().multiply(ticks).y;
+            double z = entity.getVelocity().multiply(ticks).z;
 
-    public static Vec3d extrapolatePos(PlayerEntity entity, int ticks) {
-        double x = entity.getVelocity().multiply(ticks).x;
-        double y = entity.getVelocity().multiply(ticks).y;
-        double z = entity.getVelocity().multiply(ticks).z;
-
-        return new Vec3d(x, y, z);
-    }
+            return new Vec3d(x, y, z);
+        }
 }

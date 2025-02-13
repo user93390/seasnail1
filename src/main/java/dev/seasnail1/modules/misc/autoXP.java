@@ -1,9 +1,5 @@
 package dev.seasnail1.modules.misc;
 
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.MathUtils;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -13,6 +9,10 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.MathHelper;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.swapUtils;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -137,7 +137,7 @@ public class autoXP extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
-            if (damagePause.get() && health > mc.player.getHealth() + mc.player.getAbsorptionAmount()) return;
+            if(damagePause.get() && health > mc.player.getHealth() + mc.player.getAbsorptionAmount()) return;
 
             if (pauseUse.get() && mc.player.isUsingItem()) return;
 
@@ -160,7 +160,7 @@ public class autoXP extends Module {
 
             slot = item.slot();
             Rotations.rotate(mc.player.getYaw(), pitch.get(), 100, interact);
-            MathUtils.updateRotation(rotationSteps.get());
+            MathHelper.updateRotation(rotationSteps.get());
 
             lastUseTime = currentTime;
 
@@ -192,7 +192,7 @@ public class autoXP extends Module {
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
             }
 
-            case Move -> {
+            case Move  -> {
                 error("Move is not a valid option for this module");
                 toggle();
             }

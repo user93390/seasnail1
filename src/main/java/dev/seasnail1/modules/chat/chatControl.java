@@ -1,6 +1,5 @@
 package dev.seasnail1.modules.chat;
 
-import dev.seasnail1.Addon;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -9,17 +8,8 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.text.Text;
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
+import dev.seasnail1.Addon;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
 
@@ -28,7 +18,6 @@ public class chatControl extends Module {
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
     private final SettingGroup sgReply = settings.createGroup("Reply");
-    private final SettingGroup sgTranslate = settings.createGroup("Translate");
 
     public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder()
             .name("improved client messages")
@@ -133,26 +122,6 @@ public class chatControl extends Module {
             .visible(autoReply::get)
             .build());
 
-    private final Setting<Boolean> translate = sgTranslate.add(new BoolSetting.Builder()
-            .name("translate")
-            .description("Translates messages between languages.")
-            .defaultValue(false)
-            .build());
-
-    private final Setting<languages> receiveLanguage = sgTranslate.add(new EnumSetting.Builder<languages>()
-            .name("receive-language")
-            .description("The language to translate received messages to.")
-            .defaultValue(languages.English)
-            .visible(translate::get)
-            .build());
-
-    private final Setting<languages> sendLanguage = sgTranslate.add(new EnumSetting.Builder<languages>()
-            .name("send-language")
-            .description("What language to send your messages in.")
-            .defaultValue(languages.English)
-            .visible(translate::get)
-            .build());
-
     public chatControl() {
         super(Addon.CATEGORY, "Chat-control+", "allows you to have more control over client messages and server messages\n");
     }
@@ -160,43 +129,19 @@ public class chatControl extends Module {
     Random random = new Random();
     boolean sentMessage = false;
 
-    private String translateMessage(String message, String targetLanguage) throws IOException {
-        String urlStr = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + targetLanguage + "&dt=t&q=" + URLEncoder.encode(message, StandardCharsets.UTF_8);
-        URI uri = URI.create(urlStr);
-        URL url = uri.toURL();
-
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-
-    }
-
-    @EventHandler(priority = 500)
-    private void handleTranslation(ReceiveMessageEvent event) {
-        if (translate.get()) {
-            try {
-                String translatedMessage = translateMessage(event.getMessage().getString(), receiveLanguage.get().name().toLowerCase());
-                event.setMessage(Text.literal(translatedMessage));
-                info("Translated message: %s", translatedMessage);
-            } catch (Exception e) {
-                error("Error in handleTranslation method: %s", e.getMessage());
-            }
-        }
-    }
-
-    @EventHandler(priority = 500)
-    private void handleTranslation(SendMessageEvent event) {
-        if (translate.get()) {
-            TranslateAPI translateAPI = new TranslateAPI();
-        }
-    }
-
     @EventHandler
-    private void onSendMessage(SendMessageEvent event) {
-        event.message = green.get() ? greenText(event.message) : event.message;
-        event.message = prefix.get() ? addSuffix(event.message) : event.message;
+    private void onMessageSend(SendMessageEvent event) {
+        try {
+            if (coordsProtection.get() && containsCoordinates(event.message)) {
+                event.cancel();
+                warning("You cannot send messages with coordinates. ", event.message);
+                return;
+            }
 
-        if (coordsProtection.get() && containsCoordinates(event.message)) {
-            event.cancel();
+            event.message = addSuffix(event.message);
+            event.message = greenText(event.message);
+        } catch (Exception e) {
+            error("Error in onMessageReceive method: %s", e.getMessage());
         }
     }
 
@@ -261,56 +206,5 @@ public class chatControl extends Module {
 
     private String addSuffix(String message) {
         return prefix.get() ? message + " " + suffixText.get() : message;
-    }
-
-    enum languages {
-        English,
-        Spanish,
-        French,
-        German,
-        Italian,
-        Dutch,
-        Portuguese,
-        Russian,
-        Chinese,
-        Japanese,
-        Korean,
-        Arabic,
-        Hindi,
-        Bengali,
-        Punjabi,
-        Urdu,
-        Turkish,
-        Vietnamese,
-        Polish,
-        Ukrainian,
-        Czech,
-        Slovak,
-        Hungarian,
-        Romanian,
-        Swedish,
-        Danish,
-        Norwegian,
-        Finnish,
-        Icelandic,
-        Estonian,
-        Latvian,
-        Lithuanian,
-        Maltese,
-        Croatian,
-        Serbian,
-        Bosnian,
-        Slovenian,
-        Montenegrin,
-        Macedonian,
-        Bulgarian,
-        Albanian,
-        Greek,
-        Armenian,
-        Georgian,
-        Azerbaijani,
-        Kazakh,
-        Uzbek,
-        Turkmen
     }
 }

@@ -1,13 +1,13 @@
 package dev.seasnail1.modules.render;
 
 
-import dev.seasnail1.Addon;
 import meteordevelopment.meteorclient.events.render.GetFovEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
+import dev.seasnail1.Addon;
 
 import java.util.Arrays;
 
@@ -27,9 +27,9 @@ public class FOV extends Module {
     }
 
     @EventHandler
-    private void fovEvent(GetFovEvent event) {
+    private void FOVModify(GetFovEvent event) {
         try {
-            event.fov = Fov.get().floatValue();
+            event.fov = Fov.get();
         } catch (Exception e) {
             info("An error occurred while changing the FOV");
             Addon.Logger.error("An error occurred while changing the FOV  {}", Arrays.toString(e.getStackTrace()));

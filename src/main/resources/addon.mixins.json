@@ -13,7 +13,6 @@
     "ModuleMixin"
   ],
   "client": [
-    "ClientPlayNetworkHandlerMixin",
-    "WorldLoadMixin"
+    "ClientPlayNetworkHandlerMixin"
   ]
 }

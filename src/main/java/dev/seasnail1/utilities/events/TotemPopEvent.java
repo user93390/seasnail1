@@ -1,5 +1,6 @@
 package dev.seasnail1.utilities.events;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 
 public class TotemPopEvent {

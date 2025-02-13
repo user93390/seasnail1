@@ -1,7 +1,5 @@
 package dev.seasnail1.mixins;
 
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.events.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
@@ -23,6 +21,8 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.events.PlayerMoveEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -129,6 +129,7 @@ public class FakePlayerMixin {
                         fakePlayerEntity.setPitch(movement.pitch);
 
                         fakePlayerEntity.headYaw = movement.headYaw;
+                        fakePlayerEntity.bodyYaw = movement.bodyYaw;
                         loopIndex = (loopIndex + 1) % recordedMovements.size();
 
                         if (loopIndex == 0) {

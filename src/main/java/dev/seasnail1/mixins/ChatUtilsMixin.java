@@ -1,11 +1,11 @@
 package dev.seasnail1.mixins;
 
-import dev.seasnail1.modules.chat.chatControl;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import dev.seasnail1.modules.chat.chatControl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
