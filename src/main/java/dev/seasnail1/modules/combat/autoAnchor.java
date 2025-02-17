@@ -1,5 +1,10 @@
 package dev.seasnail1.modules.combat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.CombatUtils;
+import dev.seasnail1.utilities.MathHelper;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.swapUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IBox;
@@ -21,11 +26,6 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.CombatUtils;
-import dev.seasnail1.utilities.MathHelper;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
 
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -94,20 +94,6 @@ public class autoAnchor extends Module {
             .name("air place")
             .description("Allows placing anchors in the air.")
             .defaultValue(true)
-            .build());
-
-    private final Setting<Boolean> predictMovement = sgPlacement.add(new BoolSetting.Builder()
-            .name("predict movement")
-            .description("Predicts the movement of the target.")
-            .defaultValue(false)
-            .build());
-
-    private final Setting<Integer> steps = sgPlacement.add(new IntSetting.Builder()
-            .name("steps")
-            .description("The amount of steps to predict.")
-            .defaultValue(1)
-            .sliderRange(1, 10)
-            .visible(predictMovement::get)
             .build());
 
     private final Setting<Double> anchorSpeed = sgPlacement.add(new DoubleSetting.Builder()
@@ -188,16 +174,11 @@ public class autoAnchor extends Module {
             .description("The color of the sides of the rendered anchor box.")
             .defaultValue(new SettingColor(255, 0, 0, 75))
             .build());
+
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
             .name("line color")
             .description("The color of the lines of the rendered anchor box.")
             .defaultValue(new SettingColor(255, 0, 0, 255))
-            .build());
-
-    private final Setting<Boolean> renderOutline = sgRender.add(new BoolSetting.Builder()
-            .name("render outline")
-            .description("Renders an outline around the anchor box.")
-            .defaultValue(true)
             .build());
 
     private final Setting<RenderMode> renderMode = sgRender.add(new EnumSetting.Builder<RenderMode>()
@@ -256,11 +237,8 @@ public class autoAnchor extends Module {
     BlockPos pos;
     Box renderBoxOne, renderBoxTwo;
 
-    long lastPlacedTime;
-    long lastUpdateTime;
-    float selfDamage = 0;
-    float targetDamage = 0;
-    float bestDamage = 0;
+    long lastPlacedTime, lastUpdateTime;
+    float selfDamage, targetDamage, bestDamage = 0;
 
     boolean broken = false;
 
@@ -278,7 +256,6 @@ public class autoAnchor extends Module {
         selfDamage = -1;
         targetDamage = -1;
         bestDamage = -1;
-        broken = false;
     };
 
     Runnable reset = () -> {
@@ -288,6 +265,7 @@ public class autoAnchor extends Module {
 
         start = null;
         pos = null;
+        broken = false;
 
         resetDamageValues.run();
         AnchorPos.clear();
@@ -308,7 +286,8 @@ public class autoAnchor extends Module {
             if (executor.isShutdown() || executor.isTerminated() || executor.isTerminating()) {
                 executor = new ScheduledThreadPoolExecutor(threads.get());
             }
-            reset.run();
+
+            executor.execute(reset);
         } catch (Exception e) {
             error("An error occurred while activating the module: " + e.getMessage());
             throw new RuntimeException(e);
@@ -318,7 +297,7 @@ public class autoAnchor extends Module {
     @Override
     public void onDeactivate() {
         try {
-            reset.run();
+            executor.execute(reset);
         } catch (Exception e) {
             error("An error occurred while deactivating the module: " + e.getMessage());
             throw new RuntimeException(e);
@@ -355,11 +334,17 @@ public class autoAnchor extends Module {
         int radius = (int) Math.sqrt(placeBreak.get());
 
         List<BlockPos> sphere = new ArrayList<>(MathHelper.getSphere(BlockPos.ofFloored(start), MathHelper.getRadius(radius, radius))
-                .stream()
-                .filter(this::validBlock)
-                .toList());
+                .stream().toList());
 
         sphere.forEach(pos -> executor.schedule(() -> {
+            if (validBlock(pos)) {
+                sphere.remove(pos);
+            }
+
+            if (sphere.isEmpty()) {
+                return;
+            }
+
             calculateDamage(pos);
 
             damages.put(targetDamage, selfDamage);
@@ -376,11 +361,10 @@ public class autoAnchor extends Module {
                 AnchorPos.add(pos);
                 logDebug(String.valueOf(AnchorPos.size()));
 
-                // set pos to best damage position
-                // get the closest position to the target
+                // set pos to the highest, closest damage position
                 if (!AnchorPos.isEmpty()) {
                     // get the closest position to the target
-                    for(PlayerEntity entity : entities) {
+                    for (PlayerEntity entity : entities) {
                         this.pos = AnchorPos.stream()
                                 .min(Comparator.comparingDouble(value ->
                                         entity.getPos().distanceTo(new Vec3d(value.getX(), value.getY(), value.getZ())))).orElse(null);
@@ -400,7 +384,7 @@ public class autoAnchor extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if(broken) {
+        if (broken) {
             resetDamageValues.run();
             AnchorPos.clear();
             this.pos = null;
@@ -410,9 +394,9 @@ public class autoAnchor extends Module {
         if (executor == null || executor.isShutdown() || executor.isTerminated()) {
             executor = new ScheduledThreadPoolExecutor(threads.get());
         }
+
         try {
             resetDamageValues.run();
-
             if (mc.world.getDimension().respawnAnchorWorks()) {
                 error("You are in the wrong dimension!");
                 toggle();
@@ -425,7 +409,7 @@ public class autoAnchor extends Module {
             PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), targetRange.get());
             if (player == null) return;
 
-            start = predictMovement.get() ? MathHelper.extrapolatePos(player, steps.get()) : player.getPos();
+            start = player.getPos();
             entities.add(player);
 
             calculate(start);
@@ -476,6 +460,7 @@ public class autoAnchor extends Module {
                     WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 }
             }
+
             broken = true;
             lastPlacedTime = currentTime;
         } catch (Exception e) {
@@ -493,11 +478,6 @@ public class autoAnchor extends Module {
             for (PlayerEntity entity : entities) {
                 if (entity == mc.player || Friends.get().isFriend(entity) || mc.player.distanceTo(entity) > targetRange.get()) {
                     continue;
-                }
-
-                if (renderOutline.get()) {
-                    Vec3d box = MathHelper.extrapolatePos(entity, steps.get());
-                    event.renderer.box(new Box(box, box), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 }
 
                 if (pos != null) {

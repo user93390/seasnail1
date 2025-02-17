@@ -1,5 +1,10 @@
 package dev.seasnail1.modules.chat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.events.PlayerDeathEvent;
+import dev.seasnail1.utilities.events.TotemPopEvent;
+import dev.seasnail1.utilities.screens.Placeholders;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
@@ -10,11 +15,6 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.events.PlayerDeathEvent;
-import dev.seasnail1.utilities.events.TotemPopEvent;
-import dev.seasnail1.utilities.screens.Placeholders;
 
 import java.util.List;
 import java.util.Random;
@@ -142,7 +142,7 @@ public class killMessages extends Module {
                 if (event.selfKilled) {
                     sendMessages(event.player, messages.get());
                 } else {
-                    if(sendAnyway.get()) {
+                    if (sendAnyway.get()) {
                         info("didn't kill " + event.player.getName().getString() + "sending message anyway...");
                         sendMessages(event.player, messages.get());
                     }

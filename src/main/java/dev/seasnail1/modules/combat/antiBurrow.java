@@ -1,5 +1,6 @@
 package dev.seasnail1.modules.combat;
 
+import dev.seasnail1.Addon;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -14,7 +15,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
-import dev.seasnail1.Addon;
 
 public class antiBurrow extends Module {
 

@@ -3,8 +3,11 @@ plugins {
     id 'java'
 }
 
-version = project.mod_version
-group = project.maven_group
+version = mod_version
+group = maven_group
+
+def mcVersion = project.minecraft_version
+def modVersion = project.version
 
 repositories {
     maven {
@@ -24,18 +27,15 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
-
     // Other dependencies
     implementation 'org.json:json:20231013'
-    implementation 'dev.jaqobb:namemc:3.0.1'
 
     include 'org.json:json:20231013'
-    include 'dev.jaqobb:namemc:3.0.1'
 }
 
 processResources {
     filesMatching('fabric.mod.json') {
-        expand 'version': project.version, 'mc_version': project.minecraft_version
+        expand 'version': modVersion, 'mc_version': mcVersion
     }
 }
 

@@ -1,5 +1,9 @@
 package dev.seasnail1.modules.chat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.modules.misc.autoXP;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.screens.Placeholders;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
@@ -14,10 +18,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
-import dev.seasnail1.Addon;
-import dev.seasnail1.modules.misc.autoXP;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.screens.Placeholders;
 
 import java.util.List;
 

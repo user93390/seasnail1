@@ -39,7 +39,7 @@ public class WorldUtils {
     /**
      * Checks if the hitbox at the specified position intersects with any entities.
      *
-     * @param pos The position to check for entity intersections.
+     * @param pos        The position to check for entity intersections.
      * @param ignoreItem Whether to ignore item entities in the intersection check.
      * @return true if the hitbox does not intersect with any entities, false otherwise.
      */
@@ -72,13 +72,13 @@ public class WorldUtils {
     /**
      * Places a block at the specified position with various options for hand, direction, and mode.
      *
-     * @param item The item to be placed.
-     * @param pos The position where the block will be placed.
-     * @param hand The hand mode to use (main hand or offhand).
+     * @param item          The item to be placed.
+     * @param pos           The position where the block will be placed.
+     * @param hand          The hand mode to use (main hand or offhand).
      * @param directionMode The direction mode for block placement.
-     * @param packet Whether to use packet placement.
-     * @param Mode The swap mode to use.
-     * @param rotate Whether to rotate the player to face the block position.
+     * @param packet        Whether to use packet placement.
+     * @param Mode          The swap mode to use.
+     * @param rotate        Whether to rotate the player to face the block position.
      */
     public static void placeBlock(FindItemResult item, BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, swapUtils.swapMode Mode, boolean rotate) {
         if (rotate) {

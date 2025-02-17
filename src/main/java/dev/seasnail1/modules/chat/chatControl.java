@@ -1,5 +1,6 @@
 package dev.seasnail1.modules.chat;
 
+import dev.seasnail1.Addon;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -7,8 +8,6 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.text.Text;
-import dev.seasnail1.Addon;
 
 import java.util.List;
 import java.util.Random;
@@ -131,53 +130,29 @@ public class chatControl extends Module {
 
     @EventHandler
     private void onMessageSend(SendMessageEvent event) {
-        try {
-            if (coordsProtection.get() && containsCoordinates(event.message)) {
-                event.cancel();
-                warning("You cannot send messages with coordinates. ", event.message);
-                return;
-            }
-
-            event.message = addSuffix(event.message);
-            event.message = greenText(event.message);
-        } catch (Exception e) {
-            error("Error in onMessageReceive method: %s", e.getMessage());
+        if (coordsProtection.get() && containsCoordinates(event.message)) {
+            event.cancel();
+            warning("You cannot send messages with coordinates. ", event.message);
+            return;
         }
+        event.message = addSuffix(greenText(event.message));
     }
 
     @EventHandler
     private void onMessageReceive(ReceiveMessageEvent event) {
-        Text message = event.getMessage();
-        String messageString = message.getString();
+        String messageString = event.getMessage().getString();
 
-        for (String word : filterWords.get()) {
-            if (messageString.contains(word)) {
-                event.cancel();
-                return;
-            }
-        }
-
-        for (String player : playerList.get()) {
-            if (messageString.contains(player)) {
-                event.cancel();
-                return;
-            }
+        if (filterWords.get().stream().anyMatch(messageString::contains) ||
+                playerList.get().stream().anyMatch(messageString::contains)) {
+            event.cancel();
+            return;
         }
 
         if (autoReply.get() && requireMcName.get() && messageString.contains(mc.player.getName().getString())) {
-            for (String keyword : triggerKeywords.get()) {
-                if (messageString.contains(keyword)) {
-                    if (whiteList.get()) {
-                        for (String player : players.get()) {
-                            if (messageString.contains(player)) {
-                                sendReply();
-                                return;
-                            }
-                        }
-                    } else {
-                        sendReply();
-                        return;
-                    }
+            if (triggerKeywords.get().isEmpty() ||
+                    triggerKeywords.get().stream().anyMatch(messageString::contains)) {
+                if (!whiteList.get() || players.get().stream().anyMatch(messageString::contains)) {
+                    sendReply();
                 }
             }
         }
@@ -185,15 +160,10 @@ public class chatControl extends Module {
 
     private void sendReply() {
         String replyMessage = replyMessages.get().get(random.nextInt(replyMessages.get().size()));
-
         if (!sentMessage && replyMessage != null && !replyMessage.isEmpty()) {
-            if (directMessage.get()) {
-                ChatUtils.sendPlayerMsg("/msg " + replyMessage);
-            } else {
-                ChatUtils.sendPlayerMsg(replyMessage);
-            }
+            ChatUtils.sendPlayerMsg(directMessage.get() ? "/msg " + replyMessage : replyMessage);
+            sentMessage = true;
         }
-        sentMessage = true;
     }
 
     private boolean containsCoordinates(String message) {

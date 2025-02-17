@@ -1,13 +1,13 @@
 package dev.seasnail1.modules.render;
 
 
+import dev.seasnail1.Addon;
 import meteordevelopment.meteorclient.events.render.GetFovEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
-import dev.seasnail1.Addon;
 
 import java.util.Arrays;
 

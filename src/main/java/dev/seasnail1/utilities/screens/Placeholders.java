@@ -3,6 +3,7 @@ package dev.seasnail1.utilities.screens;
 import meteordevelopment.meteorclient.gui.GuiThemes;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -10,7 +11,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class Placeholders {
 
     public static String title = "Placeholders";
-    public static List<String> items;
+    public static List<String> items = new ArrayList<>();
 
     public static void showScreen() {
         mc.setScreen(new showScreen());

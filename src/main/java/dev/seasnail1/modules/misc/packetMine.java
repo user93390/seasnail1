@@ -1,5 +1,7 @@
 package dev.seasnail1.modules.misc;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.WorldUtils;
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -19,8 +21,6 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.shape.VoxelShape;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.WorldUtils;
 
 import java.util.Arrays;
 
@@ -163,7 +163,8 @@ public class packetMine extends Module {
                         }
                     }
 
-                    if (!(progress >= 1.0)) progress += BlockUtils.getBreakDelta(slot, mc.world.getBlockState(position));
+                    if (!(progress >= 1.0))
+                        progress += BlockUtils.getBreakDelta(slot, mc.world.getBlockState(position));
                 }
             }
         } catch (Exception e) {
@@ -186,6 +187,7 @@ public class packetMine extends Module {
 
                 //smoothness
                 double smoothness = Math.max(1, 1 / clampedValue);
+
                 event.renderer.box(
                         position.getX() + box.minX + (shrinkX / smoothness),
                         position.getY() + box.minY + (shrinkY / smoothness),

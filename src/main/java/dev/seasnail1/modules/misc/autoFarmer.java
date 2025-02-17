@@ -1,5 +1,8 @@
 package dev.seasnail1.modules.misc;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.MathHelper;
+import dev.seasnail1.utilities.swapUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -14,9 +17,6 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.CropBlock;
 import net.minecraft.item.HoeItem;
 import net.minecraft.util.math.BlockPos;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.MathHelper;
-import dev.seasnail1.utilities.swapUtils;
 
 import java.util.*;
 

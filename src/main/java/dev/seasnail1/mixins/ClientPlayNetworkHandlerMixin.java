@@ -1,13 +1,16 @@
 package dev.seasnail1.mixins;
 
+import com.mojang.brigadier.ParseResults;
+import dev.seasnail1.utilities.events.PlayerDeathEvent;
+import dev.seasnail1.utilities.events.TotemPopEvent;
 import meteordevelopment.meteorclient.MeteorClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
-import dev.seasnail1.utilities.events.PlayerDeathEvent;
-import dev.seasnail1.utilities.events.TotemPopEvent;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,7 +22,10 @@ import java.util.Set;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 @Mixin(ClientPlayNetworkHandler.class)
-public class ClientPlayNetworkHandlerMixin {
+public abstract class ClientPlayNetworkHandlerMixin {
+    @Shadow
+    protected abstract ParseResults<CommandSource> parse(String command);
+
     @Unique
     int i = 0;
     @Unique

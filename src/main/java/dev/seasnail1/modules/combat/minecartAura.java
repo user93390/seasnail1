@@ -1,5 +1,10 @@
 package dev.seasnail1.modules.combat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.CombatUtils;
+import dev.seasnail1.utilities.MathHelper;
+import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.swapUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -15,11 +20,6 @@ import net.minecraft.item.ArrowItem;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.CombatUtils;
-import dev.seasnail1.utilities.MathHelper;
-import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
 
 import java.util.Arrays;
 import java.util.concurrent.Executors;

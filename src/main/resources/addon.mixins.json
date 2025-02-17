@@ -7,12 +7,12 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "CapeRenderMixin",
     "ChatUtilsMixin",
     "FakePlayerMixin",
     "ModuleMixin"
   ],
   "client": [
-    "ClientPlayNetworkHandlerMixin"
+    "ClientPlayNetworkHandlerMixin",
+    "WorldLoadMixin"
   ]
 }

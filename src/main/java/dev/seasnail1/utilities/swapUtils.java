@@ -1,12 +1,12 @@
 package dev.seasnail1.utilities;
 
+import dev.seasnail1.managers.Managers;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
-import dev.seasnail1.managers.Managers;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 

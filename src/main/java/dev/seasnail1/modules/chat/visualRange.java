@@ -1,5 +1,7 @@
 package dev.seasnail1.modules.chat;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.WorldUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -11,10 +13,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.WorldUtils;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 public class visualRange extends Module {
     private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
@@ -69,15 +72,15 @@ public class visualRange extends Module {
     });
 
     public boolean isValid(Entity entity) {
-        if(entity instanceof FakePlayerEntity) return true;
+        if (entity instanceof FakePlayerEntity) return true;
 
         return correctName(entity) && tabCheck(entity);
     }
 
     public boolean correctName(Entity entity) {
-        if(entity.getName().getString().isEmpty()) return false;
+        if (entity.getName().getString().isEmpty()) return false;
         //if the username starts with a dot, it's usually a bedrock player
-        if(entity.getName().getString().charAt(0) == '.') {
+        if (entity.getName().getString().charAt(0) == '.') {
             return true;
         }
 
@@ -143,7 +146,7 @@ public class visualRange extends Module {
 
     Runnable Remover(Entity entity) {
         return () -> mc.execute(() -> {
-            if(!correctName(entity) || !tabCheck(entity)) {
+            if (!correctName(entity) || !tabCheck(entity)) {
                 entitiesList.remove(entity);
             }
         });

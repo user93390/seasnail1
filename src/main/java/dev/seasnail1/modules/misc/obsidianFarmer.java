@@ -1,5 +1,7 @@
 package dev.seasnail1.modules.misc;
 
+import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.MathHelper;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -16,8 +18,6 @@ import net.minecraft.item.PickaxeItem;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.MathHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,6 +86,7 @@ public class obsidianFarmer extends Module {
 
     private BlockPos obsidianPosition;
     private List<BlockPos> posList;
+
     private final Runnable reset = () -> {
         synchronized (this) {
             mc.executeSync(() -> {

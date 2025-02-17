@@ -1,11 +1,11 @@
 package dev.seasnail1.hud;
 
+import dev.seasnail1.Addon;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import dev.seasnail1.Addon;
 
 public class Watermark extends HudElement {
     private final SettingGroup sgGeneral = this.settings.getDefaultGroup();

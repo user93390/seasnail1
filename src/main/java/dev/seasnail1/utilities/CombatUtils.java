@@ -54,6 +54,10 @@ public class CombatUtils {
                 }).orElse(null);
     }
 
+    /*
+    TODO: actually implement this and make it work.
+     */
+
     public static boolean isSurrounded(PlayerEntity target) {
         BlockPos blockPos = target.getBlockPos();
         double minX = target.getBoundingBox().minX;
