@@ -83,7 +83,6 @@ public class visualRange extends Module {
         if (entity.getName().getString().charAt(0) == '.') {
             return true;
         }
-
         return entity.getName().getString().matches("[a-zA-Z0-9_]{3,16}");
     }
 

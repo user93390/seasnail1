@@ -54,33 +54,6 @@ public class CombatUtils {
                 }).orElse(null);
     }
 
-    /*
-    TODO: actually implement this and make it work.
-     */
-
-    public static boolean isSurrounded(PlayerEntity target) {
-        BlockPos blockPos = target.getBlockPos();
-        double minX = target.getBoundingBox().minX;
-        double minZ = target.getBoundingBox().minZ;
-        double maxX = target.getBoundingBox().maxX;
-        double maxZ = target.getBoundingBox().maxZ;
-
-        for (Direction direction : Direction.values()) {
-            BlockPos offsetPos = blockPos.offset(direction);
-
-            // Check all blocks around the player's hitbox
-            for (double x = minX; x <= maxX; x += 0.1) {
-                for (double z = minZ; z <= maxZ; z += 0.1) {
-                    Vec3d pos = new Vec3d(offsetPos.getX() + x, target.getY(), offsetPos.getZ() + z);
-                    if (!isValidBlock(BlockPos.ofFloored(pos))) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
     public enum filterMode {
         Closet,
         Furthest,

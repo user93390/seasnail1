@@ -4,13 +4,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -23,7 +21,6 @@ public class MathHelper {
     private static int currentStep;
 
     public static List<BlockPos> getSphere(BlockPos pos, double radius) {
-
         List<BlockPos> sphere = new ArrayList<>();
         int cx = pos.getX();
         int cy = pos.getY();
@@ -45,6 +42,24 @@ public class MathHelper {
 
     public static double getRadius(int zx, int y) {
         return Math.sqrt(zx * zx + y * y);
+    }
+
+    public static List<BlockPos> getHoles(List<BlockPos> sphere, double radius) {
+        List<BlockPos> holes = new ArrayList<>();
+
+        sphere.forEach(blockPos -> {
+            for(Direction direction : Direction.values()) {
+                if(WorldUtils.isAir(blockPos, false)) {
+                    BlockPos offset = blockPos.offset(direction);
+
+                    if(CombatUtils.isValidBlock(offset)) {
+                        holes.add(blockPos);
+                    }
+                }
+            }
+        });
+
+        return holes;
     }
 
     public static BlockPos getCrosshairBlock() {

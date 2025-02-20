@@ -88,18 +88,13 @@ public class obsidianFarmer extends Module {
     private List<BlockPos> posList;
 
     private final Runnable reset = () -> {
-        synchronized (this) {
-            mc.executeSync(() -> {
-                obsidianPosition = null;
-                posList = new ArrayList<>();
-            });
-        }
+        obsidianPosition = null;
+        posList = new ArrayList<>();
     };
 
     public obsidianFarmer() {
         super(Addon.CATEGORY, "obsidian-Farmer", "Automatically mines ender-chests for obsidian");
     }
-
 
     @Override
     public void onActivate() {

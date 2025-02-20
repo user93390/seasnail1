@@ -28,12 +28,15 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: seasnail1
  */
+
 public class autoAnchor extends Module {
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacement = settings.createGroup("Placement");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
@@ -114,13 +117,6 @@ public class autoAnchor extends Module {
             .description("The mode used for direction.")
             .defaultValue(WorldUtils.DirectionMode.Down)
             .visible(() -> !strictDirection.get())
-            .build());
-
-    private final Setting<Integer> threads = sgPlacement.add(new IntSetting.Builder()
-            .name("threads")
-            .description("The amount of threads to use for calculations.")
-            .defaultValue(1)
-            .sliderRange(1, 10)
             .build());
 
     private final Setting<Boolean> liquidPlace = sgPlacement.add(new BoolSetting.Builder()
@@ -227,20 +223,25 @@ public class autoAnchor extends Module {
             .defaultValue(false)
             .build());
 
-    protected ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(threads.get());
+    private final Setting<Boolean> debugRender = sgDebug.add(new BoolSetting.Builder()
+            .name("debug render")
+            .description("Enables debug rendering for anchors.")
+            .defaultValue(false)
+            .build());
 
+    Map<PlayerEntity, DamageValues> damages = new HashMap<>();
     Set<PlayerEntity> entities = new HashSet<>();
     Set<BlockPos> AnchorPos = new HashSet<>();
-    Map<Float, Float> damages = new HashMap<>();
+    Lock lock = new ReentrantLock();
 
     Vec3d start;
     BlockPos pos;
-    Box renderBoxOne, renderBoxTwo;
+    Box renderBoxOne = null, renderBoxTwo = null;
 
     long lastPlacedTime, lastUpdateTime;
-    float selfDamage, targetDamage, bestDamage = 0;
+    float selfDamage = 0, targetDamage = 0;
 
-    boolean broken = false;
+    boolean broken;
 
     Runnable doBreak = () -> {
         if (rotate.get()) {
@@ -255,25 +256,15 @@ public class autoAnchor extends Module {
         damages.clear();
         selfDamage = -1;
         targetDamage = -1;
-        bestDamage = -1;
     };
 
     Runnable reset = () -> {
-        if (executor != null) {
-            executor.shutdown();
-        }
-
+        broken = false;
         start = null;
         pos = null;
-        broken = false;
-
-        resetDamageValues.run();
+        entities.clear();
+        damages.clear();
         AnchorPos.clear();
-
-        if (entities != null && damages != null) {
-            entities.clear();
-            damages.clear();
-        }
     };
 
     public autoAnchor() {
@@ -283,11 +274,7 @@ public class autoAnchor extends Module {
     @Override
     public void onActivate() {
         try {
-            if (executor.isShutdown() || executor.isTerminated() || executor.isTerminating()) {
-                executor = new ScheduledThreadPoolExecutor(threads.get());
-            }
-
-            executor.execute(reset);
+            reset.run();
         } catch (Exception e) {
             error("An error occurred while activating the module: " + e.getMessage());
             throw new RuntimeException(e);
@@ -297,7 +284,7 @@ public class autoAnchor extends Module {
     @Override
     public void onDeactivate() {
         try {
-            executor.execute(reset);
+            reset.run();
         } catch (Exception e) {
             error("An error occurred while deactivating the module: " + e.getMessage());
             throw new RuntimeException(e);
@@ -307,74 +294,55 @@ public class autoAnchor extends Module {
     private void calculateDamage(BlockPos pos) {
         entities.forEach(player -> {
             Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-            float anchordmg = DamageUtils.anchorDamage(player, vec);
-            float selfAnchor = DamageUtils.anchorDamage(mc.player, vec);
+            float selfDamage = DamageUtils.anchorDamage(mc.player, vec);
+            float targetDamage = DamageUtils.anchorDamage(player, vec);
+            damages.put(player, new DamageValues(selfDamage, targetDamage));
 
-            targetDamage = anchordmg;
-            selfDamage = selfAnchor;
+            logDebug("Calculated self damage: " + selfDamage + " and target damage: " + targetDamage);
         });
     }
 
     private boolean dmgCheck() {
-        if (targetDamage < bestDamage) return false;
-        if (selfDamage > maxDamage.get()) return false;
-
-        return !(targetDamage < minDamage.get());
+        return selfDamage <= maxDamage.get() && targetDamage >= minDamage.get();
     }
 
-    private boolean validBlock(BlockPos pos) {
-        return WorldUtils.intersectCheck(pos, true)
-                && (airPlace.get() || !WorldUtils.isAir(pos.down(1), false))
-                && WorldUtils.isAir(pos, false);
-    }
-
-    void calculate(Vec3d start) {
+    BlockPos calculate(Vec3d start) {
         resetDamageValues.run();
 
         int radius = (int) Math.sqrt(placeBreak.get());
+        List<BlockPos> sphere = MathHelper.getSphere(BlockPos.ofFloored(start), radius);
 
-        List<BlockPos> sphere = new ArrayList<>(MathHelper.getSphere(BlockPos.ofFloored(start), MathHelper.getRadius(radius, radius))
-                .stream().toList());
+        sphere.removeIf(blockPos -> !WorldUtils.isAir(blockPos, liquidPlace.get()) || !WorldUtils.intersectCheck(blockPos, true));
 
-        sphere.forEach(pos -> executor.schedule(() -> {
-            if (validBlock(pos)) {
-                sphere.remove(pos);
-            }
-
+        sphere.forEach(pos -> {
             if (sphere.isEmpty()) {
+                logDebug("Area is empty, returning");
                 return;
             }
 
             calculateDamage(pos);
-
-            damages.put(targetDamage, selfDamage);
-
-            //remove if the damage is less than the max damage or the damage is less than the min damage
-            damages.entrySet().removeIf(entry -> entry.getValue() > maxDamage.get() || entry.getValue() < minDamage.get());
-
-            //best damage equals the highest damage value
-            bestDamage = damages.values().stream()
-                    .max(Float::compareTo)
-                    .orElse(0f);
-
-            if (dmgCheck()) {
-                AnchorPos.add(pos);
-                logDebug(String.valueOf(AnchorPos.size()));
-
-                // set pos to the highest, closest damage position
-                if (!AnchorPos.isEmpty()) {
-                    // get the closest position to the target
-                    for (PlayerEntity entity : entities) {
-                        this.pos = AnchorPos.stream()
-                                .min(Comparator.comparingDouble(value ->
-                                        entity.getPos().distanceTo(new Vec3d(value.getX(), value.getY(), value.getZ())))).orElse(null);
-                    }
+            damages.forEach((player, damageValues) -> {
+                selfDamage = damageValues.selfDamage;
+                targetDamage = damageValues.targetDamage;
+                if (dmgCheck()) {
+                    AnchorPos.add(pos);
+                    logDebug("Adding anchor pos with " + selfDamage + ", " + targetDamage);
+                } else {
+                    AnchorPos.remove(pos);
+                    logDebug("Removing anchor pos with " + selfDamage + ", " + targetDamage);
                 }
-            }
-        }, 1, java.util.concurrent.TimeUnit.MILLISECONDS));
-        sphere.clear();
-    }
+            });
+        });
 
+        //double-check
+        AnchorPos.removeIf(blockPos -> !WorldUtils.isAir(blockPos, liquidPlace.get()) || !WorldUtils.intersectCheck(blockPos, true));
+        AnchorPos.removeIf(blockPos -> blockPos.getSquaredDistance(mc.player.getBlockPos()) >= placeBreak.get());
+
+        if (!AnchorPos.isEmpty()) {
+            return AnchorPos.stream().min(Comparator.comparingDouble(value -> start.squaredDistanceTo(Vec3d.of(value)))).orElse(null);
+        }
+        return null;
+    }
 
     private void logDebug(String message, Object... args) {
         if (debugCalculations.get()) {
@@ -391,10 +359,7 @@ public class autoAnchor extends Module {
             broken = false;
         }
 
-        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-            executor = new ScheduledThreadPoolExecutor(threads.get());
-        }
-
+        lock.lock(); // Acquire the lock
         try {
             resetDamageValues.run();
             if (mc.world.getDimension().respawnAnchorWorks()) {
@@ -407,14 +372,15 @@ public class autoAnchor extends Module {
             if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
 
             PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), targetRange.get());
-            if (player == null) return;
-
+            if (player == null) {
+                return;
+            }
             start = player.getPos();
             entities.add(player);
 
-            calculate(start);
-            if (!AnchorPos.isEmpty() && pos != null) {
-                //set pos to best damage position
+            this.pos = calculate(start);
+
+            if (!AnchorPos.isEmpty() && this.pos != null) {
                 doBreak.run();
             }
             lastUpdateTime = currentTime;
@@ -422,6 +388,8 @@ public class autoAnchor extends Module {
             error("An error occurred while updating the module: " + e.getMessage());
             Addon.Logger.error("An error occurred while updating the module: {}", Arrays.toString(e.getStackTrace()));
             throw new RuntimeException(e);
+        } finally {
+            lock.unlock(); // Release the lock
         }
     }
 
@@ -460,8 +428,8 @@ public class autoAnchor extends Module {
                     WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 }
             }
-
             broken = true;
+
             lastPlacedTime = currentTime;
         } catch (Exception e) {
             error("An error occurred while breaking the anchor: " + e.getMessage());
@@ -472,40 +440,50 @@ public class autoAnchor extends Module {
         return pauseUse.get() && mc.player.isUsingItem();
     }
 
+
     @EventHandler
     public void render(Render3DEvent event) {
         try {
-            for (PlayerEntity entity : entities) {
-                if (entity == mc.player || Friends.get().isFriend(entity) || mc.player.distanceTo(entity) > targetRange.get()) {
-                    continue;
-                }
+            synchronized (this) {
+                for (PlayerEntity entity : entities) {
+                    if (entity == mc.player || Friends.get().isFriend(entity) || mc.player.distanceTo(entity) > targetRange.get()) {
+                        continue;
+                    }
 
-                if (pos != null) {
-                    switch (renderMode.get()) {
-                        case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                        case fading ->
-                                RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, duration.get(), true, false);
-                        case smooth -> {
-                            if (renderBoxOne == null) {
-                                renderBoxOne = new Box(pos);
+                    if (pos != null) {
+                        switch (renderMode.get()) {
+                            case normal ->
+                                    event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                            case fading ->
+                                    RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, duration.get(), true, false);
+                            case smooth -> {
+                                if (renderBoxOne == null) {
+                                    renderBoxOne = new Box(pos);
+                                }
+                                if (renderBoxTwo == null) {
+                                    renderBoxTwo = new Box(pos);
+                                }
+                                if (renderBoxTwo instanceof IBox) {
+                                    ((IBox) renderBoxTwo).meteor$set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
+                                }
+                                double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
+                                double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
+                                double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
+                                ((IBox) renderBoxOne).meteor$set(
+                                        renderBoxOne.minX + offsetX,
+                                        renderBoxOne.minY + offsetY,
+                                        renderBoxOne.minZ + offsetZ,
+                                        renderBoxOne.maxX + offsetX,
+                                        renderBoxOne.maxY + offsetY,
+                                        renderBoxOne.maxZ + offsetZ);
+                                event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                             }
-                            if (renderBoxTwo == null) {
-                                renderBoxTwo = new Box(pos);
+                        }
+
+                        if (debugRender.get()) {
+                            for (BlockPos pos : AnchorPos) {
+                                event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                             }
-                            if (renderBoxTwo instanceof IBox) {
-                                ((IBox) renderBoxTwo).meteor$set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
-                            }
-                            double offsetX = (renderBoxTwo.minX - renderBoxOne.minX) / Smoothness.get();
-                            double offsetY = (renderBoxTwo.minY - renderBoxOne.minY) / Smoothness.get();
-                            double offsetZ = (renderBoxTwo.minZ - renderBoxOne.minZ) / Smoothness.get();
-                            ((IBox) renderBoxOne).meteor$set(
-                                    renderBoxOne.minX + offsetX,
-                                    renderBoxOne.minY + offsetY,
-                                    renderBoxOne.minZ + offsetZ,
-                                    renderBoxOne.maxX + offsetX,
-                                    renderBoxOne.maxY + offsetY,
-                                    renderBoxOne.maxZ + offsetZ);
-                            event.renderer.box(renderBoxOne, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                         }
                     }
                 }
@@ -527,5 +505,15 @@ public class autoAnchor extends Module {
         fading,
         normal,
         smooth
+    }
+
+    public static class DamageValues {
+        public float selfDamage;
+        public float targetDamage;
+
+        public DamageValues(float selfDamage, float targetDamage) {
+            this.selfDamage = selfDamage;
+            this.targetDamage = targetDamage;
+        }
     }
 }

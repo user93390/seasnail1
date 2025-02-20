@@ -39,7 +39,7 @@ public class swapUtils {
         Int2ObjectArrayMap<ItemStack> stack = new Int2ObjectArrayMap<>();
         stack.put(to, toStack);
 
-        mc.getNetworkHandler().sendPacket(new ClickSlotC2SPacket(handler.syncId, handler.getRevision(), from, to, SlotActionType.SWAP, fromStack, stack));
+        mc.getNetworkHandler().sendPacket(new ClickSlotC2SPacket(handler.syncId, handler.getRevision(), from, to, SlotActionType.QUICK_MOVE, fromStack, stack));
     }
 
     public enum swapMode {
