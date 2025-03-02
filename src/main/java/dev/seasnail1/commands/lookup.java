@@ -1,7 +1,7 @@
 package dev.seasnail1.commands;
 
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.seasnail1.utilities.WebsiteUtility;
 import meteordevelopment.meteorclient.commands.Command;
 import net.minecraft.command.CommandSource;

@@ -112,6 +112,12 @@ public class autoAnchor extends Module {
             .defaultValue(false)
             .build());
 
+    private final Setting<Boolean> raytrace = sgAntiCheat.add(new BoolSetting.Builder()
+            .name("raytrace")
+            .description("Only allows placing anchors where you can see.")
+            .defaultValue(false)
+            .build());
+
     private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
             .name("direction")
             .description("The mode used for direction.")
@@ -241,7 +247,7 @@ public class autoAnchor extends Module {
     long lastPlacedTime, lastUpdateTime;
     float selfDamage = 0, targetDamage = 0;
 
-    boolean broken;
+    boolean broken = false;
 
     Runnable doBreak = () -> {
         if (rotate.get()) {
@@ -251,6 +257,12 @@ public class autoAnchor extends Module {
             breakAnchor();
         }
     };
+
+    private void logDebug(String message, Object... args) {
+        if (debugCalculations.get()) {
+            info(message, args);
+        }
+    }
 
     Runnable resetDamageValues = () -> {
         damages.clear();
@@ -293,11 +305,9 @@ public class autoAnchor extends Module {
 
     private void calculateDamage(BlockPos pos) {
         entities.forEach(player -> {
-            Vec3d vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-            float selfDamage = DamageUtils.anchorDamage(mc.player, vec);
-            float targetDamage = DamageUtils.anchorDamage(player, vec);
+            float selfDamage = DamageUtils.anchorDamage(mc.player, pos.toCenterPos());
+            float targetDamage = DamageUtils.anchorDamage(player, pos.toCenterPos());
             damages.put(player, new DamageValues(selfDamage, targetDamage));
-
             logDebug("Calculated self damage: " + selfDamage + " and target damage: " + targetDamage);
         });
     }
@@ -306,47 +316,38 @@ public class autoAnchor extends Module {
         return selfDamage <= maxDamage.get() && targetDamage >= minDamage.get();
     }
 
-    BlockPos calculate(Vec3d start) {
+    void calculate(Vec3d start) {
         resetDamageValues.run();
 
         int radius = (int) Math.sqrt(placeBreak.get());
         List<BlockPos> sphere = MathHelper.getSphere(BlockPos.ofFloored(start), radius);
 
-        sphere.removeIf(blockPos -> !WorldUtils.isAir(blockPos, liquidPlace.get()) || !WorldUtils.intersectCheck(blockPos, true));
+        sphere.removeIf(blockPos -> {
+            boolean isAir = WorldUtils.isAir(blockPos, liquidPlace.get());
+            boolean intersects = WorldUtils.intersects(blockPos, true);
+            boolean tooFar = blockPos.getSquaredDistance(mc.player.getBlockPos()) >= placeBreak.get();
+            boolean airBelow = !airPlace.get() && mc.world.getBlockState(blockPos.down(1)).isAir();
+            boolean raytraceFail = raytrace.get() && !MathHelper.rayCast(blockPos.toCenterPos());
 
-        sphere.forEach(pos -> {
-            if (sphere.isEmpty()) {
-                logDebug("Area is empty, returning");
-                return;
-            }
-
-            calculateDamage(pos);
-            damages.forEach((player, damageValues) -> {
-                selfDamage = damageValues.selfDamage;
-                targetDamage = damageValues.targetDamage;
-                if (dmgCheck()) {
-                    AnchorPos.add(pos);
-                    logDebug("Adding anchor pos with " + selfDamage + ", " + targetDamage);
-                } else {
-                    AnchorPos.remove(pos);
-                    logDebug("Removing anchor pos with " + selfDamage + ", " + targetDamage);
-                }
-            });
+            return !isAir || !intersects || tooFar || airBelow || raytraceFail;
         });
 
-        //double-check
-        AnchorPos.removeIf(blockPos -> !WorldUtils.isAir(blockPos, liquidPlace.get()) || !WorldUtils.intersectCheck(blockPos, true));
-        AnchorPos.removeIf(blockPos -> blockPos.getSquaredDistance(mc.player.getBlockPos()) >= placeBreak.get());
-
-        if (!AnchorPos.isEmpty()) {
-            return AnchorPos.stream().min(Comparator.comparingDouble(value -> start.squaredDistanceTo(Vec3d.of(value)))).orElse(null);
-        }
-        return null;
-    }
-
-    private void logDebug(String message, Object... args) {
-        if (debugCalculations.get()) {
-            info(message, args);
+        synchronized (this) {
+            sphere.forEach(pos -> {
+                if (sphere.isEmpty()) {
+                    logDebug("Area is empty, returning");
+                    return;
+                }
+                calculateDamage(pos);
+                damages.forEach((player, damageValues) -> {
+                    selfDamage = damageValues.selfDamage;
+                    targetDamage = damageValues.targetDamage;
+                    if (dmgCheck()) {
+                        AnchorPos.add(pos);
+                        logDebug("Adding anchor pos with " + selfDamage + ", " + targetDamage);
+                    }
+                });
+            });
         }
     }
 
@@ -375,12 +376,20 @@ public class autoAnchor extends Module {
             if (player == null) {
                 return;
             }
+            calculate(player.getBlockPos().toCenterPos());
+
             start = player.getPos();
             entities.add(player);
 
-            this.pos = calculate(start);
+            // Set pos to highest damage
+            this.pos = AnchorPos.stream()
+                    .max(Comparator.comparingDouble(pos -> {
+                        DamageValues damageValues = damages.get(player);
+                        return damageValues != null ? damageValues.targetDamage : Double.NEGATIVE_INFINITY;
+                    }))
+                    .orElse(null);
 
-            if (!AnchorPos.isEmpty() && this.pos != null) {
+            if (!AnchorPos.isEmpty()) {
                 doBreak.run();
             }
             lastUpdateTime = currentTime;
@@ -395,6 +404,10 @@ public class autoAnchor extends Module {
 
     private void breakAnchor() {
         try {
+            if (mc.player.isSneaking()) {
+                mc.player.setSneaking(false);
+            }
+
             if (updateEat()) return;
 
             long currentTime = System.currentTimeMillis();

@@ -20,35 +20,35 @@ import java.util.Random;
 import java.util.Set;
 
 public class visualRange extends Module {
-    private final SettingGroup sgVisualRange = settings.createGroup("Visual Range");
+    private final SettingGroup General = settings.getDefaultGroup();
 
-    private final Setting<Set<EntityType<?>>> entities = sgVisualRange.add(new EntityTypeListSetting.Builder()
+    private final Setting<Set<EntityType<?>>> entities = General.add(new EntityTypeListSetting.Builder()
             .name("entities")
             .description("Entities to alert.")
             .onlyAttackable()
             .defaultValue(EntityType.PLAYER)
             .build());
 
-    private final Setting<Boolean> checkUuid = sgVisualRange.add(new BoolSetting.Builder()
+    private final Setting<Boolean> checkUuid = General.add(new BoolSetting.Builder()
             .name("ignore invalid")
             .description("Ignores bots and other invalid entities.")
             .defaultValue(true)
             .visible(() -> entities.get().contains(EntityType.PLAYER))
             .build());
 
-    private final Setting<Integer> maxAmount = sgVisualRange.add(new IntSetting.Builder()
+    private final Setting<Integer> maxAmount = General.add(new IntSetting.Builder()
             .name("max-amount")
             .description("The cap of how many players the visual range notifies.")
             .defaultValue(20)
             .sliderRange(1, 100)
             .build());
 
-    private final Setting<List<SoundEvent>> sounds = sgVisualRange.add(new SoundEventListSetting.Builder()
+    private final Setting<List<SoundEvent>> sounds = General.add(new SoundEventListSetting.Builder()
             .name("sounds")
             .description("Sounds to play when a player is spotted")
             .build());
 
-    private final Setting<Double> pitch = sgVisualRange.add(new DoubleSetting.Builder()
+    private final Setting<Double> pitch = General.add(new DoubleSetting.Builder()
             .name("pitch")
             .description("The pitch of the sound.")
             .defaultValue(1.0)

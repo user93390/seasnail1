@@ -6,7 +6,7 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.entity.ItemEntity;
@@ -25,7 +25,12 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class WorldUtils {
     public static boolean isAir(BlockPos position, boolean liquid) {
-        return liquid ? !mc.world.getBlockState(position).getFluidState().isEmpty() || mc.world.getBlockState(position).isAir() : mc.world.getBlockState(position).isAir() || mc.world.getBlockState(position).getBlock() == Blocks.FIRE;
+        BlockState blockState = mc.world.getBlockState(position);
+        if (liquid) {
+            return blockState.isLiquid() || blockState.isAir();
+        } else {
+            return blockState.isAir();
+        }
     }
 
     public static boolean strictDirection(BlockPos position, DirectionMode Direction) {
@@ -43,7 +48,7 @@ public class WorldUtils {
      * @param ignoreItem Whether to ignore item entities in the intersection check.
      * @return true if the hitbox does not intersect with any entities, false otherwise.
      */
-    public static boolean intersectCheck(BlockPos pos, boolean ignoreItem) {
+    public static boolean intersects(BlockPos pos, boolean ignoreItem) {
         return !EntityUtils.intersectsWithEntity(new Box(pos), ignoreItem ? entity -> !(entity instanceof ItemEntity) : entity -> true);
     }
 

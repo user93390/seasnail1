@@ -1,7 +1,6 @@
 package dev.seasnail1.mixins;
 
 import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.events.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
@@ -23,6 +22,7 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.math.Direction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -157,24 +157,24 @@ public class FakePlayerMixin {
                 float damage = DamageUtils.explosionDamage(entity,
                         entity.getPos(),
                         entity.getBoundingBox(),
-                        ((ExplosionS2CPacket) var3).center(),
+                        packet.center(),
                         10,
                         DamageUtils.HIT_FACTORY);
 
-                if (damage > entity.getHealth() + entity.getAbsorptionAmount()) {
-                    if (entity.timeUntilRegen <= 10) {
-                        mc.particleManager.addEmitter(entity, ParticleTypes.TOTEM_OF_UNDYING, 30);
-                        SoundEvent sound = packet.explosionSound().value();
+                float newHealth = entity.getHealth() + entity.getAbsorptionAmount() - damage;
+                if (newHealth <= 0) {
+                    newHealth = 5;
+                }
 
-                        WorldUtils.playSound(sound, 1.0f);
+                entity.setHealth(newHealth);
+                entity.limbAnimator.updateLimbs(0.75f, 1f, 2f);
 
-                        entity.hurtTime = 10;
-                        entity.timeUntilRegen = 20;
-
-                    }
-                    entity.limbAnimator.updateLimbs(0.75f, 1f, 2f);
-                } else {
-                    entity.setHealth(entity.getHealth() + entity.getAbsorptionAmount() - damage);
+                if (entity.timeUntilRegen <= 10) {
+                    mc.particleManager.addEmitter(entity, ParticleTypes.TOTEM_OF_UNDYING, 30);
+                    SoundEvent sound = packet.explosionSound().value();
+                    WorldUtils.playSound(sound, 1.0f);
+                    entity.hurtTime = 10;
+                    entity.timeUntilRegen = 20;
                 }
             });
         }
@@ -202,3 +202,26 @@ public class FakePlayerMixin {
         looping = false;
     }
 }
+
+class PlayerMoveEvent {
+
+    public double x;
+    public double y;
+    public double z;
+    public float yaw;
+    public float pitch;
+    public Direction direction;
+    public float headYaw;
+    public float bodyYaw;
+
+    public PlayerMoveEvent(double x, double y, double z, float yaw, float pitch, Direction direction, float headYaw) {
+        this.direction = direction;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.yaw = yaw;
+        this.pitch = pitch;
+        this.headYaw = headYaw;
+    }
+}
+

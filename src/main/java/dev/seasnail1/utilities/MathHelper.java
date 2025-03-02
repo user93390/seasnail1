@@ -8,7 +8,10 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -40,19 +43,15 @@ public class MathHelper {
         return sphere;
     }
 
-    public static double getRadius(int zx, int y) {
-        return Math.sqrt(zx * zx + y * y);
-    }
-
     public static List<BlockPos> getHoles(List<BlockPos> sphere, double radius) {
         List<BlockPos> holes = new ArrayList<>();
 
         sphere.forEach(blockPos -> {
-            for(Direction direction : Direction.values()) {
-                if(WorldUtils.isAir(blockPos, false)) {
+            for (Direction direction : Direction.values()) {
+                if (WorldUtils.isAir(blockPos, false)) {
                     BlockPos offset = blockPos.offset(direction);
 
-                    if(CombatUtils.isValidBlock(offset)) {
+                    if (CombatUtils.isValidBlock(offset)) {
                         holes.add(blockPos);
                     }
                 }
@@ -85,4 +84,5 @@ public class MathHelper {
             currentStep++;
         }
     }
+
 }

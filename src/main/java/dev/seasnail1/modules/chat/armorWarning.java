@@ -105,11 +105,11 @@ public class armorWarning extends Module {
 
     Runnable showScreen = Placeholders::showScreen;
 
-    Runnable reset = () -> mc.execute(() -> {
+    Runnable reset = () -> {
         sent = false;
         armorDurability = 0;
         lastAlertTime = 0;
-    });
+    };
 
     public WWidget getWidget(GuiTheme theme) {
         WVerticalList list = theme.verticalList();

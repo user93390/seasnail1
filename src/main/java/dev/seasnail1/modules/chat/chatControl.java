@@ -1,22 +1,20 @@
 package dev.seasnail1.modules.chat;
 
 import dev.seasnail1.Addon;
+import dev.seasnail1.utilities.Translator;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 
 public class chatControl extends Module {
-
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
-    private final SettingGroup sgReply = settings.createGroup("Reply");
 
     public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder()
             .name("improved client messages")
@@ -72,64 +70,33 @@ public class chatControl extends Module {
             .visible(filter::get)
             .build());
 
-    private final Setting<Boolean> autoReply = sgReply.add(new BoolSetting.Builder()
-            .name("auto-reply")
-            .description("Automatically reply to certain messages.")
-            .defaultValue(true)
-            .build());
-
-    private final Setting<Boolean> requireMcName = sgReply.add(new BoolSetting.Builder()
-            .name("require-mc-name")
-            .description("Only reply to messages that contain your Minecraft name.")
-            .defaultValue(true)
-            .visible(autoReply::get)
-            .build());
-
-    private final Setting<Boolean> directMessage = sgReply.add(new BoolSetting.Builder()
-            .name("direct message")
-            .description("sends the message directly to the player")
+    private final Setting<Boolean> translate = sgClient.add(new BoolSetting.Builder()
+            .name("translate")
+            .description("Translates messages.")
             .defaultValue(false)
-            .visible(autoReply::get)
             .build());
 
-    private final Setting<Boolean> whiteList = sgReply.add(new BoolSetting.Builder()
-            .name("whitelist")
-            .description("Only reply to certain players.")
-            .defaultValue(false)
-            .visible(autoReply::get)
+    private final Setting<String> receivedLanguage = sgClient.add(new StringSetting.Builder()
+            .name("Received language")
+            .description("Translates other people's messages to this.")
+            .defaultValue("English")
             .build());
 
-    private final Setting<List<String>> players = sgReply.add(new StringListSetting.Builder()
-            .name("players")
-            .description("Players to reply to.")
-            .defaultValue(List.of())
-            .visible(whiteList::get)
-            .visible(autoReply::get)
-            .build());
-
-    private final Setting<List<String>> replyMessages = sgReply.add(new StringListSetting.Builder()
-            .name("reply-messages")
-            .description("Messages to reply with.")
-            .defaultValue(List.of("I am currently afk.", "I am currently busy."))
-            .visible(autoReply::get)
-            .build());
-
-    private final Setting<List<String>> triggerKeywords = sgReply.add(new StringListSetting.Builder()
-            .name("trigger-keywords")
-            .description("Keywords that trigger an auto-reply. Leave empty to reply to all messages.")
-            .defaultValue(List.of("help", "question"))
-            .visible(autoReply::get)
+    private final Setting<String> targetLanguage = sgClient.add(new StringSetting.Builder()
+            .name("Sending language")
+            .description("The language you want to translate your messages to.")
+            .defaultValue("Spanish")
+            .visible(translate::get)
             .build());
 
     public chatControl() {
-        super(Addon.CATEGORY, "Chat-control+", "allows you to have more control over client messages and server messages\n");
+        super(Addon.CATEGORY, "Chat-control+", "allows you to have more control over client messages and server messages");
     }
 
-    Random random = new Random();
-    boolean sentMessage = false;
+    Translator translator = new Translator(receivedLanguage.get(), targetLanguage.get());
 
     @EventHandler
-    private void onMessageSend(SendMessageEvent event) {
+    private void onMessageSend(SendMessageEvent event) throws IOException {
         if (coordsProtection.get() && containsCoordinates(event.message)) {
             event.cancel();
             warning("You cannot send messages with coordinates. ", event.message);
@@ -142,27 +109,8 @@ public class chatControl extends Module {
     private void onMessageReceive(ReceiveMessageEvent event) {
         String messageString = event.getMessage().getString();
 
-        if (filterWords.get().stream().anyMatch(messageString::contains) ||
-                playerList.get().stream().anyMatch(messageString::contains)) {
+        if (filterWords.get().stream().anyMatch(messageString::contains) || playerList.get().stream().anyMatch(messageString::contains)) {
             event.cancel();
-            return;
-        }
-
-        if (autoReply.get() && requireMcName.get() && messageString.contains(mc.player.getName().getString())) {
-            if (triggerKeywords.get().isEmpty() ||
-                    triggerKeywords.get().stream().anyMatch(messageString::contains)) {
-                if (!whiteList.get() || players.get().stream().anyMatch(messageString::contains)) {
-                    sendReply();
-                }
-            }
-        }
-    }
-
-    private void sendReply() {
-        String replyMessage = replyMessages.get().get(random.nextInt(replyMessages.get().size()));
-        if (!sentMessage && replyMessage != null && !replyMessage.isEmpty()) {
-            ChatUtils.sendPlayerMsg(directMessage.get() ? "/msg " + replyMessage : replyMessage);
-            sentMessage = true;
         }
     }
 

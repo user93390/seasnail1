@@ -73,12 +73,13 @@ public class killMessages extends Module {
     boolean sentMessage = false;
     PlayerEntity victim;
     private long lastMessageTime = 0;
-    Runnable tickReset = () -> mc.execute(() -> {
+
+    Runnable tickReset = () -> {
         sentMessage = false;
         random = new Random();
         victim = null;
         lastMessageTime = 0;
-    });
+    };
 
     Runnable reset = () -> {
         currentTime = System.currentTimeMillis();
@@ -168,8 +169,6 @@ public class killMessages extends Module {
                     .replace("{totems}", pops.toString())
                     .replace("{world}", mc.player.getWorld().asString())
                     .replace("{weapon}", mc.player.getMainHandStack().getName().getString());
-
-
             ChatUtils.sendPlayerMsg(directMessage.get() ? "/msg " + victim + " " + message : message);
         }
         lastMessageTime = currentTime;
