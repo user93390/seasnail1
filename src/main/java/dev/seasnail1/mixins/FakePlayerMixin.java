@@ -1,6 +1,7 @@
 package dev.seasnail1.mixins;
 
 import dev.seasnail1.utilities.WorldUtils;
+import dev.seasnail1.utilities.events.FakeplayerMove;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
@@ -22,7 +23,6 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.math.Direction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -38,8 +38,9 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 @Mixin(FakePlayer.class)
 public class FakePlayerMixin {
+
     @Unique
-    private final List<PlayerMoveEvent> recordedMovements = new ArrayList<>();
+    private final List<FakeplayerMove> recordedMovements = new ArrayList<FakeplayerMove>();
     @Unique
     @Final
     public Setting<String> name;
@@ -106,7 +107,7 @@ public class FakePlayerMixin {
                     if (fakePlayerEntity != fakePlayer) continue;
 
                     if (recording) {
-                        recordedMovements.add(new PlayerMoveEvent(
+                        recordedMovements.add(new FakeplayerMove(
                                 mc.player.getX(), mc.player.getY(), mc.player.getZ(),
                                 mc.player.getYaw(), mc.player.getPitch(),
                                 mc.player.getMovementDirection(),
@@ -114,8 +115,8 @@ public class FakePlayerMixin {
                     }
 
                     if (looping && !recordedMovements.isEmpty()) {
-                        PlayerMoveEvent movement = recordedMovements.get(loopIndex);
-                        PlayerMoveEvent nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
+                        FakeplayerMove movement = recordedMovements.get(loopIndex);
+                        FakeplayerMove nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
 
                         double t = (double) loopIndex / recordedMovements.size();
                         double interpolatedX = movement.x + t * (nextMovement.x - movement.x);
@@ -202,26 +203,3 @@ public class FakePlayerMixin {
         looping = false;
     }
 }
-
-class PlayerMoveEvent {
-
-    public double x;
-    public double y;
-    public double z;
-    public float yaw;
-    public float pitch;
-    public Direction direction;
-    public float headYaw;
-    public float bodyYaw;
-
-    public PlayerMoveEvent(double x, double y, double z, float yaw, float pitch, Direction direction, float headYaw) {
-        this.direction = direction;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.yaw = yaw;
-        this.pitch = pitch;
-        this.headYaw = headYaw;
-    }
-}
-

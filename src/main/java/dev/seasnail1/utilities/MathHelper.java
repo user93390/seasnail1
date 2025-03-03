@@ -43,24 +43,6 @@ public class MathHelper {
         return sphere;
     }
 
-    public static List<BlockPos> getHoles(List<BlockPos> sphere, double radius) {
-        List<BlockPos> holes = new ArrayList<>();
-
-        sphere.forEach(blockPos -> {
-            for (Direction direction : Direction.values()) {
-                if (WorldUtils.isAir(blockPos, false)) {
-                    BlockPos offset = blockPos.offset(direction);
-
-                    if (CombatUtils.isValidBlock(offset)) {
-                        holes.add(blockPos);
-                    }
-                }
-            }
-        });
-
-        return holes;
-    }
-
     public static BlockPos getCrosshairBlock() {
         HitResult hitResult = mc.crosshairTarget;
         if (hitResult.getType() == HitResult.Type.BLOCK) {

@@ -130,7 +130,7 @@ public class WorldUtils {
         };
     }
 
-    protected static Direction directionMode(DirectionMode Mode) {
+     public static Direction directionMode(DirectionMode Mode) {
         return switch (Mode) {
             case Up -> Direction.UP;
             case Down -> Direction.DOWN;
