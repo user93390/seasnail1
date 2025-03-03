@@ -88,12 +88,6 @@ public class webAura extends Module {
             .visible(() -> !strictDirection.get())
             .build());
 
-    private final Setting<Boolean> onlySurround = sgPlace.add(new BoolSetting.Builder()
-            .name("only surrounded")
-            .description("Only targets players that are surrounded by blocks.")
-            .defaultValue(false)
-            .build());
-
     private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
             .name("render")
             .description("Renders the webs.")
@@ -165,7 +159,6 @@ public class webAura extends Module {
                 for (PlayerEntity entity : mc.world.getPlayers()) {
                     if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity))
                         continue;
-                    //   if (onlySurround.get() && !CombatUtils.isSurrounded(entity)) continue;
 
                     BestTarget = entity;
                     for (BlockPos blockPos : positions(BestTarget)) {
