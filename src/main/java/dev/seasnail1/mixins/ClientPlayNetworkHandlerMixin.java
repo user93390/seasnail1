@@ -27,7 +27,8 @@ public abstract class ClientPlayNetworkHandlerMixin {
     protected abstract ParseResults<CommandSource> parse(String command);
 
     @Unique
-    int i = 0;
+    short i = 0;
+    
     @Unique
     private final Set<Packet<?>> processedPackets = new HashSet<>();
 

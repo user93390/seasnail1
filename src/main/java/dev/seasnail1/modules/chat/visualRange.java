@@ -73,8 +73,10 @@ public class visualRange extends Module {
 
     public boolean isValid(Entity entity) {
         if (entity instanceof FakePlayerEntity) return true;
-
-        return correctName(entity) && tabCheck(entity);
+        if(entity instanceof PlayerEntity) {
+            return correctName(entity) && tabCheck(entity);
+        }
+        return true;
     }
 
     public boolean correctName(Entity entity) {
@@ -89,7 +91,7 @@ public class visualRange extends Module {
     public boolean tabCheck(Entity entity) {
         //check if the entity is in the tab list.
         return mc.getNetworkHandler().getPlayerList().stream()
-                .anyMatch(player -> player.getProfile().getName().equals(entity.getName().getString()));
+                .anyMatch(player -> player.getDisplayName().getString().equals(entity.getName().getString()));
     }
 
     @Override

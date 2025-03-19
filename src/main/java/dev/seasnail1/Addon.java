@@ -11,7 +11,6 @@ import dev.seasnail1.modules.combat.*;
 import dev.seasnail1.modules.misc.*;
 import dev.seasnail1.modules.render.FOV;
 import dev.seasnail1.modules.render.burrowEsp;
-import dev.seasnail1.modules.render.spawnerExploit;
 import dev.seasnail1.utilities.WebsiteUtility;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.commands.Command;
@@ -52,8 +51,7 @@ public class Addon extends MeteorAddon {
 
     Runnable checkForUpdates = () -> {
         try {
-            URI uri = URI.create("https://api.github.com/repos/user93390/seasnail1/releases/latest");
-            String latestVersion = getVersion(uri);
+            String latestVersion = getVersion(URI.create("https://api.github.com/repos/user93390/seasnail1/releases/latest"));
 
             needsUpdate = !CLIENT_VERSION.equals(latestVersion);
         } catch (Exception e) {
@@ -64,11 +62,11 @@ public class Addon extends MeteorAddon {
     @Override
     public void onInitialize() {
         try {
-            synchronized (this) {
-                checkForUpdates.run();
-                if (!needsUpdate) {
-                    Initialize.run();
-                }
+            checkForUpdates.run();
+            if (!needsUpdate) {
+                Initialize.run();
+            } else {
+                Logger.error("You are using an outdated version of Snail++ " + CLIENT_VERSION);
             }
         } catch (Exception e) {
             Logger.error("Critical error while initializing", e);
@@ -91,16 +89,11 @@ public class Addon extends MeteorAddon {
                 new autoAnchor(),
                 new autoXP(),
                 new webAura(),
-                new autoFarmer(),
                 new selfAnvil(),
                 new chatControl(),
                 new killMessages(),
                 new autoWither(),
                 new armorWarning(),
-                new antiBurrow(),
-                new obsidianFarmer(),
-                new minecartAura(),
-                new spawnerExploit(),
                 new packetMine()
         );
 

@@ -27,7 +27,7 @@ public class WorldUtils {
     public static boolean isAir(BlockPos position, boolean liquid) {
         BlockState blockState = mc.world.getBlockState(position);
         if (liquid) {
-            return blockState.isLiquid() || blockState.isAir();
+            return !blockState.getFluidState().isEmpty() || blockState.isAir();
         } else {
             return blockState.isAir();
         }
@@ -40,14 +40,7 @@ public class WorldUtils {
             case East, South -> mc.player.getX() >= position.getX() + 1;
         };
     }
-
-    /**
-     * Checks if the hitbox at the specified position intersects with any entities.
-     *
-     * @param pos        The position to check for entity intersections.
-     * @param ignoreItem Whether to ignore item entities in the intersection check.
-     * @return true if the hitbox does not intersect with any entities, false otherwise.
-     */
+    
     public static boolean intersects(BlockPos pos, boolean ignoreItem) {
         return !EntityUtils.intersectsWithEntity(new Box(pos), ignoreItem ? entity -> !(entity instanceof ItemEntity) : entity -> true);
     }

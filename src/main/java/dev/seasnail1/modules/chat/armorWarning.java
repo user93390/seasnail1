@@ -93,7 +93,7 @@ public class armorWarning extends Module {
             .build());
 
     public armorWarning() {
-        super(Addon.CATEGORY, "armor-warning", "Warns you when your armor is low. Can be paired with armorRepair");
+        super(Addon.CATEGORY, "armor-warning", "Warns you when your armor is low.");
     }
 
     boolean sent = false;
@@ -204,7 +204,7 @@ public class armorWarning extends Module {
     private ItemStack getArmorPiece(PlayerEntity entity) {
         for (ItemStack stack : entity.getArmorItems()) {
             if (stack != null && !stack.isEmpty() && stack.isDamageable()) {
-                double damage = stack.getMaxDamage() - (double) (100 * (stack.getMaxDamage() - stack.getDamage())) / stack.getMaxDamage();
+                double damage = stack.getMaxDamage() - (100 * (stack.getMaxDamage() - stack.getDamage())) / stack.getMaxDamage();
                 if (damage == armorDurability && damage > 0) {
                     return stack;
                 }
@@ -235,7 +235,7 @@ public class armorWarning extends Module {
     private Integer getDurability(PlayerEntity entity) {
         for (ItemStack stack : entity.getArmorItems()) {
             if (stack != null && !stack.isEmpty() && stack.isDamageable()) {
-                double damage = (double) (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
+                double damage = (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
                 if (damage < threshold.get() && damage > 0) {
                     return (int) (damage * 100);
                 }

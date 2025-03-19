@@ -1,7 +1,6 @@
 package dev.seasnail1.modules.chat;
 
 import dev.seasnail1.Addon;
-import dev.seasnail1.utilities.Translator;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -70,30 +69,9 @@ public class chatControl extends Module {
             .visible(filter::get)
             .build());
 
-    private final Setting<Boolean> translate = sgClient.add(new BoolSetting.Builder()
-            .name("translate")
-            .description("Translates messages.")
-            .defaultValue(false)
-            .build());
-
-    private final Setting<String> receivedLanguage = sgClient.add(new StringSetting.Builder()
-            .name("Received language")
-            .description("Translates other people's messages to this.")
-            .defaultValue("English")
-            .build());
-
-    private final Setting<String> targetLanguage = sgClient.add(new StringSetting.Builder()
-            .name("Sending language")
-            .description("The language you want to translate your messages to.")
-            .defaultValue("Spanish")
-            .visible(translate::get)
-            .build());
-
     public chatControl() {
         super(Addon.CATEGORY, "Chat-control+", "allows you to have more control over client messages and server messages");
     }
-
-    Translator translator = new Translator(receivedLanguage.get(), targetLanguage.get());
 
     @EventHandler
     private void onMessageSend(SendMessageEvent event) throws IOException {

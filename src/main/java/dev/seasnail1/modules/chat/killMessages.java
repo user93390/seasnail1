@@ -68,7 +68,7 @@ public class killMessages extends Module {
             .build());
 
     long currentTime = System.currentTimeMillis();
-    Integer pops = 0;
+    short pops = 0;
     Random random = new Random();
     boolean sentMessage = false;
     PlayerEntity victim;
@@ -111,7 +111,8 @@ public class killMessages extends Module {
         Placeholders.items = List.of(
                 "{name} - shows the player's name",
                 "{coordinates} - shows where the player died",
-                "{totems} - shows the amount of totem pops", "{world} - shows the world the player died in",
+                "{totems} - shows the amount of totem pops", 
+                "{world} - shows the world the player died in",
                 "{weapon} - shows the weapon used to kill the player"
         );
     }
@@ -161,12 +162,11 @@ public class killMessages extends Module {
     }
 
     private void sendMessages(PlayerEntity entity, List<String> messages) {
-
         if (currentTime - lastMessageTime >= chatDelay.get() * 50) {
             String message = messages.get(random.nextInt(messages.size()));
             message = message.replace("{name}", entity.getName().getString())
                     .replace("{coordinates}", WorldUtils.getCoords(entity.getBlockPos()))
-                    .replace("{totems}", pops.toString())
+                    .replace("{totems}", Short.toString(pops))
                     .replace("{world}", mc.player.getWorld().asString())
                     .replace("{weapon}", mc.player.getMainHandStack().getName().getString());
             ChatUtils.sendPlayerMsg(directMessage.get() ? "/msg " + victim + " " + message : message);

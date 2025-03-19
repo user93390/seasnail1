@@ -154,9 +154,8 @@ public class packetMine extends Module {
 
                         if (autoSwitch.get()) {
                             InvUtils.swap(slot, true);
-
+                            
                             breakBlock.run();
-
                             InvUtils.swapBack();
                         } else {
                             breakBlock.run();
@@ -179,6 +178,7 @@ public class packetMine extends Module {
         if (position != null && slot != -1 && progress != -1) {
             double clampedValue = Math.abs(MathHelper.clamp(progress, 0, 1)) * (grow.get() ? 2 : 1);
             VoxelShape shape = mc.world.getBlockState(position).getOutlineShape(mc.world, position);
+            
             if (!shape.isEmpty()) {
                 Box box = shape.getBoundingBox();
                 double shrinkX = box.getLengthX() * clampedValue * 0.5;

@@ -4,11 +4,11 @@ import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.CombatUtils;
 import dev.seasnail1.utilities.WorldUtils;
 import dev.seasnail1.utilities.swapUtils;
+import dev.seasnail1.utilities.CombatUtils.filterMode;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -20,7 +20,6 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -120,8 +119,8 @@ public class webAura extends Module {
             .description("The hand to place webs with.")
             .defaultValue(WorldUtils.HandMode.MainHand)
             .build());
-
-    private final ReentrantLock lock = new ReentrantLock();
+            
+    private BlockPos pos;
     private boolean placed;
     private long lastPlacedTime;
     private long lastUpdateTime;
@@ -133,12 +132,18 @@ public class webAura extends Module {
 
     @Override
     public void onActivate() {
+        BestTarget = null;
+        placed = false;
+        pos = null;
         lastPlacedTime = 0;
         lastUpdateTime = 0;
     }
 
     @Override
     public void onDeactivate() {
+        BestTarget = null;
+        placed = false;
+        pos = null;
         lastPlacedTime = 0;
         lastUpdateTime = 0;
     }
@@ -151,28 +156,24 @@ public class webAura extends Module {
 
     @EventHandler
     public void onTick(TickEvent.Post event) {
-        lock.lock();
         try {
-            try {
-                long currentTime = System.currentTimeMillis();
-                if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
-                for (PlayerEntity entity : mc.world.getPlayers()) {
-                    if (entity == mc.player || entity.isDead() || entity.distanceTo(mc.player) > range.get() || Friends.get().isFriend(entity))
-                        continue;
 
-                    BestTarget = entity;
-                    for (BlockPos blockPos : positions(BestTarget)) {
-                        placed = !WorldUtils.isAir(blockPos, false);
-                        placeWeb(blockPos);
-                        if (doublePlace.get()) {
-                            placeWeb(blockPos.up(1));
-                        }
-                    }
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastUpdateTime < (1000 / updateTime.get())) return;
+            PlayerEntity entity = CombatUtils.filter(mc.world.getPlayers(), filterMode.Closet, range.get());
+            if (entity == null) return;
+                
+            BestTarget = entity;
+            for (BlockPos blockPos : positions(BestTarget)) {
+                placed = !WorldUtils.isAir(blockPos, false);
+                pos = blockPos;
+
+                placeWeb(pos);
+                if (doublePlace.get()) {
+                    placeWeb(pos.up(1));
                 }
-                lastUpdateTime = currentTime;
-            } finally {
-                lock.unlock();
             }
+            lastUpdateTime = currentTime;
         } catch (Exception e) {
             error("An error occurred while placing webs: " + e.getMessage());
             Addon.Logger.error("An error occurred while placing webs: {}", Arrays.toString(e.getStackTrace()));
@@ -180,30 +181,24 @@ public class webAura extends Module {
     }
 
     public void placeWeb(BlockPos pos) {
-        lock.lock();
-        try {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastPlacedTime < (1000 / speed.get())) return;
-            if (!placed) {
-                FindItemResult web = InvUtils.find(Items.COBWEB);
-                if (!web.found()) {
-                    toggle();
-                    return;
-                }
-                WorldUtils.placeBlock(web, pos, hand.get(), direction.get(), true, swapMode.get(), rotate.get());
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastPlacedTime < (1000 / speed.get())) return;
+
+        if (!placed) {
+            FindItemResult web = InvUtils.find(Items.COBWEB);
+            if (!web.found()) {
+                toggle();
+                return;
             }
-            lastPlacedTime = currentTime;
-        } finally {
-            lock.unlock();
+            WorldUtils.placeBlock(web, pos, hand.get(), direction.get(), true, swapMode.get(), rotate.get());
         }
+        lastPlacedTime = currentTime;
     }
 
     @EventHandler
     public void onRender(Render3DEvent event) {
         if (render.get() && BestTarget != null) {
-            for (BlockPos pos : positions(BestTarget)) {
-                event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-            }
+            event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
         }
     }
 }

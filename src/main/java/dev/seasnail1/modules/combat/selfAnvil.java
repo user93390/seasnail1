@@ -19,8 +19,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.Arrays;
-
 public class selfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -75,45 +73,65 @@ public class selfAnvil extends Module {
             .defaultValue(ShapeMode.Both)
             .build());
 
-
+    private FindItemResult item;
+    private BlockPos anvil;
     private long lastPlaceTime = 0;
 
     public selfAnvil() {
         super(Addon.CATEGORY, "self-Anvil", "Places an anvil on the top of your head to burrow yourself.");
     }
 
-    @EventHandler
-    private void onTick(TickEvent.Post event) {
-        try {
-            FindItemResult anvil = InvUtils.findInHotbar(Items.ANVIL);
+    @Override
+    public void onActivate() {
+        item = InvUtils.findInHotbar(Items.ANVIL);
+        if (item == null) {
+            error("You need an anvil in your hotbar to use this module.");
+            toggle();
+            return;
+        }
+    }
 
-            if (autoCenter.get() && !CombatUtils.isCentered(mc.player)) {
-                PlayerUtils.centerPlayer();
-                info("centered");
+    @Override
+    public void onDeactivate() {
+        anvil = null;
+        item = null;
+        }
+
+        @EventHandler
+        private void onTick(TickEvent.Post event) {
+        if (mc.player == null) return;
+
+        anvil = mc.player.getBlockPos().up(2);
+
+        if (autoCenter.get() && !CombatUtils.isCentered(mc.player)) {
+            PlayerUtils.centerPlayer();
+            info("centered");
+            return;
+        }
+
+        if (autoDisable.get() && mc.world.getBlockState(mc.player.getBlockPos().up(2)).getBlock().equals(Blocks.ANVIL)) {
+            toggle();
+            return;
+        }
+
+        if (System.currentTimeMillis() - lastPlaceTime >= delay.get() * 1000) {
+            placeAnvil(mc.player, item);
+            }
+        }
+
+        private void placeAnvil(PlayerEntity player, FindItemResult anvil) {
+        FindItemResult obsidian = InvUtils.findInHotbar(Items.OBSIDIAN);
+        if (anvil == null) return;
+
+        if(support.get()) {
+            if (obsidian == null) {
+                error("You need obsidian to place support blocks.");
                 return;
             }
-
-            if (mc.world.getBlockState(mc.player.getBlockPos().up(2)).isAir()) {
-                if (anvil.found()) {
-                    if (WorldUtils.isAir(mc.player.getBlockPos().up(2), false)) {
-                        if (support.get()) {
-                            PlaceSupportBlocks(mc.player, InvUtils.findInHotbar(Items.OBSIDIAN));
-                        }
-
-                        long time = System.currentTimeMillis();
-                        if ((time - lastPlaceTime) < delay.get() * 1000) return;
-                        lastPlaceTime = time;
-                        WorldUtils.placeBlock(anvil, mc.player.getBlockPos().up(2), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
-                    }
-                }
-            }
-            if (autoDisable.get() && mc.world.getBlockState(mc.player.getBlockPos().up(2)).getBlock().equals(Blocks.ANVIL)) {
-                toggle();
-            }
-        } catch (Exception e) {
-            error("An error occurred while placing the anvil: " + e.getMessage());
-            Addon.Logger.error("An error occurred while placing the anvil: {}", Arrays.toString(e.getStackTrace()));
+            PlaceSupportBlocks(player, obsidian);
         }
+  
+        WorldUtils.placeBlock(anvil, this.anvil, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Up, true, swapUtils.swapMode.silent, rotate.get());
     }
 
     private void PlaceSupportBlocks(PlayerEntity player, FindItemResult obsidian) {
@@ -125,9 +143,9 @@ public class selfAnvil extends Module {
     @EventHandler
     public void onRender(Render3DEvent event) {
         if (mc.player == null || mc.world == null) return;
-        BlockPos pos = mc.player.getBlockPos().up(2);
-        if (pos != null) {
-            event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), (int) 1.0f);
+
+        if (this.anvil != null) {
+            event.renderer.box(this.anvil, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
         }
     }
 }
