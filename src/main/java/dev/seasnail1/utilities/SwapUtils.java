@@ -15,18 +15,18 @@ public class SwapUtils {
 
     //credits to Blackout-client
     public static void pickSwitch(int slot) {
-        if (slot >= 0) {
-            Managers.swapMng.modifyStartTime = System.currentTimeMillis();
-            pickSlot = slot;
-            mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(slot));
-        }
+        if (!(slot >= 0)) return;
+
+        Managers.swapMng.modifyStartTime = System.currentTimeMillis();
+        pickSlot = slot;
+        mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(slot));
     }
 
     public static void pickSwapBack() {
-        if (pickSlot >= 0) {
-            mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(pickSlot));
-            pickSlot = -1;
-        }
+        if(!(pickSlot >= 0)) return;
+
+        mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(pickSlot));
+        pickSlot = -1;
     }
 
     public static void moveSwitch(int from, int to) {
@@ -41,7 +41,6 @@ public class SwapUtils {
 
         mc.getNetworkHandler().sendPacket(new ClickSlotC2SPacket(handler.syncId, handler.getRevision(), from, to, SlotActionType.SWAP, fromStack, stack));
     }
-
     public enum swapMode {
         Inventory,
         Move,

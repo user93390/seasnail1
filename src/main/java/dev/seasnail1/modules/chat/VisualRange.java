@@ -81,7 +81,6 @@ public class VisualRange extends Module {
 
     public boolean correctName(Entity entity) {
         if (entity.getName().getString().isEmpty()) return false;
-        //if the username starts with a dot, it's usually a bedrock player
         if (entity.getName().getString().charAt(0) == '.') {
             return true;
         }
@@ -89,7 +88,6 @@ public class VisualRange extends Module {
     }
 
     public boolean tabCheck(Entity entity) {
-        //check if the entity is in the tab list.
         return mc.getNetworkHandler().getPlayerList().stream()
                 .anyMatch(player -> player.getDisplayName().getString().equals(entity.getName().getString()));
     }

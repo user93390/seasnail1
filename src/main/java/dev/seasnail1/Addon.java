@@ -64,21 +64,12 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
-        new Thread(() -> {
-            try {
-                checkForUpdates.run();
-                if (needsUpdate) {
-                    return;
-                }
-
-                Logger.info("Initializing Snail++ v" + CLIENT_VERSION);
-                Initialize.run();
-            } catch (Exception e) {
-                Logger.error("Critical error while initializing", e);
-                Logger.error("stacktrace: " + Arrays.toString(e.getStackTrace()));
-                throw new RuntimeException(e);
-            }
-        }, "Snail++-Init-Thread").start();
+        checkForUpdates.run();
+        if (!needsUpdate) {
+            Initialize.run();
+        } else {
+            Logger.error("You are using an outdated version of Snail++ {}", CLIENT_VERSION);
+        }
     }
 
     @Override

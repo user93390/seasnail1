@@ -55,10 +55,6 @@ public class WorldUtils {
         mc.getSoundManager().play(PositionedSoundInstance.master(sound, pitch));
     }
 
-    public static String getName(PlayerEntity entity) {
-        return entity.getName().getString();
-    }
-
     public static String getCoords(PlayerEntity player) {
         return "%s, %s, %s".formatted(Math.round(player.getX()), Math.round(player.getY()), Math.round(player.getZ()));
     }

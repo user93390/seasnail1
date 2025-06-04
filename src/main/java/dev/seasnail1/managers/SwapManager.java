@@ -7,7 +7,6 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 
 public class SwapManager {
-
     public int slot;
     public long modifyStartTime = 0;
 

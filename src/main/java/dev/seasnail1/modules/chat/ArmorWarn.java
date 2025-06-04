@@ -19,7 +19,7 @@ import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 
-import java.util.List;
+import java.util.*;
 
 public class ArmorWarn extends Module {
 

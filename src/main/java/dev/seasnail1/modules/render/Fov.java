@@ -9,7 +9,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class Fov extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

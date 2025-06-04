@@ -152,9 +152,8 @@ public class PacketMine extends Module {
 
                     if (progress >= 0.75 && !WorldUtils.isAir(position, false)) {
 
-                        if (rotate.get()) {
-                            Rotations.rotate(Rotations.getYaw(position), Rotations.getPitch(position));
-                        }
+                        if (rotate.get()) Rotations.rotate(Rotations.getYaw(position), Rotations.getPitch(position));
+
 
                         if (autoSwitch.get()) {
                             InvUtils.swap(slot, true);

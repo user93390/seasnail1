@@ -149,6 +149,7 @@ public class WebAura extends Module {
     }
 
     protected BlockPos positions(PlayerEntity entity) {
+
         return entity.getBlockPos();
     }
 
@@ -164,6 +165,12 @@ public class WebAura extends Module {
             BestTarget = entity;
 
             pos = positions(BestTarget);
+
+            if(!airPlace.get() && WorldUtils.isAir(pos.down(1), false)) {
+                //skip if the block below is air
+                return;
+            }
+
             placed = !WorldUtils.isAir(pos, false);
 
             placeWeb(pos);

@@ -40,7 +40,6 @@ public class AutoAnchor extends Module {
     private final SettingGroup sgAntiCheat = settings.createGroup("Anti-Cheat");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
-    private final SettingGroup sgDebug = settings.createGroup("Debug");
 
     // General Settings
     private final Setting<Double> placeBreak = sgGeneral.add(new DoubleSetting.Builder()

@@ -66,12 +66,6 @@ public class CrystalAura extends Module {
             .sliderMax(10)
             .build());
 
-    private final Setting<Boolean> sync = sgBreak.add(new BoolSetting.Builder()
-            .name("sync")
-            .description("only breaks crystals every tick.")
-            .defaultValue(false)
-            .build());
-
     private final Setting<CombatUtils.filterMode> filterMode = sgGeneral.add(new EnumSetting.Builder<CombatUtils.filterMode>()
             .name("filter-mode")
             .description("The filter mode to use.")

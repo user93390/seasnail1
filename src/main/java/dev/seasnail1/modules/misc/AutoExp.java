@@ -15,7 +15,6 @@ import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public class AutoExp extends Module {

@@ -95,7 +95,7 @@ public class SelfAnvil extends Module {
     public void onDeactivate() {
         anvil = null;
         item = null;
-        }
+    }
 
         @EventHandler
         private void onTick(TickEvent.Post event) {

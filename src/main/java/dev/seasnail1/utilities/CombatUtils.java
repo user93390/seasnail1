@@ -31,6 +31,7 @@ public class CombatUtils {
 
     public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode mode, double range) {
         WorldUtils.getAllFriends().forEach(playerEntities::remove);
+
         return playerEntities.stream()
                 .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range)
                 .min((player1, player2) -> {

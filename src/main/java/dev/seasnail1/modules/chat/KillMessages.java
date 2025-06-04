@@ -16,8 +16,7 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class KillMessages extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

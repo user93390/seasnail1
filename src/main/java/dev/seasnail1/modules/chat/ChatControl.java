@@ -9,7 +9,7 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 public class ChatControl extends Module {
     private final SettingGroup sgChat = settings.createGroup("Chat");

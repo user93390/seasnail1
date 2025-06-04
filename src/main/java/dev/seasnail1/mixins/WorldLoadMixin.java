@@ -25,7 +25,7 @@ public class WorldLoadMixin {
                         .withFormatting(Formatting.UNDERLINE)
                         .withFormatting(Formatting.RED);
                 text = text.setStyle(style);
-                //add the text to the chat
+
                 mc.inGameHud.getChatHud().addMessage(text);
             }
         }

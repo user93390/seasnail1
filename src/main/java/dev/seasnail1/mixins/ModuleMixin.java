@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Module.class)
 public class ModuleMixin {
-
     @Unique
     private Module seasnail1$module = (Module) (Object) this;
 

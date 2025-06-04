@@ -40,14 +40,6 @@ public class MathHelper {
         return sphere;
     }
 
-    public static BlockPos getCrosshairBlock() {
-        HitResult hitResult = mc.crosshairTarget;
-        if (hitResult.getType() == HitResult.Type.BLOCK) {
-            return ((BlockHitResult) hitResult).getBlockPos();
-        }
-        return null;
-    }
-
     public static boolean rayCast(Vec3d blockPos) {
         HitResult hitResult = mc.world.raycast(new RaycastContext(new Vec3d(mc.player.getX(), mc.player.getEyeY(), mc.player.getZ()), blockPos, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player));
         return hitResult.getType() != HitResult.Type.MISS;
