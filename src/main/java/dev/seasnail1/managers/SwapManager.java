@@ -6,12 +6,12 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 
-public class swapManager {
+public class SwapManager {
 
     public int slot;
     public long modifyStartTime = 0;
 
-    public swapManager() {
+    public SwapManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
         slot = 0;
     }

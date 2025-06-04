@@ -2,8 +2,8 @@ package dev.seasnail1.modules.combat;
 
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.CombatUtils;
-import dev.seasnail1.utilities.WorldUtils;
 import dev.seasnail1.utilities.SwapUtils;
+import dev.seasnail1.utilities.WorldUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -131,12 +131,12 @@ public class SelfAnvil extends Module {
             PlaceSupportBlocks(player, obsidian);
         }
   
-        WorldUtils.placeBlock(anvil, this.anvil, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Up, true, swapUtils.swapMode.silent, rotate.get());
+        WorldUtils.placeBlock(anvil, this.anvil, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Up, true, SwapUtils.swapMode.silent, rotate.get());
     }
 
     private void PlaceSupportBlocks(PlayerEntity player, FindItemResult obsidian) {
         for (int i = 0; i <= 2; i++) {
-            WorldUtils.placeBlock(obsidian, player.getBlockPos().north(1).up(i), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, swapUtils.swapMode.silent, rotate.get());
+            WorldUtils.placeBlock(obsidian, player.getBlockPos().north(1).up(i), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, SwapUtils.swapMode.silent, rotate.get());
         }
     }
 

@@ -61,10 +61,10 @@ public class WebAura extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<swapUtils.swapMode> swapMode = sgPlace.add(new EnumSetting.Builder<swapUtils.swapMode>()
+    private final Setting<SwapUtils.swapMode> swapMode = sgPlace.add(new EnumSetting.Builder<SwapUtils.swapMode>()
             .name("swap-mode")
             .description("The mode to use when swapping items.")
-            .defaultValue(swapUtils.swapMode.silent)
+            .defaultValue(SwapUtils.swapMode.silent)
             .build());
 
     private final Setting<Double> speed = sgPlace.add(new DoubleSetting.Builder()
@@ -148,10 +148,8 @@ public class WebAura extends Module {
         lastUpdateTime = 0;
     }
 
-    protected List<BlockPos> positions(PlayerEntity entity) {
-        return Stream.of(entity.getBlockPos())
-                .filter(pos -> !CombatUtils.isBurrowed(entity) && (airPlace.get() || !WorldUtils.isAir(pos, false)))
-                .collect(Collectors.toList());
+    protected BlockPos positions(PlayerEntity entity) {
+        return entity.getBlockPos();
     }
 
     @EventHandler
@@ -164,14 +162,13 @@ public class WebAura extends Module {
             if (entity == null) return;
                 
             BestTarget = entity;
-            for (BlockPos blockPos : positions(BestTarget)) {
-                placed = !WorldUtils.isAir(blockPos, false);
-                pos = blockPos;
 
-                placeWeb(pos);
-                if (doublePlace.get()) {
-                    placeWeb(pos.up(1));
-                }
+            pos = positions(BestTarget);
+            placed = !WorldUtils.isAir(pos, false);
+
+            placeWeb(pos);
+            if (doublePlace.get()) {
+                placeWeb(pos.up(1));
             }
             lastUpdateTime = currentTime;
         } catch (Exception e) {
@@ -182,16 +179,16 @@ public class WebAura extends Module {
 
     public void placeWeb(BlockPos pos) {
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastPlacedTime < (1000 / speed.get())) return;
+        if (currentTime - lastPlacedTime < (1000 / speed.get()) || placed) return;
 
-        if (!placed) {
-            FindItemResult web = InvUtils.find(Items.COBWEB);
-            if (!web.found()) {
-                toggle();
-                return;
-            }
-            WorldUtils.placeBlock(web, pos, hand.get(), direction.get(), true, swapMode.get(), rotate.get());
+        FindItemResult web = InvUtils.find(Items.COBWEB);
+        if (!web.found()) {
+            toggle();
+            return;
         }
+
+        WorldUtils.placeBlock(web, pos, hand.get(), direction.get(), true, swapMode.get(), rotate.get());
+
         lastPlacedTime = currentTime;
     }
 

@@ -132,7 +132,7 @@ public class ArmorWarn extends Module {
     public void onActivate() {
         reset.run();
     }
-    
+
 
     @Override
     public void onDeactivate() {
@@ -158,16 +158,16 @@ public class ArmorWarn extends Module {
         }
 
         if (friends.get()) {
-            for (PlayerEntity friend : WorldUtils.getAllFriends()) {
-                if (friend != null) {
-                    Integer friendDurability = getDurability(friend);
-
-                    if (friendDurability < friendThreshold.get() && mc.player.distanceTo(friend) < maxFriendRange.get() && shouldAlert) {
-                        sendMessage(friend, friendDurability);
-                        lastAlertTime = currentTime;
-                    }
-                }
-            }
+            WorldUtils.getAllFriends().stream().
+                    filter(friend -> friend.getBlockPos().getSquaredDistance(mc.player.getBlockPos()) <= maxFriendRange.get() * maxFriendRange.get())
+                    .forEach(friend -> {
+                        Integer friendDurability = getDurability(friend);
+                        if (friendDurability < friendThreshold.get() && !sent) {
+                            playAlertSounds();
+                            sendMessage(friend, friendDurability);
+                            sent = true;
+                        }
+                    });
         }
     }
 
@@ -217,14 +217,9 @@ public class ArmorWarn extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         try {
-            if (module == null) {
-                info("auto-XP+ not found, Finding module...");
-                module = Modules.get().get(AutoExp.class);
-            }
+            if (module == null) module = Modules.get().get(AutoExp.class);
 
-            if (mc.player != null) {
-                handleArmor();
-            }
+            if (mc.player != null) handleArmor();
         } catch (Exception e) {
             error("Error in armorWarning", e);
             Addon.Logger.error("Unexpected error in armorWarning: {}", String.valueOf(e));
@@ -236,12 +231,12 @@ public class ArmorWarn extends Module {
     private Integer getDurability(PlayerEntity entity) {
         for (ItemStack stack : entity.getArmorItems()) {
             if (stack != null && !stack.isEmpty() && stack.isDamageable()) {
-                double damage = (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
-                if (damage < threshold.get() && damage > 0) {
-                    return (int) (damage * 100);
+                float damage = (float) (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
+                if (damage > 0 && damage * stack.getMaxDamage() < threshold.get()) {
+                    return (int) (stack.getMaxDamage() * damage);
                 }
             }
         }
-        return 0;
+        return -1;
     }
 }

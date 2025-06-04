@@ -78,7 +78,7 @@ public class WorldUtils {
      * @param Mode          The swap mode to use.
      * @param rotate        Whether to rotate the player to face the block position.
      */
-    public static void placeBlock(FindItemResult item, BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, swapUtils.swapMode Mode, boolean rotate) {
+    public static void placeBlock(FindItemResult item, BlockPos pos, HandMode hand, DirectionMode directionMode, boolean packet, SwapUtils.swapMode Mode, boolean rotate) {
         if (rotate) {
             Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100);
         }
@@ -93,9 +93,9 @@ public class WorldUtils {
 
         switch (Mode) {
             case Inventory -> {
-                swapUtils.pickSwitch(item.slot());
+                SwapUtils.pickSwitch(item.slot());
                 placeAction.run();
-                swapUtils.pickSwapBack();
+                SwapUtils.pickSwapBack();
             }
             case silent -> {
                 InvUtils.swap(item.slot(), true);
@@ -107,9 +107,9 @@ public class WorldUtils {
                 placeAction.run();
             }
             case Move -> {
-                swapUtils.moveSwitch(item.slot(), mc.player.getInventory().selectedSlot);
+                SwapUtils.moveSwitch(item.slot(), mc.player.getInventory().selectedSlot);
                 placeAction.run();
-                swapUtils.moveSwitch(mc.player.getInventory().selectedSlot, item.slot());
+                SwapUtils.moveSwitch(mc.player.getInventory().selectedSlot, item.slot());
             }
             case none -> placeAction.run();
             default -> throw new IllegalArgumentException("Unexpected value: " + Mode);

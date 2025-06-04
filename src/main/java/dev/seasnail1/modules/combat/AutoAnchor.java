@@ -1,29 +1,15 @@
 package dev.seasnail1.modules.combat;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.CombatUtils;
 import dev.seasnail1.utilities.MathHelper;
-import dev.seasnail1.utilities.WorldUtils;
 import dev.seasnail1.utilities.SwapUtils;
+import dev.seasnail1.utilities.WorldUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IBox;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.EnumSetting;
-import meteordevelopment.meteorclient.settings.IntSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
@@ -40,6 +26,8 @@ import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+
+import java.util.*;
 
 /**
  * Author: seasnail1
@@ -414,8 +402,7 @@ public class AutoAnchor extends Module {
             }
 
             if (!(mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
-                WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(),
-                        rotate.get());
+                WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
             }
 
             if (mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR) {
@@ -455,10 +442,10 @@ public class AutoAnchor extends Module {
                     if (pos != null) {
                         switch (renderMode.get()) {
                             case normal ->
-                                event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+                                    event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                             case fading ->
-                                RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(),
-                                        0, duration.get(), true, false);
+                                    RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(),
+                                            0, duration.get(), true, false);
                             case smooth -> {
                                 if (renderBoxOne == null) {
                                     renderBoxOne = new Box(pos);

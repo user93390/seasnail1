@@ -43,10 +43,10 @@ public class AutoExp extends Module {
             .sliderRange(0.0, 36.0)
             .build());
 
-    private final Setting<swapUtils.swapMode> autoSwitch = sgGeneral.add(new EnumSetting.Builder<swapUtils.swapMode>()
+    private final Setting<SwapUtils.swapMode> autoSwitch = sgGeneral.add(new EnumSetting.Builder<SwapUtils.swapMode>()
             .name("swap-mode")
             .description("Swapping method. IGNORE MOVE MODE.")
-            .defaultValue(swapUtils.swapMode.silent)
+            .defaultValue(SwapUtils.swapMode.silent)
             .build());
 
     private final Setting<Integer> moveSlot = sgGeneral.add(new IntSetting.Builder()
@@ -54,7 +54,7 @@ public class AutoExp extends Module {
             .description("the slot to move the xp to")
             .defaultValue(0)
             .sliderRange(0, 10)
-            .visible(() -> autoSwitch.get().equals(swapUtils.swapMode.silent) || autoSwitch.get().equals(swapUtils.swapMode.normal))
+            .visible(() -> autoSwitch.get().equals(SwapUtils.swapMode.silent) || autoSwitch.get().equals(SwapUtils.swapMode.normal))
             .build());
 
     private final Setting<WorldUtils.HandMode> handSwing = sgGeneral.add(new EnumSetting.Builder<WorldUtils.HandMode>()
@@ -181,9 +181,9 @@ public class AutoExp extends Module {
             }
 
             case Inventory -> {
-                swapUtils.pickSwitch(slot);
+                SwapUtils.pickSwitch(slot);
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                swapUtils.pickSwapBack();
+                SwapUtils.pickSwapBack();
             }
 
             case normal -> {
@@ -205,7 +205,7 @@ public class AutoExp extends Module {
     }
 
     private boolean isArmorFullDurability() {
-        return StreamSupport.stream(Objects.requireNonNull(mc.player).getArmorItems().spliterator(), false)
+        return StreamSupport.stream(mc.player.getArmorItems().spliterator(), false)
                 .allMatch(itemStack -> itemStack.getDamage() == 0 || (double) itemStack.getDamage() / itemStack.getMaxDamage() > armorDurabilityThreshold.get());
     }
 }

@@ -129,28 +129,24 @@ public class KillMessages extends Module {
 
     @EventHandler
     private void onActivateTotem(TotemPopEvent event) {
+        if(event.player == mc.player) return;
         if (totemPop.get()) {
-            if (event.player != mc.player) {
-                pops = event.totems;
-                sendMessages(event.player, totemMessage.get());
-            }
+
+            pops = event.totems;
+            sendMessages(event.player, totemMessage.get());
         }
     }
 
     @EventHandler
     private void onPlayerDeath(PlayerDeathEvent event) {
+        if (event.player == mc.player) return;
         if (killMessage.get() && !sentMessage) {
-            if (event.player != mc.player) {
-                if (event.selfKilled) {
-                    sendMessages(event.player, messages.get());
-                } else {
-                    if (sendAnyway.get()) {
-                        info("didn't kill " + event.player.getName().getString() + "sending message anyway...");
-                        sendMessages(event.player, messages.get());
-                    }
-                }
-                sentMessage = true;
+
+
+            if (event.selfKilled || sendAnyway.get()) {
+                sendMessages(event.player, messages.get());
             }
+            sentMessage = true;
         }
     }
 
