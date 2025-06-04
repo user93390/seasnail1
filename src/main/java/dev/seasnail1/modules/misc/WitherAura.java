@@ -31,7 +31,7 @@ import java.util.List;
  * @author TurtleWithaBlock
  */
 
-public class autoWither extends Module {
+public class WitherAura extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
 
@@ -68,8 +68,8 @@ public class autoWither extends Module {
             .visible(renderBlock::get)
             .build());
 
-    public autoWither() {
-        super(Addon.CATEGORY, "wither-aura", "Automatically builds a wither");
+    public WitherAura() {
+        super(Addon.CATEGORY, "Wither-Aura", "Automatically builds a wither");
     }
 
     private BlockPos currentBlockPos = null;

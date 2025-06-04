@@ -3,7 +3,7 @@ package dev.seasnail1.modules.combat;
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.CombatUtils;
 import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
+import dev.seasnail1.utilities.SwapUtils;
 import dev.seasnail1.utilities.CombatUtils.filterMode;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class webAura extends Module {
+public class WebAura extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -126,7 +126,7 @@ public class webAura extends Module {
     private long lastUpdateTime;
     private PlayerEntity BestTarget;
 
-    public webAura() {
+    public WebAura() {
         super(Addon.CATEGORY, "web-aura", "Places cobwebs at players feet to slow them down");
     }
 

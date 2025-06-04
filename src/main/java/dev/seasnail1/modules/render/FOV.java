@@ -11,7 +11,7 @@ import meteordevelopment.orbit.EventHandler;
 
 import java.util.Arrays;
 
-public class FOV extends Module {
+public class Fov extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Integer> Fov = sgGeneral.add(new IntSetting.Builder()
@@ -22,8 +22,8 @@ public class FOV extends Module {
             .sliderMax(280)
             .build());
 
-    public FOV() {
-        super(Addon.CATEGORY, "fov-control", "Allows you to change your field of view");
+    public Fov() {
+        super(Addon.CATEGORY, "Fov+", "Allows you to change your FOV to a custom value.");
     }
 
     @EventHandler

@@ -3,7 +3,7 @@ package dev.seasnail1.modules.misc;
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.MathHelper;
 import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
+import dev.seasnail1.utilities.SwapUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
-public class autoXP extends Module {
+public class AutoExp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPause = settings.createGroup("Pause");
 
@@ -104,7 +104,7 @@ public class autoXP extends Module {
             .defaultValue(false)
             .build());
 
-    public autoXP() {
+    public AutoExp() {
         super(Addon.CATEGORY, "armor-Repair", "Automatically interacts with xp bottles to repair armor");
     }
 

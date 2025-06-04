@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-public class visualRange extends Module {
+public class VisualRange extends Module {
     private final SettingGroup General = settings.getDefaultGroup();
 
     private final Setting<Set<EntityType<?>>> entities = General.add(new EntityTypeListSetting.Builder()
@@ -55,7 +55,7 @@ public class visualRange extends Module {
             .sliderRange(0.0, 2.0)
             .build());
 
-    public visualRange() {
+    public VisualRange() {
         super(Addon.CATEGORY, "visual-Range", "warns you when certain entities are within render distance");
     }
 

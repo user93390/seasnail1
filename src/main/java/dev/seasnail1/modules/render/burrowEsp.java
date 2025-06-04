@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class burrowEsp extends Module {
+public class BurrowEsp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Boolean> ignoreFriends = sgGeneral.add(new BoolSetting.Builder()
@@ -76,7 +76,7 @@ public class burrowEsp extends Module {
             .defaultValue(new SettingColor(255, 0, 0, 255))
             .build());
 
-    public burrowEsp() {
+    public BurrowEsp() {
         super(Addon.CATEGORY, "Burrow-ESP", "Highlights players that are in burrows (inside blocks)");
     }
 

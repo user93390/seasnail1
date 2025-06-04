@@ -11,7 +11,7 @@ import meteordevelopment.orbit.EventHandler;
 import java.io.IOException;
 import java.util.List;
 
-public class chatControl extends Module {
+public class ChatControl extends Module {
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
 
@@ -69,7 +69,7 @@ public class chatControl extends Module {
             .visible(filter::get)
             .build());
 
-    public chatControl() {
+    public ChatControl() {
         super(Addon.CATEGORY, "Chat-control+", "allows you to have more control over client messages and server messages");
     }
 

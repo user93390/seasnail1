@@ -9,7 +9,7 @@ import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 
-public class swapUtils {
+public class SwapUtils {
     public static int pickSlot = -1;
     public static MinecraftClient mc = MinecraftClient.getInstance();
 

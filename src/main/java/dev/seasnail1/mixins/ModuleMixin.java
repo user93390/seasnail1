@@ -1,6 +1,6 @@
 package dev.seasnail1.mixins;
 
-import dev.seasnail1.modules.chat.chatControl;
+import dev.seasnail1.modules.chat.ChatControl;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -22,7 +22,7 @@ public class ModuleMixin {
 
     @Inject(method = "sendToggledMsg", at = @At("HEAD"), cancellable = true, remap = false)
     private void sendToggledMsg(CallbackInfo ci) {
-        if (Config.get().chatFeedback.get() && Modules.get().get(chatControl.class).improveClientMessage.get()) {
+        if (Config.get().chatFeedback.get() && Modules.get().get(ChatControl.class).improveClientMessage.get()) {
             String message = seasnail1$module.isActive() ? Formatting.GREEN + "[+] " + seasnail1$module.title : Formatting.RED + "[-] " + seasnail1$module.title;
             ChatUtils.sendMsg(Text.of(Formatting.BOLD + message));
             ci.cancel();
@@ -31,7 +31,7 @@ public class ModuleMixin {
 
     @Inject(method = "warning", at = @At("HEAD"), cancellable = true, remap = false)
     private void warning(String message, Object[] args, CallbackInfo ci) {
-        if (Modules.get().get(chatControl.class).improveClientMessage.get()) {
+        if (Modules.get().get(ChatControl.class).improveClientMessage.get()) {
             ChatUtils.sendMsg(Text.of(Formatting.YELLOW + " [!] " + String.format(message, args)));
             ci.cancel();
         }
@@ -39,7 +39,7 @@ public class ModuleMixin {
 
     @Inject(method = "error", at = @At("HEAD"), cancellable = true, remap = false)
     private void error(String message, Object[] args, CallbackInfo ci) {
-        if (Modules.get().get(chatControl.class).improveClientMessage.get()) {
+        if (Modules.get().get(ChatControl.class).improveClientMessage.get()) {
             ChatUtils.sendMsg(Text.of(Formatting.RED + " [!] " + String.format(message, args)));
             ci.cancel();
         }
@@ -47,7 +47,7 @@ public class ModuleMixin {
 
     @Inject(method = "info*", at = @At("HEAD"), cancellable = true, remap = false)
     private void info(String message, Object[] args, CallbackInfo ci) {
-        if (Modules.get().get(chatControl.class).improveClientMessage.get()) {
+        if (Modules.get().get(ChatControl.class).improveClientMessage.get()) {
             ChatUtils.sendMsg(Text.of(Formatting.GRAY + " [i] " + String.format(message, args)));
             ci.cancel();
         }

@@ -1,16 +1,28 @@
 package dev.seasnail1;
 
-import dev.seasnail1.commands.lookup;
-import dev.seasnail1.commands.swapCommand;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import dev.seasnail1.commands.Lookup;
+import dev.seasnail1.commands.SwapCommand;
 import dev.seasnail1.hud.Watermark;
-import dev.seasnail1.modules.chat.armorWarning;
-import dev.seasnail1.modules.chat.chatControl;
-import dev.seasnail1.modules.chat.killMessages;
-import dev.seasnail1.modules.chat.visualRange;
-import dev.seasnail1.modules.combat.*;
-import dev.seasnail1.modules.misc.*;
-import dev.seasnail1.modules.render.FOV;
-import dev.seasnail1.modules.render.burrowEsp;
+import dev.seasnail1.modules.chat.ArmorWarn;
+import dev.seasnail1.modules.chat.ChatControl;
+import dev.seasnail1.modules.chat.KillMessages;
+import dev.seasnail1.modules.chat.VisualRange;
+import dev.seasnail1.modules.combat.AutoAnchor;
+import dev.seasnail1.modules.combat.CrystalAura;
+import dev.seasnail1.modules.combat.SelfAnvil;
+import dev.seasnail1.modules.combat.WebAura;
+import dev.seasnail1.modules.misc.AutoExp;
+import dev.seasnail1.modules.misc.PacketMine;
+import dev.seasnail1.modules.render.BurrowEsp;
+import dev.seasnail1.modules.render.Fov;
 import dev.seasnail1.utilities.WebsiteUtility;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.commands.Command;
@@ -22,15 +34,10 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.fabricmc.loader.api.FabricLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
 
 public class Addon extends MeteorAddon {
+
+    public static final URI API_URL = URI.create("https://api.github.com/repos/user93390/seasnail1/releases/latest");
     public static final Category CATEGORY = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     public static final Logger Logger = LoggerFactory.getLogger("Snail++");
@@ -42,37 +49,36 @@ public class Addon extends MeteorAddon {
     public static boolean needsUpdate;
 
     Runnable Initialize = () -> {
-        try {
-            loadModules();
-        } catch (Exception e) {
-            Logger.error("Critical error while loading: {}", Arrays.toString(e.getStackTrace()));
-        }
+        loadModules();
     };
 
     Runnable checkForUpdates = () -> {
         try {
-            String latestVersion = getVersion(URI.create("https://api.github.com/repos/user93390/seasnail1/releases/latest"));
-
+            String latestVersion = getVersion(API_URL);
             needsUpdate = !CLIENT_VERSION.equals(latestVersion);
         } catch (Exception e) {
+            Logger.error("Error while checking for updates", e);
             throw new RuntimeException(e);
         }
     };
 
     @Override
     public void onInitialize() {
-        try {
-            checkForUpdates.run();
-            if (!needsUpdate) {
+        new Thread(() -> {
+            try {
+                checkForUpdates.run();
+                if (needsUpdate) {
+                    return;
+                }
+
+                Logger.info("Initializing Snail++ v" + CLIENT_VERSION);
                 Initialize.run();
-            } else {
-                Logger.error("You are using an outdated version of Snail++ " + CLIENT_VERSION);
+            } catch (Exception e) {
+                Logger.error("Critical error while initializing", e);
+                Logger.error("stacktrace: " + Arrays.toString(e.getStackTrace()));
+                throw new RuntimeException(e);
             }
-        } catch (Exception e) {
-            Logger.error("Critical error while initializing", e);
-            e.printStackTrace();
-            System.exit(1);
-        }
+        }, "Snail++-Init-Thread").start();
     }
 
     @Override
@@ -80,26 +86,29 @@ public class Addon extends MeteorAddon {
         Modules.registerCategory(CATEGORY);
     }
 
-    // Load modules
     public void loadModules() {
+        if (Config.get() == null) {
+            Config.get().load();
+        }
+
         List<Module> moduleList = List.of(
-                new visualRange(),
-                new burrowEsp(),
-                new FOV(),
-                new autoAnchor(),
-                new autoXP(),
-                new webAura(),
-                new selfAnvil(),
-                new chatControl(),
-                new killMessages(),
-                new autoWither(),
-                new armorWarning(),
-                new packetMine()
+                new VisualRange(),
+                new BurrowEsp(),
+                new Fov(),
+                new AutoAnchor(),
+                new AutoExp(),
+                new WebAura(),
+                new SelfAnvil(),
+                new ChatControl(),
+                new KillMessages(),
+                new ArmorWarn(),
+                new PacketMine(),
+                new CrystalAura()
         );
 
         List<Command> commandList = List.of(
-                new swapCommand(),
-                new lookup()
+                new SwapCommand(),
+                new Lookup()
         );
 
         moduleList.forEach(Modules.get()::add);
@@ -107,7 +116,6 @@ public class Addon extends MeteorAddon {
 
         Hud.get().register(Watermark.INFO);
 
-        Config.get().load();
         Logger.info("Modules and config loaded");
     }
 

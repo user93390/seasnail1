@@ -1,6 +1,6 @@
 package dev.seasnail1.mixins;
 
-import dev.seasnail1.modules.chat.chatControl;
+import dev.seasnail1.modules.chat.ChatControl;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -17,7 +17,7 @@ public class ChatUtilsMixin {
     @Inject(method = "getPrefix", at = @At("HEAD"), cancellable = true, remap = false)
     private static void getPrefix(CallbackInfoReturnable<Text> cir) {
         try {
-            Color color = Modules.get().get(chatControl.class).color.get();
+            Color color = Modules.get().get(ChatControl.class).color.get();
             MutableText logo = Text.literal("Snail++");
             MutableText prefix = Text.literal("");
 

@@ -1,18 +1,19 @@
 package dev.seasnail1.commands;
 
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import dev.seasnail1.utilities.WebsiteUtility;
-import meteordevelopment.meteorclient.commands.Command;
-import net.minecraft.command.CommandSource;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class lookup extends Command {
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
-    public lookup() {
+import dev.seasnail1.utilities.WebsiteUtility;
+import meteordevelopment.meteorclient.commands.Command;
+import net.minecraft.command.CommandSource;
+
+public class Lookup extends Command {
+
+    public Lookup() {
         super("uuid", "Lookup a player's UUID.");
     }
 

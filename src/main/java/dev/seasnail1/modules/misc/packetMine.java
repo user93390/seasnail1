@@ -1,12 +1,18 @@
 package dev.seasnail1.modules.misc;
 
+import java.util.Arrays;
+
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.WorldUtils;
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -22,9 +28,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.shape.VoxelShape;
 
-import java.util.Arrays;
-
-public class packetMine extends Module {
+public class PacketMine extends Module {
     private static BlockPos position;
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -72,6 +76,10 @@ public class packetMine extends Module {
             .defaultValue(new SettingColor(255, 255, 255, 75))
             .build());
 
+    public PacketMine() {
+        super(Addon.CATEGORY, "packet-mine+", "Mines blocks better and faster using packets.");
+    }
+
     long currentTime = System.currentTimeMillis();
     private double progress = 0;
     private int slot = 0;
@@ -103,10 +111,6 @@ public class packetMine extends Module {
     };
 
     private final Runnable breakBlock = sendPacket::run;
-
-    public packetMine() {
-        super(Addon.CATEGORY, "packet-mine+", "Mines blocks better and faster using packets.");
-    }
 
     @Override
     public void onActivate() {
@@ -142,7 +146,7 @@ public class packetMine extends Module {
                 slot = pickaxe.slot();
 
                 if (pickaxe.found()) {
-                    if (!pickaxe.found() || originalSlot == slot) {
+                    if (originalSlot == slot) {
                         return;
                     }
 
@@ -178,7 +182,7 @@ public class packetMine extends Module {
         if (position != null && slot != -1 && progress != -1) {
             double clampedValue = Math.abs(MathHelper.clamp(progress, 0, 1)) * (grow.get() ? 2 : 1);
             VoxelShape shape = mc.world.getBlockState(position).getOutlineShape(mc.world, position);
-            
+
             if (!shape.isEmpty()) {
                 Box box = shape.getBoundingBox();
                 double shrinkX = box.getLengthX() * clampedValue * 0.5;

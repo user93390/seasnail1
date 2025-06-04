@@ -3,7 +3,7 @@ package dev.seasnail1.modules.combat;
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.CombatUtils;
 import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
+import dev.seasnail1.utilities.SwapUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -19,7 +19,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 
-public class selfAnvil extends Module {
+public class SelfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
 
@@ -77,7 +77,7 @@ public class selfAnvil extends Module {
     private BlockPos anvil;
     private long lastPlaceTime = 0;
 
-    public selfAnvil() {
+    public SelfAnvil() {
         super(Addon.CATEGORY, "self-Anvil", "Places an anvil on the top of your head to burrow yourself.");
     }
 

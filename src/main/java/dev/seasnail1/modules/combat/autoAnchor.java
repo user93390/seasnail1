@@ -1,15 +1,29 @@
 package dev.seasnail1.modules.combat;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.CombatUtils;
 import dev.seasnail1.utilities.MathHelper;
 import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.swapUtils;
+import dev.seasnail1.utilities.SwapUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IBox;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.EnumSetting;
+import meteordevelopment.meteorclient.settings.IntSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
@@ -27,14 +41,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.*;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
 /**
  * Author: seasnail1
  */
-
-public class autoAnchor extends Module {
+public class AutoAnchor extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacement = settings.createGroup("Placement");
@@ -59,12 +69,11 @@ public class autoAnchor extends Module {
             .sliderRange(1.0, 20)
             .build());
 
-    private final Setting<CombatUtils.filterMode> targetMode = sgGeneral
-            .add(new EnumSetting.Builder<CombatUtils.filterMode>()
-                    .name("filter mode")
-                    .description("The mode used for targeting players.")
-                    .defaultValue(CombatUtils.filterMode.LowestHealth)
-                    .build());
+    private final Setting<CombatUtils.filterMode> targetMode = sgGeneral.add(new EnumSetting.Builder<CombatUtils.filterMode>()
+            .name("filter mode")
+            .description("The mode used for targeting players.")
+            .defaultValue(CombatUtils.filterMode.LowestHealth)
+            .build());
 
     private final Setting<Boolean> packetPlace = sgGeneral.add(new BoolSetting.Builder()
             .name("packet place")
@@ -124,13 +133,12 @@ public class autoAnchor extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement
-            .add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
-                    .name("direction")
-                    .description("The mode used for direction.")
-                    .defaultValue(WorldUtils.DirectionMode.Down)
-                    .visible(() -> !strictDirection.get())
-                    .build());
+    private final Setting<WorldUtils.DirectionMode> directionMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.DirectionMode>()
+            .name("direction")
+            .description("The mode used for direction.")
+            .defaultValue(WorldUtils.DirectionMode.Down)
+            .visible(() -> !strictDirection.get())
+            .build());
 
     private final Setting<Boolean> liquidPlace = sgPlacement.add(new BoolSetting.Builder()
             .name("liquid place")
@@ -138,10 +146,10 @@ public class autoAnchor extends Module {
             .defaultValue(false)
             .build());
 
-    private final Setting<swapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<swapUtils.swapMode>()
+    private final Setting<SwapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<SwapUtils.swapMode>()
             .name("swap mode")
             .description("The mode used for swapping items when placing anchors.")
-            .defaultValue(swapUtils.swapMode.Move)
+            .defaultValue(SwapUtils.swapMode.Move)
             .build());
 
     private final Setting<Boolean> swing = sgPlacement.add(new BoolSetting.Builder()
@@ -150,13 +158,12 @@ public class autoAnchor extends Module {
             .defaultValue(true)
             .build());
 
-    private final Setting<WorldUtils.HandMode> swingMode = sgPlacement
-            .add(new EnumSetting.Builder<WorldUtils.HandMode>()
-                    .name("swing mode")
-                    .description("The mode used for swinging your hand.")
-                    .defaultValue(WorldUtils.HandMode.MainHand)
-                    .visible(swing::get)
-                    .build());
+    private final Setting<WorldUtils.HandMode> swingMode = sgPlacement.add(new EnumSetting.Builder<WorldUtils.HandMode>()
+            .name("swing mode")
+            .description("The mode used for swinging your hand.")
+            .defaultValue(WorldUtils.HandMode.MainHand)
+            .visible(swing::get)
+            .build());
 
     private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder()
             .name("min damage")
@@ -225,6 +232,10 @@ public class autoAnchor extends Module {
             .defaultValue(false)
             .build());
 
+    public AutoAnchor() {
+        super(Addon.CATEGORY, "Auto-Anchor", "Blows up respawn anchors to deal massive damage to targets");
+    }
+
     Map<PlayerEntity, DamageValues> damages = new HashMap<>();
     Set<PlayerEntity> entities = new HashSet<>();
     Set<BlockPos> AnchorPos = new HashSet<>();
@@ -263,10 +274,6 @@ public class autoAnchor extends Module {
         AnchorPos.clear();
     };
 
-    public autoAnchor() {
-        super(Addon.CATEGORY, "Auto-Anchor", "Blows up respawn anchors to deal massive damage to targets");
-    }
-
     @Override
     public void onActivate() {
         try {
@@ -289,10 +296,7 @@ public class autoAnchor extends Module {
 
     private void calculateDamage(BlockPos pos) {
         entities.forEach(player -> {
-            float selfDamage = DamageUtils.anchorDamage(mc.player, pos.toCenterPos());
-            float targetDamage = DamageUtils.anchorDamage(player, pos.toCenterPos());
-
-            damages.put(player, new DamageValues(selfDamage, targetDamage));
+            damages.put(player, new DamageValues(DamageUtils.anchorDamage(player, pos.toCenterPos()), DamageUtils.anchorDamage(mc.player, pos.toCenterPos())));
         });
     }
 
@@ -331,7 +335,7 @@ public class autoAnchor extends Module {
     }
 
     @EventHandler(
-        priority = EventPriority.HIGHEST
+            priority = EventPriority.HIGHEST
     )
     private void onTick(TickEvent.Post event) {
         try {
@@ -351,27 +355,31 @@ public class autoAnchor extends Module {
             }
 
             long currentTime = System.currentTimeMillis();
-            if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) return;
+            if (currentTime - lastUpdateTime < (1000 / updateSpeed.get())) {
+                return;
+            }
 
-                PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), targetRange.get());
-                if (player == null) return;
-                
-                calculate(player.getBlockPos().toCenterPos());
+            PlayerEntity player = CombatUtils.filter(mc.world.getPlayers(), targetMode.get(), targetRange.get());
+            if (player == null) {
+                return;
+            }
 
-                start = player.getPos();
-                entities.add(player);
+            calculate(player.getBlockPos().toCenterPos());
 
-                // Set pos to highest damage
-                this.pos = AnchorPos.stream()
-                        .max(Comparator.comparingDouble(pos -> {
-                            DamageValues damageValues = damages.get(player);
-                            return damageValues != null ? damageValues.targetDamage : Double.NEGATIVE_INFINITY;
-                        }))
-                        .orElse(null);
+            start = player.getPos();
+            entities.add(player);
 
-                if (!AnchorPos.isEmpty()) {
-                    doBreak.run();
-                }
+            // Set pos to highest damage
+            this.pos = AnchorPos.stream()
+                    .max(Comparator.comparingDouble(pos -> {
+                        DamageValues damageValues = damages.get(player);
+                        return damageValues != null ? damageValues.targetDamage : Double.NEGATIVE_INFINITY;
+                    }))
+                    .orElse(null);
+
+            if (!AnchorPos.isEmpty()) {
+                doBreak.run();
+            }
             lastUpdateTime = currentTime;
         } catch (Exception e) {
             error("An error occurred while updating the module: " + e.getMessage());
@@ -382,21 +390,21 @@ public class autoAnchor extends Module {
 
     private void breakAnchor() {
         try {
-            if (updateEat())
-            return;
+            if (updateEat()) {
+                return;
+            }
 
             long currentTime = System.currentTimeMillis();
-            if (currentTime - lastPlacedTime < (1000 / anchorSpeed.get()))
+            if ((currentTime - lastPlacedTime < (1000 / anchorSpeed.get())) || (mc.player == null || mc.player.getHealth() <= pauseHealth.get())) {
                 return;
-            if (mc.player == null || mc.player.getHealth() <= pauseHealth.get())
-                return;
+            }
 
-            FindItemResult glowstone = swap.get() == swapUtils.swapMode.silent
-                    || swap.get() == swapUtils.swapMode.normal
-                            ? InvUtils.findInHotbar(Items.GLOWSTONE)
-                            : InvUtils.find(Items.GLOWSTONE);
+            FindItemResult glowstone = swap.get() == SwapUtils.swapMode.silent
+                    || swap.get() == SwapUtils.swapMode.normal
+                    ? InvUtils.findInHotbar(Items.GLOWSTONE)
+                    : InvUtils.find(Items.GLOWSTONE);
 
-            FindItemResult anchor = swap.get() == swapUtils.swapMode.silent || swap.get() == swapUtils.swapMode.normal
+            FindItemResult anchor = swap.get() == SwapUtils.swapMode.silent || swap.get() == SwapUtils.swapMode.normal
                     ? InvUtils.findInHotbar(Items.RESPAWN_ANCHOR)
                     : InvUtils.find(Items.RESPAWN_ANCHOR);
 
@@ -418,12 +426,10 @@ public class autoAnchor extends Module {
             // instantly break and replace if brute force is enabled
             if (ak47.get()) {
                 for (int i = 0; i < 2; i++) {
-                    WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(),
-                            swap.get(), rotate.get());
+                    WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
                 }
             } else {
-                WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(),
-                        rotate.get());
+                WorldUtils.placeBlock(anchor, pos, swingMode.get(), directionMode.get(), packetPlace.get(), swap.get(), rotate.get());
             }
             broken = true;
             lastPlacedTime = currentTime;
@@ -500,6 +506,7 @@ public class autoAnchor extends Module {
     }
 
     public static class DamageValues {
+
         public float selfDamage;
         public float targetDamage;
 

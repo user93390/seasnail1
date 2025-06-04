@@ -19,7 +19,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import java.util.List;
 import java.util.Random;
 
-public class killMessages extends Module {
+public class KillMessages extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> chatDelay = sgGeneral.add(new DoubleSetting.Builder()
@@ -91,7 +91,7 @@ public class killMessages extends Module {
 
     Runnable showScreen = Placeholders::showScreen;
 
-    public killMessages() {
+    public KillMessages() {
         super(Addon.CATEGORY, "kill-Messages", "sends a custom message when a player dies");
     }
 

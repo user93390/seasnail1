@@ -1,19 +1,20 @@
 package dev.seasnail1.commands;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+
 import meteordevelopment.meteorclient.commands.Command;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import net.minecraft.command.CommandSource;
 import net.minecraft.item.Item;
 
-import java.util.ArrayList;
-import java.util.List;
+public class SwapCommand extends Command {
 
-public class swapCommand extends Command {
-
-    public swapCommand() {
+    public SwapCommand() {
         super("swap", "Swap to an item in your inventory.");
     }
 

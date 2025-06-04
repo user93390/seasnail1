@@ -1,15 +1,14 @@
 package dev.seasnail1.utilities;
 
+import java.util.List;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-
-import java.util.List;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class CombatUtils {
     public static boolean isValidBlock(BlockPos pos) {
@@ -31,8 +30,6 @@ public class CombatUtils {
     }
 
     public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode mode, double range) {
-        playerEntities.remove(mc.player);
-        
         WorldUtils.getAllFriends().forEach(playerEntities::remove);
         return playerEntities.stream()
                 .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range)

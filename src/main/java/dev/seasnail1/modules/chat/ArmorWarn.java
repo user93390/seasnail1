@@ -1,7 +1,7 @@
 package dev.seasnail1.modules.chat;
 
 import dev.seasnail1.Addon;
-import dev.seasnail1.modules.misc.autoXP;
+import dev.seasnail1.modules.misc.AutoExp;
 import dev.seasnail1.utilities.WorldUtils;
 import dev.seasnail1.utilities.screens.Placeholders;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -21,7 +21,7 @@ import net.minecraft.sound.SoundEvent;
 
 import java.util.List;
 
-public class armorWarning extends Module {
+public class ArmorWarn extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -92,7 +92,7 @@ public class armorWarning extends Module {
             .defaultValue(10)
             .build());
 
-    public armorWarning() {
+    public ArmorWarn() {
         super(Addon.CATEGORY, "armor-warning", "Warns you when your armor is low.");
     }
 
@@ -132,6 +132,7 @@ public class armorWarning extends Module {
     public void onActivate() {
         reset.run();
     }
+    
 
     @Override
     public void onDeactivate() {
@@ -218,7 +219,7 @@ public class armorWarning extends Module {
         try {
             if (module == null) {
                 info("auto-XP+ not found, Finding module...");
-                module = Modules.get().get(autoXP.class);
+                module = Modules.get().get(AutoExp.class);
             }
 
             if (mc.player != null) {
