@@ -19,97 +19,47 @@ import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 
-import java.util.*;
+import java.util.List;
 
 public class ArmorWarn extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Boolean> friends = sgGeneral.add(new BoolSetting.Builder()
-            .name("friends")
-            .description("Warns your friends when they have low armor.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> friends = sgGeneral.add(new BoolSetting.Builder().name("friends").description("Warns your friends when they have low armor.").defaultValue(true).build());
 
-    private final Setting<Boolean> directMessage = sgGeneral.add(new BoolSetting.Builder()
-            .name("direct message")
-            .description("Sends the message directly to the player.")
-            .defaultValue(true)
-            .visible(friends::get)
-            .build());
+    private final Setting<Boolean> directMessage = sgGeneral.add(new BoolSetting.Builder().name("direct message").description("Sends the message directly to the player.").defaultValue(true).visible(friends::get).build());
 
-    private final Setting<String> chatMessage = sgGeneral.add(new StringSetting.Builder()
-            .name("chat-message")
-            .description("The message to send in chat when your armor is low.")
-            .defaultValue("")
-            .visible(friends::get)
-            .build());
+    private final Setting<String> chatMessage = sgGeneral.add(new StringSetting.Builder().name("chat-message").description("The message to send in chat when your armor is low.").defaultValue("").visible(friends::get).build());
 
-    private final Setting<Double> friendThreshold = sgGeneral.add(new DoubleSetting.Builder()
-            .name("friend-threshold")
-            .description("The armor value at which to warn your friends.")
-            .defaultValue(10)
-            .sliderRange(0, 100)
-            .visible(friends::get)
-            .build());
+    private final Setting<Double> friendThreshold = sgGeneral.add(new DoubleSetting.Builder().name("friend-threshold").description("The armor value at which to warn your friends.").defaultValue(10).sliderRange(0, 100).visible(friends::get).build());
 
-    private final Setting<Double> maxFriendRange = sgGeneral.add(new DoubleSetting.Builder()
-            .name("max-friend-range")
-            .description("The maximum range to warn your friends.")
-            .defaultValue(7)
-            .sliderRange(0, 100)
-            .visible(friends::get)
-            .build());
+    private final Setting<Double> maxFriendRange = sgGeneral.add(new DoubleSetting.Builder().name("max-friend-range").description("The maximum range to warn your friends.").defaultValue(7).sliderRange(0, 100).visible(friends::get).build());
 
-    private final Setting<Double> threshold = sgGeneral.add(new DoubleSetting.Builder()
-            .name("threshold")
-            .description("The armor value at which to warn you.")
-            .defaultValue(10)
-            .sliderRange(0, 100)
-            .build());
+    private final Setting<Double> threshold = sgGeneral.add(new DoubleSetting.Builder().name("threshold").description("The armor value at which to warn you.").defaultValue(10).sliderRange(0, 100).build());
 
-    private final Setting<Boolean> enableXP = sgGeneral.add(new BoolSetting.Builder()
-            .name("enable auto-XP")
-            .description("Automatically uses XP to repair armor.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> enableXP = sgGeneral.add(new BoolSetting.Builder().name("enable auto-XP").description("Automatically uses XP to repair armor.").defaultValue(true).build());
 
-    private final Setting<Boolean> playSound = sgGeneral.add(new BoolSetting.Builder()
-            .name("sound")
-            .description("Plays a sound when your armor is low.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> playSound = sgGeneral.add(new BoolSetting.Builder().name("sound").description("Plays a sound when your armor is low.").defaultValue(true).build());
 
-    private final Setting<List<SoundEvent>> sounds = sgGeneral.add(new SoundEventListSetting.Builder()
-            .name("sounds")
-            .description("Sounds to play when a player is spotted")
-            .visible(playSound::get)
-            .build());
+    private final Setting<List<SoundEvent>> sounds = sgGeneral.add(new SoundEventListSetting.Builder().name("sounds").description("Sounds to play when a player is spotted").visible(playSound::get).build());
 
-    private final Setting<Integer> reminderTime = sgGeneral.add(new IntSetting.Builder()
-            .name("reminder time")
-            .description("how long to remind you of the armor value before warning you again. (In seconds)")
-            .defaultValue(10)
-            .build());
-
-    public ArmorWarn() {
-        super(Addon.CATEGORY, "armor-warning", "Warns you when your armor is low.");
-    }
-
-    boolean sent = false;
-    Integer armorDurability;
-    private long lastAlertTime = 0;
+    private final Setting<Integer> reminderTime = sgGeneral.add(new IntSetting.Builder().name("reminder time").description("how long to remind you of the armor value before warning you again. (In seconds)").defaultValue(10).build());
     private final long alertIntervalMillis = reminderTime.get() * 1000;
-    private Module module;
-    private String grammar;
-
+    boolean sent = false;
+    int armorDurability;
     Runnable showScreen = Placeholders::showScreen;
-
+    private long lastAlertTime = 0;
     Runnable reset = () -> {
         sent = false;
         armorDurability = 0;
         lastAlertTime = 0;
     };
+    private Module module;
+    private String grammar;
+
+    public ArmorWarn() {
+        super(Addon.CATEGORY, "armor-warning", "Warns you when your armor is low.");
+    }
 
     public WWidget getWidget(GuiTheme theme) {
         WVerticalList list = theme.verticalList();
@@ -124,8 +74,7 @@ public class ArmorWarn extends Module {
     public void getContent() {
         Placeholders.title = "Armor Warning Placeholders";
 
-        Placeholders.items = List.of("{name} - shows the player's name", "{piece} - shows the piece of armor",
-                "{durability} - shows the durability of the armor", "{grammar} - shows the grammar for the piece of armor (is/are)");
+        Placeholders.items = List.of("{name} - shows the player's name", "{piece} - shows the piece of armor", "{durability} - shows the durability of the armor", "{grammar} - shows the grammar for the piece of armor (is/are)");
     }
 
     @Override
@@ -153,21 +102,19 @@ public class ArmorWarn extends Module {
                 module.toggle();
                 info("Enabling auto-XP+");
             }
-            warning("Your armor is low! (%s)", armorDurability.toString());
+            warning("Your armor is low! (%s)", armorDurability);
             lastAlertTime = currentTime;
         }
 
         if (friends.get()) {
-            WorldUtils.getAllFriends().stream().
-                    filter(friend -> friend.getBlockPos().getSquaredDistance(mc.player.getBlockPos()) <= maxFriendRange.get() * maxFriendRange.get())
-                    .forEach(friend -> {
-                        Integer friendDurability = getDurability(friend);
-                        if (friendDurability < friendThreshold.get() && !sent) {
-                            playAlertSounds();
-                            sendMessage(friend, friendDurability);
-                            sent = true;
-                        }
-                    });
+            WorldUtils.getAllFriends().stream().filter(friend -> friend.getBlockPos().getSquaredDistance(mc.player.getBlockPos()) <= maxFriendRange.get() * maxFriendRange.get()).forEach(friend -> {
+                Integer friendDurability = getDurability(friend);
+                if (friendDurability < friendThreshold.get() && !sent) {
+                    playAlertSounds();
+                    sendMessage(friend, friendDurability);
+                    sent = true;
+                }
+            });
         }
     }
 
@@ -190,11 +137,7 @@ public class ArmorWarn extends Module {
             }
         }
 
-        String message = chatMessage.get()
-                .replace("{durability}", friendDurability.toString())
-                .replace("{name}", entity.getName().getString())
-                .replace("{piece}", getArmorPiece(entity).getItem().getName().getString())
-                .replace("{grammar}", grammar);
+        String message = chatMessage.get().replace("{durability}", friendDurability.toString()).replace("{name}", entity.getName().getString()).replace("{piece}", getArmorPiece(entity).getItem().getName().getString()).replace("{grammar}", grammar);
         if (directMessage.get()) {
             ChatUtils.sendPlayerMsg("/msg " + entity.getName().getString() + " " + message);
         } else {

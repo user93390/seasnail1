@@ -2,7 +2,7 @@ package dev.seasnail1.utilities.events;
 
 import net.minecraft.util.math.Direction;
 
-public class FakeplayerMove {
+public class FakePlayerMove {
     public double x;
     public double y;
     public double z;
@@ -12,7 +12,7 @@ public class FakeplayerMove {
     public float headYaw;
     public float bodyYaw;
 
-    public FakeplayerMove(double x, double y, double z, float yaw, float pitch, Direction direction, float headYaw) {
+    public FakePlayerMove(double x, double y, double z, float yaw, float pitch, Direction direction, float headYaw) {
         this.direction = direction;
         this.x = x;
         this.y = y;

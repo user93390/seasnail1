@@ -1,15 +1,14 @@
 package dev.seasnail1.commands;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-
 import dev.seasnail1.utilities.WebsiteUtility;
 import meteordevelopment.meteorclient.commands.Command;
 import net.minecraft.command.CommandSource;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class Lookup extends Command {
 

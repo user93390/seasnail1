@@ -23,7 +23,7 @@ public class SwapUtils {
     }
 
     public static void pickSwapBack() {
-        if(!(pickSlot >= 0)) return;
+        if (!(pickSlot >= 0)) return;
 
         mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(pickSlot));
         pickSlot = -1;
@@ -41,6 +41,7 @@ public class SwapUtils {
 
         mc.getNetworkHandler().sendPacket(new ClickSlotC2SPacket(handler.syncId, handler.getRevision(), from, to, SlotActionType.SWAP, fromStack, stack));
     }
+
     public enum swapMode {
         Inventory,
         Move,

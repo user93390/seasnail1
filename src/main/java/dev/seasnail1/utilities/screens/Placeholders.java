@@ -18,6 +18,12 @@ public class Placeholders {
     }
 
     public static class showScreen extends WindowScreen {
+        Runnable onClose = () -> {
+            if(mc.player != null) {
+                mc.player.closeScreen();
+            }
+        };
+
         public showScreen() {
             super(GuiThemes.get(), "Placeholders");
         }
@@ -30,7 +36,5 @@ public class Placeholders {
 
             this.add(theme.button("Close")).widget().action = onClose;
         }
-
-        Runnable onClose = () -> mc.player.closeScreen();
     }
 }

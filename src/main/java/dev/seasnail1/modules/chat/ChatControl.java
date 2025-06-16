@@ -9,65 +9,29 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
 
 public class ChatControl extends Module {
     private final SettingGroup sgChat = settings.createGroup("Chat");
     private final SettingGroup sgClient = settings.createGroup("Client");
 
-    public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder()
-            .name("improved client messages")
-            .description("Improves the look of chat messages.")
-            .defaultValue(true)
-            .build());
+    public final Setting<Boolean> improveClientMessage = sgClient.add(new BoolSetting.Builder().name("improved client messages").description("Improves the look of chat messages.").defaultValue(true).build());
 
-    public final Setting<SettingColor> color = sgClient.add(new ColorSetting.Builder()
-            .name("prefix color")
-            .description("The color of the prefix.")
-            .build());
+    public final Setting<SettingColor> color = sgClient.add(new ColorSetting.Builder().name("prefix color").description("The color of the prefix.").build());
 
-    private final Setting<Boolean> coordsProtection = sgChat.add(new BoolSetting.Builder()
-            .name("coords-protection")
-            .description("Prevents you from sending messages in chat that may contain coordinates.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> coordsProtection = sgChat.add(new BoolSetting.Builder().name("coords-protection").description("Prevents you from sending messages in chat that may contain coordinates.").defaultValue(true).build());
 
-    private final Setting<Boolean> prefix = sgChat.add(new BoolSetting.Builder()
-            .name("chat prefix")
-            .description("Adds a prefix to your chat messages.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> prefix = sgChat.add(new BoolSetting.Builder().name("chat prefix").description("Adds a prefix to your chat messages.").defaultValue(true).build());
 
-    private final Setting<String> suffixText = sgChat.add(new StringSetting.Builder()
-            .name("suffix-text")
-            .description("The text to add as your suffix when you type in chat.")
-            .defaultValue("| snail++")
-            .visible(prefix::get)
-            .build());
+    private final Setting<String> suffixText = sgChat.add(new StringSetting.Builder().name("suffix-text").description("The text to add as your suffix when you type in chat.").defaultValue("| snail++").visible(prefix::get).build());
 
-    private final Setting<Boolean> green = sgChat.add(new BoolSetting.Builder()
-            .name("green-text")
-            .description("Adds a '>' to your text to make it green")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> green = sgChat.add(new BoolSetting.Builder().name("green-text").description("Adds a '>' to your text to make it green").defaultValue(true).build());
 
-    private final Setting<Boolean> filter = sgChat.add(new BoolSetting.Builder()
-            .name("filter")
-            .description("Filters out messages that contain certain words.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> filter = sgChat.add(new BoolSetting.Builder().name("filter").description("Filters out messages that contain certain words.").defaultValue(true).build());
 
-    private final Setting<List<String>> filterWords = sgChat.add(new StringListSetting.Builder()
-            .name("filter-words")
-            .description("Words to filter out of chat.")
-            .visible(filter::get)
-            .build());
+    private final Setting<List<String>> filterWords = sgChat.add(new StringListSetting.Builder().name("filter-words").description("Words to filter out of chat.").visible(filter::get).build());
 
-    private final Setting<List<String>> playerList = sgChat.add(new StringListSetting.Builder()
-            .name("blocked players")
-            .description("Players to filter out of chat.")
-            .visible(filter::get)
-            .build());
+    private final Setting<List<String>> playerList = sgChat.add(new StringListSetting.Builder().name("blocked players").description("Players to filter out of chat.").visible(filter::get).build());
 
     public ChatControl() {
         super(Addon.CATEGORY, "Chat-control+", "allows you to have more control over client messages and server messages");

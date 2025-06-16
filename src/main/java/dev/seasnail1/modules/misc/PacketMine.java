@@ -1,18 +1,12 @@
 package dev.seasnail1.modules.misc;
 
-import java.util.Arrays;
-
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.WorldUtils;
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -28,89 +22,53 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.shape.VoxelShape;
 
+import java.util.Arrays;
+
 public class PacketMine extends Module {
-    private static BlockPos position;
+
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
-            .name("range")
-            .description("The range to mine blocks.")
-            .defaultValue(5)
-            .sliderRange(1, 10)
-            .build());
+    private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder().name("range").description("The range to mine blocks.").defaultValue(5).sliderRange(1, 10).build());
 
-    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
-            .name("rotate")
-            .description("Faces towards the block being mined.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder().name("rotate").description("Faces towards the block being mined.").defaultValue(true).build());
 
-    private final Setting<Boolean> instant = sgGeneral.add(new BoolSetting.Builder()
-            .name("instant")
-            .description("Instantly mines blocks.")
-            .defaultValue(false)
-            .build());
+    private final Setting<Boolean> instant = sgGeneral.add(new BoolSetting.Builder().name("instant").description("Instantly mines blocks.").defaultValue(false).build());
 
-    private final Setting<Boolean> autoSwitch = sgGeneral.add(new BoolSetting.Builder()
-            .name("auto-switch")
-            .description("Automatically switches to the best tool in your hotbar.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> autoSwitch = sgGeneral.add(new BoolSetting.Builder().name("auto-switch").description("Automatically switches to the best tool in your hotbar.").defaultValue(true).build());
 
-    private final Setting<Boolean> grow = sgGeneral.add(new BoolSetting.Builder()
-            .name("grow")
-            .description("Grows the render outline as you mine.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> grow = sgGeneral.add(new BoolSetting.Builder().name("grow").description("Grows the render outline as you mine.").defaultValue(true).build());
 
-    private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
-            .name("side-color")
-            .description("The side color.")
-            .defaultValue(new SettingColor(255, 255, 255, 75))
-            .build());
+    private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder().name("side-color").description("The side color.").defaultValue(new SettingColor(255, 255, 255, 75)).build());
 
-    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
-            .name("line-color")
-            .description("The line color.")
-            .defaultValue(new SettingColor(255, 255, 255, 75))
-            .build());
+    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder().name("line-color").description("The line color.").defaultValue(new SettingColor(255, 255, 255, 75)).build());
 
     public PacketMine() {
         super(Addon.CATEGORY, "packet-mine+", "Mines blocks better and faster using packets.");
     }
 
+    private static BlockPos position;
     long currentTime = System.currentTimeMillis();
-    private double progress = 0;
-    private int slot = 0;
     Direction direction;
-
+    private double progress = 0;
     private final Runnable sendPacket = () -> {
         if (instant.get()) {
-            mc.player.networkHandler.sendPacket(
-                    new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, position, direction)
-            );
+            mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, position, direction));
         } else {
-            mc.player.networkHandler.sendPacket(
-                    new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, position, direction)
-            );
-
-
+            mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, position, direction));
             if (progress >= 0.95) {
-                mc.player.networkHandler.sendPacket(
-                        new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, position, direction)
-                );
+                mc.player.networkHandler.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, position, direction));
             }
         }
     };
 
+    private final Runnable breakBlock = sendPacket;
+    private int slot = 0;
     private final Runnable reset = () -> {
         progress = 0;
         slot = 0;
         currentTime = System.currentTimeMillis();
     };
-
-    private final Runnable breakBlock = sendPacket::run;
 
     @Override
     public void onActivate() {
@@ -157,7 +115,7 @@ public class PacketMine extends Module {
 
                         if (autoSwitch.get()) {
                             InvUtils.swap(slot, true);
-                            
+
                             breakBlock.run();
                             InvUtils.swapBack();
                         } else {
@@ -191,15 +149,7 @@ public class PacketMine extends Module {
                 //smoothness
                 double smoothness = Math.max(1, 1 / clampedValue);
 
-                event.renderer.box(
-                        position.getX() + box.minX + (shrinkX / smoothness),
-                        position.getY() + box.minY + (shrinkY / smoothness),
-                        position.getZ() + box.minZ + (shrinkZ / smoothness),
-                        position.getX() + box.maxX - (shrinkX / smoothness),
-                        position.getY() + box.maxY - (shrinkY / smoothness),
-                        position.getZ() + box.maxZ - (shrinkZ / smoothness),
-                        sideColor.get(), lineColor.get(), ShapeMode.Both, 0
-                );
+                event.renderer.box(position.getX() + box.minX + (shrinkX / smoothness), position.getY() + box.minY + (shrinkY / smoothness), position.getZ() + box.minZ + (shrinkZ / smoothness), position.getX() + box.maxX - (shrinkX / smoothness), position.getY() + box.maxY - (shrinkY / smoothness), position.getZ() + box.maxZ - (shrinkZ / smoothness), sideColor.get(), lineColor.get(), ShapeMode.Both, 0);
             }
         }
     }

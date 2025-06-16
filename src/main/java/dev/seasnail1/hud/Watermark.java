@@ -22,7 +22,6 @@ public class Watermark extends HudElement {
             .description("Shows shadow")
             .defaultValue(false)
             .build());
-
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
             .name("scale")
             .description("The scale of the text.")
@@ -43,4 +42,6 @@ public class Watermark extends HudElement {
 
         renderer.text(text, x, y, color.get(), shadow.get(), scale.get());
     }
+
+
 }

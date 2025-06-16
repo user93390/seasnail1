@@ -1,13 +1,5 @@
 package dev.seasnail1;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import dev.seasnail1.commands.Lookup;
 import dev.seasnail1.commands.SwapCommand;
 import dev.seasnail1.hud.Watermark;
@@ -19,8 +11,10 @@ import dev.seasnail1.modules.combat.AutoAnchor;
 import dev.seasnail1.modules.combat.CrystalAura;
 import dev.seasnail1.modules.combat.SelfAnvil;
 import dev.seasnail1.modules.combat.WebAura;
+import dev.seasnail1.modules.misc.AntiBot;
 import dev.seasnail1.modules.misc.AutoExp;
 import dev.seasnail1.modules.misc.PacketMine;
+import dev.seasnail1.modules.misc.WitherAura;
 import dev.seasnail1.modules.render.BurrowEsp;
 import dev.seasnail1.modules.render.Fov;
 import dev.seasnail1.utilities.WebsiteUtility;
@@ -34,6 +28,12 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.fabricmc.loader.api.FabricLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
 
 public class Addon extends MeteorAddon {
 
@@ -41,10 +41,7 @@ public class Addon extends MeteorAddon {
     public static final Category CATEGORY = new Category("Snail++");
     public static final HudGroup HUD_GROUP = new HudGroup("Snail++");
     public static final Logger Logger = LoggerFactory.getLogger("Snail++");
-    public static String CLIENT_VERSION = FabricLoader.getInstance().getModContainer("seasnail1").get()
-            .getMetadata()
-            .getVersion()
-            .getFriendlyString();
+    public static String CLIENT_VERSION = FabricLoader.getInstance().getModContainer("seasnail1").get().getMetadata().getVersion().getFriendlyString();
 
     public static boolean needsUpdate;
 
@@ -61,6 +58,12 @@ public class Addon extends MeteorAddon {
             throw new RuntimeException(e);
         }
     };
+
+    private static String getVersion(URI uri) throws IOException {
+        WebsiteUtility websiteUtil = new WebsiteUtility();
+
+        return websiteUtil.getString(uri, "tag_name");
+    }
 
     @Override
     public void onInitialize() {
@@ -94,13 +97,12 @@ public class Addon extends MeteorAddon {
                 new KillMessages(),
                 new ArmorWarn(),
                 new PacketMine(),
-                new CrystalAura()
+                //new CrystalAura(), <- for now.
+                new AntiBot(),
+                new WitherAura()
         );
 
-        List<Command> commandList = List.of(
-                new SwapCommand(),
-                new Lookup()
-        );
+        List<Command> commandList = List.of(new SwapCommand(), new Lookup());
 
         moduleList.forEach(Modules.get()::add);
         commandList.forEach(Commands::add);
@@ -108,12 +110,6 @@ public class Addon extends MeteorAddon {
         Hud.get().register(Watermark.INFO);
 
         Logger.info("Modules and config loaded");
-    }
-
-    private static String getVersion(URI uri) throws IOException {
-        WebsiteUtility websiteUtil = new WebsiteUtility();
-
-        return websiteUtil.getString(uri, "tag_name");
     }
 
     @Override

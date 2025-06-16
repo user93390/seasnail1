@@ -1,8 +1,6 @@
 package dev.seasnail1.utilities;
 
-import java.util.List;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -10,9 +8,16 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.List;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
 public class CombatUtils {
     public static boolean isValidBlock(BlockPos pos) {
-        Block block = mc.world.getBlockState(pos).getBlock();
+        if (mc.world == null || pos == null) return false;
+        var blockState = mc.world.getBlockState(pos);
+        if (blockState == null) return false;
+        Block block = blockState.getBlock();
         return block.equals(Blocks.OBSIDIAN) || block.equals(Blocks.BEDROCK) || block.equals(Blocks.REINFORCED_DEEPSLATE) || block.equals(Blocks.NETHERITE_BLOCK) || block.equals(Blocks.CRYING_OBSIDIAN) || block.equals(Blocks.ENDER_CHEST) || block.equals(Blocks.ANVIL);
     }
 
@@ -29,14 +34,16 @@ public class CombatUtils {
         return target.getY() == target.prevY && isValidBlock(BlockPos.ofFloored(pos));
     }
 
-    public static PlayerEntity filter(List<AbstractClientPlayerEntity> playerEntities, filterMode mode, double range) {
-        WorldUtils.getAllFriends().forEach(playerEntities::remove);
+    public static PlayerEntity bestTarget(List<AbstractClientPlayerEntity> playerEntities, filterMode mode, double targetRange) {
+        if (mc.player == null) return null;
+
+        playerEntities.removeIf(player -> player == null || player == mc.player || Friends.get().isFriend(player));
 
         return playerEntities.stream()
-                .filter(player -> mc.player != null && mc.player.distanceTo(player) <= range)
+                .filter(player -> player != null)
                 .min((player1, player2) -> {
-                    double distance1 = mc.player.distanceTo(player1);
-                    double distance2 = mc.player.distanceTo(player2);
+                    double distance1 = mc.player != null ? mc.player.distanceTo(player1) : Double.MAX_VALUE;
+                    double distance2 = mc.player != null ? mc.player.distanceTo(player2) : Double.MAX_VALUE;
                     double health1 = player1.getHealth();
                     double health2 = player2.getHealth();
 

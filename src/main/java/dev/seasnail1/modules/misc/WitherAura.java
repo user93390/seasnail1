@@ -35,76 +35,32 @@ public class WitherAura extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
 
-    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
-            .name("Rotate")
-            .description("Rotate to place blocks")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder().name("Rotate").description("Rotate to place blocks").defaultValue(true).build());
 
-    private final Setting<Boolean> renderBlock = sgRender.add(new BoolSetting.Builder()
-            .name("Render Block")
-            .description("Render placed blocks")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> renderBlock = sgRender.add(new BoolSetting.Builder().name("Render Block").description("Render placed blocks").defaultValue(true).build());
 
-    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
-            .name("Shape Mode")
-            .description("Should it display the outline or fill")
-            .defaultValue(ShapeMode.Both)
-            .visible(renderBlock::get)
-            .build());
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>().name("Shape Mode").description("Should it display the outline or fill").defaultValue(ShapeMode.Both).visible(renderBlock::get).build());
 
-    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
-            .name("Side Color")
-            .description("Color of the inside of the rendered block")
-            .defaultValue(new SettingColor(0, 255, 255, 100))
-            .visible(renderBlock::get)
-            .build());
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder().name("Side Color").description("Color of the inside of the rendered block").defaultValue(new SettingColor(0, 255, 255, 100)).visible(renderBlock::get).build());
 
-    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
-            .name("Line Color")
-            .description("Color of the outlines on the rendered block")
-            .defaultValue(new SettingColor(0, 255, 255, 255))
-            .visible(renderBlock::get)
-            .build());
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder().name("Line Color").description("Color of the outlines on the rendered block").defaultValue(new SettingColor(0, 255, 255, 255)).visible(renderBlock::get).build());
+
+    private final List<BlockPos> soulSandOffsetsX = Arrays.asList(new BlockPos(0, 0, 0), new BlockPos(0, 1, 0), new BlockPos(1, 1, 0), new BlockPos(-1, 1, 0));
+    private final List<BlockPos> soulSandOffsetsZ = Arrays.asList(new BlockPos(0, 0, 0), new BlockPos(0, 1, 0), new BlockPos(0, 1, 1), new BlockPos(0, 1, -1));
+    private final List<BlockPos> witherSkullOffsetsX = Arrays.asList(new BlockPos(0, 2, 0), new BlockPos(1, 2, 0), new BlockPos(-1, 2, 0));
+    private final List<BlockPos> witherSkullOffsetsZ = Arrays.asList(new BlockPos(0, 2, 0), new BlockPos(0, 2, 1), new BlockPos(0, 2, -1));
+    private BlockPos currentBlockPos = null;
 
     public WitherAura() {
         super(Addon.CATEGORY, "Wither-Aura", "Automatically builds a wither");
     }
-
-    private BlockPos currentBlockPos = null;
-
-    private final List<BlockPos> soulSandOffsetsX = Arrays.asList(
-            new BlockPos(0, 0, 0),
-            new BlockPos(0, 1, 0),
-            new BlockPos(1, 1, 0),
-            new BlockPos(-1, 1, 0));
-
-    private final List<BlockPos> soulSandOffsetsZ = Arrays.asList(
-            new BlockPos(0, 0, 0),
-            new BlockPos(0, 1, 0),
-            new BlockPos(0, 1, 1),
-            new BlockPos(0, 1, -1));
-
-    private final List<BlockPos> witherSkullOffsetsX = Arrays.asList(
-            new BlockPos(0, 2, 0),
-            new BlockPos(1, 2, 0),
-            new BlockPos(-1, 2, 0));
-
-    private final List<BlockPos> witherSkullOffsetsZ = Arrays.asList(
-            new BlockPos(0, 2, 0),
-            new BlockPos(0, 2, 1),
-            new BlockPos(0, 2, -1));
 
     private boolean canPlace(Block block, BlockPos pos) {
         return mc.world.canPlace(block.getDefaultState(), pos, ShapeContext.absent());
     }
 
     private void placeBlock(Direction placementSide, BlockPos blockPos, boolean rotate) {
-        Vec3d hitPos = Vec3d.ofCenter(blockPos).add(
-                placementSide.getOffsetX() * 0.5,
-                placementSide.getOffsetY() * 0.5,
-                placementSide.getOffsetZ() * 0.5);
+        Vec3d hitPos = Vec3d.ofCenter(blockPos).add(placementSide.getOffsetX() * 0.5, placementSide.getOffsetY() * 0.5, placementSide.getOffsetZ() * 0.5);
         if (rotate) {
             Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 5);
         }

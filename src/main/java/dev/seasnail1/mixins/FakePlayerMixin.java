@@ -1,7 +1,7 @@
 package dev.seasnail1.mixins;
 
 import dev.seasnail1.utilities.WorldUtils;
-import dev.seasnail1.utilities.events.FakeplayerMove;
+import dev.seasnail1.utilities.events.FakePlayerMove;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
@@ -40,7 +40,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class FakePlayerMixin {
 
     @Unique
-    private final List<FakeplayerMove> recordedMovements = new ArrayList<FakeplayerMove>();
+    private final List<FakePlayerMove> recordedMovements = new ArrayList<FakePlayerMove>();
     @Unique
     @Final
     public Setting<String> name;
@@ -106,7 +106,7 @@ public class FakePlayerMixin {
                     if (fakePlayerEntity != fakePlayer) continue;
 
                     if (recording) {
-                        recordedMovements.add(new FakeplayerMove(
+                        recordedMovements.add(new FakePlayerMove(
                                 mc.player.getX(), mc.player.getY(), mc.player.getZ(),
                                 mc.player.getYaw(), mc.player.getPitch(),
                                 mc.player.getMovementDirection(),
@@ -114,8 +114,8 @@ public class FakePlayerMixin {
                     }
 
                     if (looping && !recordedMovements.isEmpty()) {
-                        FakeplayerMove movement = recordedMovements.get(loopIndex);
-                        FakeplayerMove nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
+                        FakePlayerMove movement = recordedMovements.get(loopIndex);
+                        FakePlayerMove nextMovement = recordedMovements.get((loopIndex + 1) % recordedMovements.size());
 
                         double t = (double) loopIndex / recordedMovements.size();
                         double interpolatedX = movement.x + t * (nextMovement.x - movement.x);

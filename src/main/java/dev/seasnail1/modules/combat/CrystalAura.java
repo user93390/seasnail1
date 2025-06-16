@@ -1,19 +1,10 @@
 package dev.seasnail1.modules.combat;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.CombatUtils;
 import dev.seasnail1.utilities.MathHelper;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.EnumSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
@@ -31,6 +22,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class CrystalAura extends Module {
 
     private final SettingGroup sgPlace = settings.createGroup("Place");
@@ -38,79 +34,35 @@ public class CrystalAura extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Boolean> place = sgPlace.add(new BoolSetting.Builder()
-            .name("place")
-            .description("Places crystals.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> place = sgPlace.add(new BoolSetting.Builder().name("place").description("Places crystals.").defaultValue(true).build());
 
-    private final Setting<Double> placeRange = sgPlace.add(new DoubleSetting.Builder()
-            .name("place-range")
-            .description("The range in which to place crystals.")
-            .defaultValue(4.5)
-            .min(0)
-            .sliderMax(10)
-            .build());
+    private final Setting<Double> placeRange = sgPlace.add(new DoubleSetting.Builder().name("place-range").description("The range in which to place crystals.").defaultValue(4.5).min(0).sliderMax(10).build());
 
-    private final Setting<Boolean> break_ = sgBreak.add(new BoolSetting.Builder()
-            .name("break")
-            .description("Breaks crystals.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> break_ = sgBreak.add(new BoolSetting.Builder().name("break").description("Breaks crystals.").defaultValue(true).build());
 
-    private final Setting<Double> breakRange = sgBreak.add(new DoubleSetting.Builder()
-            .name("break-range")
-            .description("The range in which to break crystals.")
-            .defaultValue(4.5)
-            .min(0)
-            .sliderMax(10)
-            .build());
+    private final Setting<Double> breakRange = sgBreak.add(new DoubleSetting.Builder().name("break-range").description("The range in which to break crystals.").defaultValue(4.5).min(0).sliderMax(10).build());
 
-    private final Setting<CombatUtils.filterMode> filterMode = sgGeneral.add(new EnumSetting.Builder<CombatUtils.filterMode>()
-            .name("filter-mode")
-            .description("The filter mode to use.")
-            .defaultValue(CombatUtils.filterMode.Closet)
-            .build());
+    private final Setting<CombatUtils.filterMode> filterMode = sgGeneral.add(new EnumSetting.Builder<CombatUtils.filterMode>().name("filter-mode").description("The filter mode to use.").defaultValue(CombatUtils.filterMode.Closet).build());
 
-    private final Setting<Double> targetRange = sgGeneral.add(new DoubleSetting.Builder()
-            .name("target-range")
-            .description("The range in which to target players.")
-            .defaultValue(12.5)
-            .min(0)
-            .sliderMax(16)
-            .build());
+    private final Setting<Double> targetRange = sgGeneral.add(new DoubleSetting.Builder().name("target-range").description("The range in which to target players.").defaultValue(12.5).min(0).sliderMax(16).build());
 
-    private final Setting<Double> minDamage = sgGeneral.add(new DoubleSetting.Builder()
-            .name("min-damage")
-            .description("The minimum damage to deal to the target.")
-            .defaultValue(6.5)
-            .min(0)
-            .sliderMax(36)
-            .build());
+    private final Setting<Double> minDamage = sgGeneral.add(new DoubleSetting.Builder().name("min-damage").description("The minimum damage to deal to the target.").defaultValue(6.5).min(0).sliderMax(36).build());
 
-    private final Setting<Double> maxSelfDamage = sgGeneral.add(new DoubleSetting.Builder()
-            .name("max-self-damage")
-            .description("The maximum damage you can take from a crystal.")
-            .defaultValue(12.5)
-            .min(0)
-            .sliderMax(36)
-            .build());
-
-    public CrystalAura() {
-        super(Addon.CATEGORY, "CrystalAura-plus", "Automatically places and explodes crystals around your opps.");
-    }
-
+    private final Setting<Double> maxSelfDamage = sgGeneral.add(new DoubleSetting.Builder().name("max-self-damage").description("The maximum damage you can take from a crystal.").defaultValue(12.5).min(0).sliderMax(36).build());
     Set<BlockPos> validPositions = new HashSet<>();
     PlayerEntity bestTarget = null;
     BlockPos crystalPos = null;
     int crystalID = -1;
-
     Runnable reset = () -> {
         validPositions.clear();
         bestTarget = null;
         crystalPos = null;
         crystalID = -1;
     };
+
+    public CrystalAura() {
+        super(Addon.CATEGORY, "CrystalAura-plus", "Automatically places and explodes crystals around your opps.");
+    }
 
     @Override
     public void onActivate() {
@@ -127,9 +79,7 @@ public class CrystalAura extends Module {
 
         List<BlockPos> sphere = MathHelper.radius(BlockPos.ofFloored(start), radius);
 
-        sphere.removeIf(pos -> {
-            return mc.world.getBlockState(pos.down(1)).getBlock() != Blocks.OBSIDIAN;
-        });
+        sphere.removeIf(pos -> mc.world.getBlockState(pos.down(1)).getBlock() != Blocks.OBSIDIAN);
 
         sphere.forEach(crystal -> {
             double targetDamage = DamageUtils.crystalDamage(bestTarget, crystal.toCenterPos());
@@ -144,7 +94,7 @@ public class CrystalAura extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void init(TickEvent.Pre event) {
         if (mc.world != null) {
-            bestTarget = CombatUtils.filter(mc.world.getPlayers(), filterMode.get(), targetRange.get());
+            bestTarget = CombatUtils.bestTarget(mc.world.getPlayers(), filterMode.get(), targetRange.get());
             if (bestTarget == null) {
                 return;
             }
@@ -152,9 +102,7 @@ public class CrystalAura extends Module {
 
         findValidPositions(mc.player.getPos());
 
-        this.crystalPos = validPositions.stream()
-                .min(Comparator.comparingDouble(pos
-                        -> mc.player.squaredDistanceTo(pos.getX(), pos.getY(), pos.getZ()))).orElse(null);
+        this.crystalPos = validPositions.stream().min(Comparator.comparingDouble(pos -> mc.player.squaredDistanceTo(pos.getX(), pos.getY(), pos.getZ()))).orElse(null);
 
         if (place.get()) {
             placeCrystal(this.crystalPos);

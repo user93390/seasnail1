@@ -23,13 +23,13 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class ClientPlayNetworkHandlerMixin {
-    @Shadow
-    protected abstract ParseResults<CommandSource> parse(String command);
-
-    @Unique
-    short i = 0;
     @Unique
     private final Set<Packet<?>> processedPackets = new HashSet<>();
+    @Unique
+    short i = 0;
+
+    @Shadow
+    protected abstract ParseResults<CommandSource> parse(String command);
 
     /*
      * This mixin is used to listen for EntityStatusS2CPacket packets and then post events based on the packet status.

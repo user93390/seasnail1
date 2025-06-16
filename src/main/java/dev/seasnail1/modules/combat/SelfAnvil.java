@@ -2,8 +2,6 @@ package dev.seasnail1.modules.combat;
 
 import dev.seasnail1.Addon;
 import dev.seasnail1.utilities.CombatUtils;
-import dev.seasnail1.utilities.SwapUtils;
-import dev.seasnail1.utilities.WorldUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -13,6 +11,7 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
@@ -23,59 +22,24 @@ public class SelfAnvil extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
 
-    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
-            .name("rotate")
-            .description("Automatically rotates towards the position where the anvil is placed.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder().name("rotate").description("Automatically rotates towards the position where the anvil is placed.").defaultValue(true).build());
 
-    private final Setting<Boolean> support = sgGeneral.add(new BoolSetting.Builder()
-            .name("support")
-            .description("Places support blocks (recommended)")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> support = sgGeneral.add(new BoolSetting.Builder().name("support").description("Places support blocks (recommended)").defaultValue(true).build());
 
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
-            .name("delay")
-            .description("Delay in seconds between each block placement.")
-            .defaultValue(1.0)
-            .min(0)
-            .sliderMax(5)
-            .build());
+    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder().name("delay").description("Delay in seconds between each block placement.").defaultValue(1.0).min(0).sliderMax(5).build());
 
-    private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder()
-            .name("auto-disable")
-            .description("Disables the module when you have placed the anvil.")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> autoDisable = sgGeneral.add(new BoolSetting.Builder().name("auto-disable").description("Disables the module when you have placed the anvil.").defaultValue(true).build());
 
-    private final Setting<Boolean> autoCenter = sgGeneral.add(new BoolSetting.Builder()
-            .name("auto center")
-            .description("centers you when placing the anvil")
-            .defaultValue(true)
-            .build());
+    private final Setting<Boolean> autoCenter = sgGeneral.add(new BoolSetting.Builder().name("auto center").description("centers you when placing the anvil").defaultValue(true).build());
 
-    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
-            .name("side color")
-            .description("Side color")
-            .defaultValue(new SettingColor(255, 0, 0, 75))
-            .build());
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder().name("side color").description("Side color").defaultValue(new SettingColor(255, 0, 0, 75)).build());
 
-    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
-            .name("line color")
-            .description("Line color")
-            .defaultValue(new SettingColor(255, 0, 0, 255))
-            .build());
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder().name("line color").description("Line color").defaultValue(new SettingColor(255, 0, 0, 255)).build());
 
-    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
-            .name("shape-mode")
-            .description("How the shapes are rendered.")
-            .defaultValue(ShapeMode.Both)
-            .build());
-
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>().name("shape-mode").description("How the shapes are rendered.").defaultValue(ShapeMode.Both).build());
+    private final long lastPlaceTime = 0;
     private FindItemResult item;
     private BlockPos anvil;
-    private long lastPlaceTime = 0;
 
     public SelfAnvil() {
         super(Addon.CATEGORY, "self-Anvil", "Places an anvil on the top of your head to burrow yourself.");
@@ -87,7 +51,6 @@ public class SelfAnvil extends Module {
         if (item == null) {
             error("You need an anvil in your hotbar to use this module.");
             toggle();
-            return;
         }
     }
 
@@ -97,8 +60,8 @@ public class SelfAnvil extends Module {
         item = null;
     }
 
-        @EventHandler
-        private void onTick(TickEvent.Post event) {
+    @EventHandler
+    private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
 
         anvil = mc.player.getBlockPos().up(2);
@@ -116,27 +79,24 @@ public class SelfAnvil extends Module {
 
         if (System.currentTimeMillis() - lastPlaceTime >= delay.get() * 1000) {
             placeAnvil(mc.player, item);
-            }
         }
+    }
 
-        private void placeAnvil(PlayerEntity player, FindItemResult anvil) {
+    private void placeAnvil(PlayerEntity player, FindItemResult anvil) {
         FindItemResult obsidian = InvUtils.findInHotbar(Items.OBSIDIAN);
+
         if (anvil == null) return;
 
-        if(support.get()) {
-            if (obsidian == null) {
-                error("You need obsidian to place support blocks.");
-                return;
-            }
+        if (support.get()) {
             PlaceSupportBlocks(player, obsidian);
         }
-  
-        WorldUtils.placeBlock(anvil, this.anvil, WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Up, true, SwapUtils.swapMode.silent, rotate.get());
+
+        BlockUtils.place(this.anvil, obsidian, rotate.get(), 100, true);
     }
 
     private void PlaceSupportBlocks(PlayerEntity player, FindItemResult obsidian) {
         for (int i = 0; i <= 2; i++) {
-            WorldUtils.placeBlock(obsidian, player.getBlockPos().north(1).up(i), WorldUtils.HandMode.MainHand, WorldUtils.DirectionMode.Down, true, SwapUtils.swapMode.silent, rotate.get());
+            BlockUtils.place(player.getBlockPos().north(1), obsidian, rotate.get(), 100, true);
         }
     }
 
