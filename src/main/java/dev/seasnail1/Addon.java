@@ -8,7 +8,7 @@ import dev.seasnail1.modules.chat.ChatControl;
 import dev.seasnail1.modules.chat.KillMessages;
 import dev.seasnail1.modules.chat.VisualRange;
 import dev.seasnail1.modules.combat.AutoAnchor;
-import dev.seasnail1.modules.combat.CrystalAura;
+import dev.seasnail1.modules.combat.AutoCrystal;
 import dev.seasnail1.modules.combat.SelfAnvil;
 import dev.seasnail1.modules.combat.WebAura;
 import dev.seasnail1.modules.misc.AntiBot;
@@ -45,10 +45,6 @@ public class Addon extends MeteorAddon {
 
     public static boolean needsUpdate;
 
-    Runnable Initialize = () -> {
-        loadModules();
-    };
-
     Runnable checkForUpdates = () -> {
         try {
             String latestVersion = getVersion(API_URL);
@@ -69,7 +65,7 @@ public class Addon extends MeteorAddon {
     public void onInitialize() {
         checkForUpdates.run();
         if (!needsUpdate) {
-            Initialize.run();
+            loadModules();
         } else {
             Logger.error("You are using an outdated version of Snail++ {}", CLIENT_VERSION);
         }
@@ -97,7 +93,7 @@ public class Addon extends MeteorAddon {
                 new KillMessages(),
                 new ArmorWarn(),
                 new PacketMine(),
-                //new CrystalAura(), <- for now.
+                new AutoCrystal(),
                 new AntiBot(),
                 new WitherAura()
         );
