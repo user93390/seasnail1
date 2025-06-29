@@ -39,7 +39,6 @@ public class AutoAnchor extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacement = settings.createGroup("Placement");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
-    private final SettingGroup sgAntiCheat = settings.createGroup("Anti-Cheat");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
 
@@ -54,13 +53,9 @@ public class AutoAnchor extends Module {
     // Placement Settings
     private final Setting<Boolean> rotate = sgPlacement.add(new BoolSetting.Builder().name("rotation").description("Enables rotation towards the block when placing anchors.").defaultValue(false).build());
 
-    private final Setting<Integer> rotationSteps = sgAntiCheat.add(new IntSetting.Builder().name("rotation steps").description("The amount of steps to rotate.").sliderRange(5, 25).visible(rotate::get).build());
-
     private final Setting<Double> explodeDelay = sgPlacement.add(new DoubleSetting.Builder().name("explode delay").description("How long to wait before exploding the anchor after placing it. In ticks").defaultValue(5).sliderRange(0.0, 10.0).build());
 
     private final Setting<SwapUtils.swapMode> swap = sgPlacement.add(new EnumSetting.Builder<SwapUtils.swapMode>().name("swap mode").description("The mode used for swapping items when placing anchors.").defaultValue(SwapUtils.swapMode.Move).build());
-
-    private final Setting<Boolean> swing = sgPlacement.add(new BoolSetting.Builder().name("swing").description("Swings your hand.").defaultValue(true).build());
 
     private final Setting<Double> minDamage = sgDamage.add(new DoubleSetting.Builder().name("min damage").description("The minimum damage required to place an anchor.").defaultValue(0.5).sliderRange(0.0, 36.0).build());
 
@@ -125,7 +120,7 @@ public class AutoAnchor extends Module {
     void calculate(Vec3d start) {
         List<BlockPos> sphere = MathHelper.radius(BlockPos.ofFloored(start), Math.sqrt(placeBreak.get()));
 
-        sphere.removeIf(pos -> !WorldUtils.replaceable(pos) || !WorldUtils.intersects(pos, true) ||
+        sphere.removeIf(pos -> !WorldUtils.replaceable(pos) || WorldUtils.intersects(pos) ||
                 mc.player.getBlockPos().getSquaredDistance(start) > placeBreak.get() * placeBreak.get());
 
         for (BlockPos pos : sphere) {
@@ -149,8 +144,6 @@ public class AutoAnchor extends Module {
             }
         }
     }
-
-
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
@@ -183,8 +176,8 @@ public class AutoAnchor extends Module {
             auto -> Places anchors at the position with the highest damage to the target minus the distance to the player.
             */
 
-          this.pos = switch (logicMode.get()) {
-                case damage ->  Arrays.stream(AnchorPos)
+            this.pos = switch (logicMode.get()) {
+                case damage -> Arrays.stream(AnchorPos)
                         .max(Comparator.comparingDouble(p -> DamageUtils.anchorDamage(entity, p.toCenterPos())))
                         .orElse(null);
 
@@ -206,7 +199,7 @@ public class AutoAnchor extends Module {
         // Break once per tick
         if (this.pos != null && !broken) {
             if (rotate.get()) {
-                Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, () -> MathHelper.updateRotation(rotationSteps.get()));
+                Rotations.rotate(Rotations.getYaw(pos.toCenterPos()), Rotations.getPitch(pos.toCenterPos()));
             }
             breakAnchor();
         }
@@ -227,16 +220,25 @@ public class AutoAnchor extends Module {
             return;
         }
 
+        Hand anchorHand = anchor.getHand();
+        Hand glowstoneHand = glowstone.getHand();
+
+        if(anchorHand == null || glowstoneHand == null) {
+            error("Failed to get hand for anchor or glowstone!");
+            toggle();
+            return;
+        }
+
         BlockHitResult hitResult = new BlockHitResult(pos.toCenterPos(), mc.player.getHorizontalFacing(), pos, false);
 
         // Step 1: Place anchor
         performInteraction(() -> BlockUtils.place(pos, anchor, rotate.get(), 100, true), anchor);
 
         // Step 2: Charge anchor
-        performInteraction(() -> mc.interactionManager.interactBlock(mc.player, glowstone.getHand(), hitResult), glowstone);
+        performInteraction(() -> mc.interactionManager.interactBlock(mc.player, anchorHand, hitResult), glowstone);
 
         // Step 3: Explode anchor
-        performInteraction(() -> mc.interactionManager.interactBlock(mc.player, anchor.getHand(), hitResult), anchor);
+        performInteraction(() -> mc.interactionManager.interactBlock(mc.player, glowstoneHand, hitResult), anchor);
 
         lastExplode = currentTime;
         broken = true;
@@ -273,11 +275,13 @@ public class AutoAnchor extends Module {
     @EventHandler
     public void render(Render3DEvent event) {
         for (PlayerEntity entity : entities) {
-            if (mc.player.getBlockPos().getSquaredDistance(entity.getBlockPos()) > placeBreak.get() * placeBreak.get() || pos == null) continue;
+            if (mc.player.getBlockPos().getSquaredDistance(entity.getBlockPos()) > placeBreak.get() * placeBreak.get() || pos == null)
+                continue;
 
             switch (renderMode.get()) {
                 case normal -> event.renderer.box(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-                case fading -> RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, duration.get(), true, false);
+                case fading ->
+                        RenderUtils.renderTickingBlock(pos, sideColor.get(), lineColor.get(), shapeMode.get(), 0, duration.get(), true, false);
                 case smooth -> {
                     if (renderBoxOne == null) {
                         renderBoxOne = new Box(pos);

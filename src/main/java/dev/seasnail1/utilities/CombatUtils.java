@@ -35,8 +35,6 @@ public class CombatUtils {
     }
 
     public static PlayerEntity bestTarget(List<AbstractClientPlayerEntity> playerEntities, filterMode mode, double targetRange) {
-        if (mc.player == null) return null;
-
         playerEntities.removeIf(player -> player == null || player == mc.player || Friends.get().isFriend(player));
 
         return playerEntities.stream()

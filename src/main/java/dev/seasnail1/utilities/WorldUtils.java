@@ -11,6 +11,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 
@@ -30,8 +31,8 @@ public class WorldUtils {
         return mc.world.getBlockState(block).isReplaceable();
     }
 
-    public static boolean intersects(BlockPos pos, boolean ignoreItem) {
-        return !EntityUtils.intersectsWithEntity(new Box(pos), ignoreItem ? entity -> !(entity instanceof ItemEntity) : entity -> true);
+    public static boolean intersects(BlockPos pos) {
+        return EntityUtils.intersectsWithEntity(new Box(pos), entity -> true);
     }
 
     public static List<AbstractClientPlayerEntity> getAllFriends() {
